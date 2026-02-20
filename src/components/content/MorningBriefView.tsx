@@ -9,6 +9,8 @@ import {
   ArrowRight,
   RefreshCw,
   Loader2,
+  List,
+  ChevronUp,
 } from "lucide-react";
 
 interface Story {
@@ -90,6 +92,7 @@ const DEMO_STORIES: Story[] = [
 export default function MorningBriefView() {
   const [stories, setStories] = useState<Story[]>(DEMO_STORIES);
   const [generating, setGenerating] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
 
   const updateStoryStatus = (id: string, status: "pending" | "selected" | "dismissed") => {
     setStories((prev) =>
@@ -143,20 +146,68 @@ export default function MorningBriefView() {
             </p>
           </div>
         </div>
-        <button
-          onClick={handleGenerateBrief}
-          disabled={generating}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-          style={{ backgroundColor: "var(--brand-primary)" }}
-        >
-          {generating ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <RefreshCw size={16} />
-          )}
-          {generating ? "Generating..." : "Generate Fresh Brief"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowSummary(!showSummary)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border"
+            style={{
+              borderColor: showSummary ? "var(--brand-primary)" : "var(--border)",
+              color: showSummary ? "var(--brand-primary)" : "var(--muted)",
+              backgroundColor: showSummary ? "var(--brand-primary-light, #EDE9FE)" : "transparent",
+            }}
+          >
+            {showSummary ? <ChevronUp size={16} /> : <List size={16} />}
+            {showSummary ? "Hide Summary" : "View Summary"}
+          </button>
+          <button
+            onClick={handleGenerateBrief}
+            disabled={generating}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+            style={{ backgroundColor: "var(--brand-primary)" }}
+          >
+            {generating ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <RefreshCw size={16} />
+            )}
+            {generating ? "Generating..." : "Generate Fresh Brief"}
+          </button>
+        </div>
       </div>
+
+      {/* Bulleted Summary Panel */}
+      {showSummary && (
+        <div
+          className="rounded-xl border p-5 mb-6"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        >
+          <h3 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--foreground)" }}>
+            Today&apos;s Brief Summary
+          </h3>
+          <ul className="space-y-3">
+            {stories.map((story) => (
+              <li key={story.id} className="flex gap-2 text-sm" style={{ color: "var(--foreground)" }}>
+                <span className="shrink-0 mt-1" style={{ color: "var(--brand-primary)" }}>&bull;</span>
+                <div>
+                  <span className="font-medium">{story.title}</span>
+                  <span style={{ color: "var(--muted)" }}> — {story.summary}</span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span
+                      className="text-xs px-1.5 py-0.5 rounded-full"
+                      style={{ backgroundColor: "#EDE9FE", color: "#7C3AED" }}
+                    >
+                      {story.sourcePlatform}
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      Score: {Math.round(story.relevanceScore * 0.6 + story.viralityScore * 0.4)}
+                    </span>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Selected Story Banner */}
       {selectedStory && (

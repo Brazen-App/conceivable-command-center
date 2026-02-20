@@ -91,7 +91,7 @@ export default function MorningBriefView() {
   const [stories, setStories] = useState<Story[]>(DEMO_STORIES);
   const [generating, setGenerating] = useState(false);
 
-  const updateStoryStatus = (id: string, status: "selected" | "dismissed") => {
+  const updateStoryStatus = (id: string, status: "pending" | "selected" | "dismissed") => {
     setStories((prev) =>
       prev.map((s) => (s.id === id ? { ...s, status } : s))
     );

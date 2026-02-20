@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  /* Conceivable Brand Colors */
+  --brand-primary: #7C3AED;
+  --brand-primary-light: #A78BFA;
+  --brand-primary-dark: #5B21B6;
+  --brand-secondary: #EC4899;
+  --brand-secondary-light: #F9A8D4;
+  --brand-accent: #F59E0B;
+
+  /* Neutrals */
+  --background: #FAFAFA;
+  --foreground: #1A1A2E;
+  --surface: #FFFFFF;
+  --surface-hover: #F5F5F5;
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
+  --muted: #6B7280;
+  --muted-light: #9CA3AF;
+
+  /* Sidebar */
+  --sidebar-bg: #1A1A2E;
+  --sidebar-text: #E5E7EB;
+  --sidebar-hover: #2D2B55;
+  --sidebar-active: #7C3AED;
+
+  /* Status Colors */
+  --status-success: #10B981;
+  --status-warning: #F59E0B;
+  --status-error: #EF4444;
+  --status-info: #3B82F6;
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-text: var(--sidebar-text);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-light);
+}

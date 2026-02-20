@@ -16,6 +16,53 @@ import {
 } from "lucide-react";
 import { ContentPlatform } from "@/types";
 
+function generateDemoContent(topic: string, angle: string): GeneratedPiece[] {
+  return [
+    {
+      platform: "linkedin",
+      title: `${topic} — LinkedIn`,
+      body: `I've been thinking a lot about ${topic.toLowerCase()} lately.\n\nHere's what most people get wrong: they treat this as a one-size-fits-all issue. But the data tells a different story.\n\n${angle}\n\nAt Conceivable, we're building the first operating system for women's health — and insights like these are exactly why personalization matters.\n\n3 things every woman should know:\n1. Your body is unique — and your health plan should be too\n2. Science-backed approaches outperform trends every time\n3. Small, consistent changes compound into massive results\n\nWhat's your experience been? Drop a comment below.\n\n#WomensHealth #Fertility #HealthTech #Conceivable`,
+      status: "draft",
+    },
+    {
+      platform: "instagram-post",
+      title: `${topic} — IG Post`,
+      body: `✨ New research alert ✨\n\n${topic}\n\nHere's why this matters for YOUR health journey:\n\n${angle}\n\nThe science is clear — and we're here to make it actionable.\n\nSave this post for later 🔖\n\n#WomensHealth #FertilityJourney #HealthScience #Conceivable #WellnessTips #ReproductiveHealth`,
+      status: "draft",
+    },
+    {
+      platform: "instagram-carousel",
+      title: `${topic} — IG Carousel`,
+      body: `SLIDE 1: "${topic}" [Bold headline on branded background]\n\nSLIDE 2: "Here's what the research shows..." [Key stat or finding]\n\nSLIDE 3: "Why does this matter?" [${angle}]\n\nSLIDE 4: "What you can do about it" [Actionable tip #1]\n\nSLIDE 5: "The science behind it" [Supporting evidence]\n\nSLIDE 6: "Key takeaway" [Summary of main point]\n\nSLIDE 7: "Follow @conceivable for more science-backed health insights" [CTA]\n\nCaption: Knowledge is power — especially when it comes to your health. Swipe through to learn what the latest research means for you. 💜\n\n#WomensHealth #HealthEducation #Conceivable`,
+      status: "draft",
+    },
+    {
+      platform: "pinterest",
+      title: `${topic} — Pinterest`,
+      body: `Pin Title: ${topic} — What Every Woman Needs to Know\n\nPin Description: Discover the latest research on ${topic.toLowerCase()} and what it means for your health journey. Science-backed insights from Conceivable, the first operating system for women's health.\n\nKeywords: women's health, fertility, wellness, health research, ${topic.toLowerCase()}\n\nImage Concept: Clean infographic with key stats, branded purple/pink gradient, easy-to-read typography.`,
+      status: "draft",
+    },
+    {
+      platform: "tiktok",
+      title: `${topic} — TikTok`,
+      body: `🎬 TikTok Script\n\n[0-3s] HOOK: "Did you know that ${topic.toLowerCase()}? Here's what nobody's telling you..."\n\n[3-15s] "So new research just came out and..."\n${angle}\n\n[15-30s] "Here's what this actually means for you..."\n• Key point 1\n• Key point 2\n• Key point 3\n\n[30-45s] "The thing most people miss is that this is personal — what works for one person might not work for you."\n\n[45-55s] "That's exactly why we're building Conceivable — to give every woman a personalized health plan."\n\n[55-60s] CTA: "Follow for more science-backed health tips. Link in bio."`,
+      status: "draft",
+    },
+    {
+      platform: "youtube",
+      title: `${topic} — YouTube`,
+      body: `📹 YouTube Script\n\nTitle: ${topic} — What Every Woman Should Know in 2026\n\nThumbnail: Split image — surprised face + key stat overlay\n\n[0:00-0:30] INTRO\n"If you've been following the latest health research, you've probably heard about ${topic.toLowerCase()}. But today I want to break down what this actually means for you — because the headlines don't tell the full story."\n\n[0:30-3:00] THE RESEARCH\n"Here's what the study found..."\n${angle}\n\n[3:00-6:00] WHY THIS MATTERS\n"So why should you care? Because..."\n\n[6:00-9:00] WHAT YOU CAN DO\n"Now let's talk about actionable steps..."\n\n[9:00-10:00] OUTRO\n"If you found this helpful, subscribe and hit the bell. And if you want personalized health insights, check out Conceivable — link in the description."\n\nDescription: In this video, we break down ${topic.toLowerCase()} and what it means for women's health. #WomensHealth #Conceivable`,
+      status: "draft",
+    },
+    {
+      platform: "blog",
+      title: `${topic} — Blog`,
+      body: `# ${topic}: What Every Woman Needs to Know\n\n**Meta Description:** Discover the latest research on ${topic.toLowerCase()} and learn actionable steps you can take today for better health outcomes.\n\n## Introduction\n\nRecent developments in ${topic.toLowerCase()} have sparked important conversations about women's health. ${angle}\n\n## What the Research Shows\n\nThe latest findings are compelling — and they have direct implications for women at every stage of their health journey.\n\n## Why This Matters for You\n\nUnderstanding this research isn't just academic. It has real, practical implications for the choices you make every day.\n\n## Actionable Steps You Can Take Today\n\n1. **Stay informed** — Follow evidence-based sources\n2. **Personalize your approach** — What works for others may not work for you\n3. **Track your progress** — Data-driven decisions lead to better outcomes\n\n## The Bottom Line\n\nAt Conceivable, we believe every woman deserves access to personalized, science-backed health insights. This research reinforces why.\n\n---\n*Want personalized health insights? Join the Conceivable waitlist.*`,
+      status: "draft",
+    },
+  ];
+}
+
 interface GeneratedPiece {
   platform: ContentPlatform;
   title: string;
@@ -60,6 +107,7 @@ export default function ContentStudio() {
   const handleGenerate = async () => {
     if (!topic.trim() || !founderAngle.trim()) return;
     setGenerating(true);
+    setPieces([]);
 
     try {
       const res = await fetch("/api/content/generate", {
@@ -68,12 +116,17 @@ export default function ContentStudio() {
         body: JSON.stringify({ topic, founderAngle }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setPieces(data.pieces ?? []);
+      const data = await res.json();
+
+      if (res.ok && data.pieces?.length) {
+        setPieces(data.pieces);
+      } else {
+        // API returned an error or empty pieces — use demo content
+        setPieces(generateDemoContent(topic, founderAngle));
       }
     } catch {
-      // Handle error silently
+      // Network / server error — use demo content
+      setPieces(generateDemoContent(topic, founderAngle));
     } finally {
       setGenerating(false);
     }

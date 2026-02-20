@@ -22,6 +22,7 @@ interface UploadedDoc {
   size: number;
   status: "uploading" | "processing" | "indexed" | "error";
   chunkCount?: number;
+  errorMessage?: string;
 }
 
 const DOC_TYPE_OPTIONS: { value: DocumentType; label: string; icon: typeof FileText }[] = [
@@ -74,6 +75,18 @@ export default function DocumentUpload() {
       formData.append("file", file);
       formData.append("type", selectedType);
 
+      // Check file size before uploading (4.5MB limit on Vercel free tier)
+      if (file.size > 4.5 * 1024 * 1024) {
+        setDocuments((prev) =>
+          prev.map((d) =>
+            d.id === doc.id
+              ? { ...d, status: "error" as const, errorMessage: `Too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max 4.5MB.` }
+              : d
+          )
+        );
+        continue;
+      }
+
       try {
         const res = await fetch("/api/documents/upload", {
           method: "POST",
@@ -90,13 +103,22 @@ export default function DocumentUpload() {
             )
           );
         } else {
+          const data = await res.json().catch(() => ({ error: "Upload failed" }));
           setDocuments((prev) =>
-            prev.map((d) => (d.id === doc.id ? { ...d, status: "error" as const } : d))
+            prev.map((d) =>
+              d.id === doc.id
+                ? { ...d, status: "error" as const, errorMessage: data.error }
+                : d
+            )
           );
         }
       } catch {
         setDocuments((prev) =>
-          prev.map((d) => (d.id === doc.id ? { ...d, status: "error" as const } : d))
+          prev.map((d) =>
+            d.id === doc.id
+              ? { ...d, status: "error" as const, errorMessage: "Upload failed — check connection" }
+              : d
+          )
         );
       }
     }
@@ -227,9 +249,10 @@ export default function DocumentUpload() {
                     <p className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
                       {doc.name}
                     </p>
-                    <p className="text-xs" style={{ color: "var(--muted)" }}>
+                    <p className="text-xs" style={{ color: doc.status === "error" ? "var(--status-error)" : "var(--muted)" }}>
                       {formatFileSize(doc.size)} &middot; {doc.type}
                       {doc.chunkCount ? ` · ${doc.chunkCount} chunks` : ""}
+                      {doc.errorMessage ? ` · ${doc.errorMessage}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

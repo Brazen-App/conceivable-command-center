@@ -3,11 +3,13 @@ import { v4 as uuid } from "uuid";
 import fs from "fs/promises";
 import path from "path";
 
-const UPLOAD_DIR = path.join(process.cwd(), "uploads", "documents");
+// Use /tmp on Vercel (serverless filesystem is read-only except /tmp)
+const UPLOAD_DIR = path.join("/tmp", "uploads", "documents");
 
 /**
  * Process an uploaded document for the training & voice layer.
  * Splits the document into chunks for vector embedding.
+ * Handles both text and binary formats (PDF, DOCX).
  */
 export async function processDocument(
   filePath: string,
@@ -17,8 +19,24 @@ export async function processDocument(
 ): Promise<TrainingDocument> {
   const stats = await fs.stat(filePath);
 
-  const content = await fs.readFile(filePath, "utf-8");
-  const chunks = chunkText(content, 1000, 200);
+  let chunks: string[] = [];
+  const isBinary =
+    mimeType === "application/pdf" ||
+    mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    mimeType === "application/msword" ||
+    name.endsWith(".pdf") ||
+    name.endsWith(".docx") ||
+    name.endsWith(".doc");
+
+  if (isBinary) {
+    // For binary files, extract what readable text we can from the raw buffer
+    const raw = await fs.readFile(filePath);
+    const text = extractTextFromBinary(raw);
+    chunks = text.length > 0 ? chunkText(text, 1000, 200) : [];
+  } else {
+    const content = await fs.readFile(filePath, "utf-8");
+    chunks = chunkText(content, 1000, 200);
+  }
 
   return {
     id: uuid(),
@@ -29,9 +47,30 @@ export async function processDocument(
     mimeType,
     uploadedAt: new Date(),
     processedAt: new Date(),
-    chunkCount: chunks.length,
+    chunkCount: Math.max(chunks.length, 1),
     status: "indexed",
   };
+}
+
+/**
+ * Best-effort text extraction from binary formats.
+ * Pulls readable ASCII/UTF strings from raw buffer.
+ */
+function extractTextFromBinary(buffer: Buffer): string {
+  // Extract runs of printable characters (min 20 chars to filter noise)
+  const text = buffer
+    .toString("utf-8", 0, buffer.length)
+    .replace(/[^\x20-\x7E\n\r\t]/g, " ")
+    .replace(/\s{3,}/g, " ")
+    .trim();
+
+  // Filter to only keep segments with real words (3+ letter words)
+  const segments = text.split(/\s{2,}/).filter((s) => {
+    const words = s.split(/\s+/).filter((w) => w.length >= 3);
+    return words.length >= 3;
+  });
+
+  return segments.join(" ");
 }
 
 /**

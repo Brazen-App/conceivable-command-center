@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Linkedin,
   Instagram,
@@ -36,11 +37,19 @@ const PLATFORM_CONFIG: Record<
 };
 
 export default function ContentStudio() {
+  const searchParams = useSearchParams();
   const [topic, setTopic] = useState("");
   const [founderAngle, setFounderAngle] = useState("");
   const [generating, setGenerating] = useState(false);
   const [pieces, setPieces] = useState<GeneratedPiece[]>([]);
   const [selectedPiece, setSelectedPiece] = useState<GeneratedPiece | null>(null);
+
+  useEffect(() => {
+    const topicParam = searchParams.get("topic");
+    const contextParam = searchParams.get("context");
+    if (topicParam) setTopic(topicParam);
+    if (contextParam) setFounderAngle(contextParam);
+  }, [searchParams]);
 
   const handleGenerate = async () => {
     if (!topic.trim() || !founderAngle.trim()) return;

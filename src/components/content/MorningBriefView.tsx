@@ -201,6 +201,17 @@ export default function MorningBriefView() {
                     <span className="text-xs" style={{ color: "var(--muted)" }}>
                       Score: {Math.round(story.relevanceScore * 0.6 + story.viralityScore * 0.4)}
                     </span>
+                    {story.sourceUrl && story.sourceUrl !== "#" && (
+                      <a
+                        href={story.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium hover:underline"
+                        style={{ color: "var(--brand-primary)" }}
+                      >
+                        <ExternalLink size={12} /> View source
+                      </a>
+                    )}
                   </div>
                 </div>
               </li>
@@ -228,7 +239,7 @@ export default function MorningBriefView() {
             {selectedStory.summary}
           </p>
           <a
-            href="/content"
+            href={`/content?topic=${encodeURIComponent(selectedStory.title)}&context=${encodeURIComponent(selectedStory.summary)}`}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
             style={{ backgroundColor: "var(--brand-primary)" }}
           >

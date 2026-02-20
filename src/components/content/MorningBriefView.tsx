@@ -120,8 +120,7 @@ export default function MorningBriefView() {
   };
 
   const selectedStory = stories.find((s) => s.status === "selected");
-  const pendingStories = stories.filter((s) => s.status === "pending");
-  const dismissedStories = stories.filter((s) => s.status === "dismissed");
+  const pendingCount = stories.filter((s) => s.status === "pending").length;
 
   return (
     <div className="p-8 max-w-4xl">
@@ -144,7 +143,7 @@ export default function MorningBriefView() {
               })}
             </p>
             <p className="text-xs" style={{ color: "var(--muted)" }}>
-              {stories.length} stories curated &middot; {pendingStories.length} pending review
+              {stories.length} stories curated &middot; {pendingCount} pending review
             </p>
           </div>
         </div>
@@ -335,161 +334,6 @@ export default function MorningBriefView() {
         </div>
       )}
 
-      {/* Story List */}
-      <div className="space-y-4">
-        {pendingStories.map((story) => (
-          <StoryCard
-            key={story.id}
-            story={story}
-            onSelect={() => updateStoryStatus(story.id, "selected")}
-            onDismiss={() => updateStoryStatus(story.id, "dismissed")}
-          />
-        ))}
-      </div>
-
-      {/* Dismissed Stories */}
-      {dismissedStories.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--muted)" }}>
-            Dismissed ({dismissedStories.length})
-          </h3>
-          <div className="space-y-2 opacity-50">
-            {dismissedStories.map((story) => (
-              <div
-                key={story.id}
-                className="rounded-lg border p-3 flex items-center justify-between"
-                style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-              >
-                <span className="text-sm line-through" style={{ color: "var(--muted)" }}>
-                  {story.title}
-                </span>
-                <button
-                  onClick={() => updateStoryStatus(story.id, "pending")}
-                  className="text-xs px-2 py-1 rounded hover:bg-gray-100"
-                  style={{ color: "var(--muted)" }}
-                >
-                  Restore
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function StoryCard({
-  story,
-  onSelect,
-  onDismiss,
-}: {
-  story: Story;
-  onSelect: () => void;
-  onDismiss: () => void;
-}) {
-  const combinedScore = story.relevanceScore * 0.6 + story.viralityScore * 0.4;
-
-  return (
-    <div
-      className="rounded-xl border p-5 hover:shadow-sm"
-      style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span
-              className="text-xs font-medium px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: "#EDE9FE", color: "#7C3AED" }}
-            >
-              {story.sourcePlatform}
-            </span>
-            {story.topics.map((topic) => (
-              <span
-                key={topic}
-                className="text-xs px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "var(--border-light)", color: "var(--muted)" }}
-              >
-                {topic}
-              </span>
-            ))}
-          </div>
-          <h3 className="font-medium mb-1" style={{ color: "var(--foreground)" }}>
-            {story.title}
-          </h3>
-          <p className="text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-            {story.summary}
-          </p>
-
-          {/* Scores */}
-          <div className="flex items-center gap-4 mt-3">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>
-                Relevance
-              </span>
-              <div className="w-16 h-1.5 rounded-full" style={{ backgroundColor: "var(--border)" }}>
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${story.relevanceScore}%`,
-                    backgroundColor: "var(--brand-primary)",
-                  }}
-                />
-              </div>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>
-                {story.relevanceScore}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>
-                Virality
-              </span>
-              <div className="w-16 h-1.5 rounded-full" style={{ backgroundColor: "var(--border)" }}>
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: `${story.viralityScore}%`,
-                    backgroundColor: "var(--brand-secondary)",
-                  }}
-                />
-              </div>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>
-                {story.viralityScore}
-              </span>
-            </div>
-            <span className="text-xs font-semibold ml-2" style={{ color: "var(--brand-primary)" }}>
-              Score: {Math.round(combinedScore)}
-            </span>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col gap-2 shrink-0">
-          <button
-            onClick={onSelect}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
-            style={{ backgroundColor: "var(--status-success)" }}
-          >
-            <CheckCircle size={14} /> Select
-          </button>
-          <button
-            onClick={onDismiss}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border hover:bg-gray-50"
-            style={{ borderColor: "var(--border)", color: "var(--muted)" }}
-          >
-            <XCircle size={14} /> Dismiss
-          </button>
-          <a
-            href={story.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border hover:bg-gray-50"
-            style={{ borderColor: "var(--border)", color: "var(--muted)" }}
-          >
-            <ExternalLink size={14} /> Source
-          </a>
-        </div>
-      </div>
     </div>
   );
 }

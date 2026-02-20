@@ -47,8 +47,14 @@ export default function ContentStudio() {
   useEffect(() => {
     const topicParam = searchParams.get("topic");
     const contextParam = searchParams.get("context");
+    const povParam = searchParams.get("pov");
     if (topicParam) setTopic(topicParam);
-    if (contextParam) setFounderAngle(contextParam);
+    // Use the user's POV if provided, otherwise fall back to the story context
+    if (povParam) {
+      setFounderAngle(povParam);
+    } else if (contextParam) {
+      setFounderAngle(contextParam);
+    }
   }, [searchParams]);
 
   const handleGenerate = async () => {

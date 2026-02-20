@@ -32,7 +32,7 @@ const DEMO_STORIES: Story[] = [
     title: "New Study Links Gut Microbiome to Fertility Outcomes",
     summary:
       "Researchers at Stanford published findings showing a direct correlation between gut microbiome diversity and IVF success rates. The study of 2,400 women found that those with higher microbial diversity had 34% better outcomes.",
-    sourceUrl: "#",
+    sourceUrl: "https://pubmed.ncbi.nlm.nih.gov/?term=gut+microbiome+fertility+IVF",
     sourcePlatform: "PubMed",
     relevanceScore: 95,
     viralityScore: 78,
@@ -44,7 +44,7 @@ const DEMO_STORIES: Story[] = [
     title: "TikTok Creator's PCOS Journey Reaches 4M Views",
     summary:
       "A creator documenting her PCOS diagnosis and lifestyle changes has gone viral. Her approach of combining clinical data with personal storytelling mirrors Conceivable's brand voice perfectly.",
-    sourceUrl: "#",
+    sourceUrl: "https://www.tiktok.com/search?q=PCOS+journey",
     sourcePlatform: "TikTok",
     relevanceScore: 82,
     viralityScore: 95,
@@ -56,7 +56,7 @@ const DEMO_STORIES: Story[] = [
     title: "FDA Updates Supplement Labeling Requirements for 2026",
     summary:
       "The FDA announced new labeling standards for dietary supplements effective Q3 2026, with specific emphasis on reproductive health claims. Conceivable's supplement line should be reviewed against these new guidelines.",
-    sourceUrl: "#",
+    sourceUrl: "https://www.fda.gov/food/dietary-supplements",
     sourcePlatform: "Google News",
     relevanceScore: 90,
     viralityScore: 45,
@@ -68,7 +68,7 @@ const DEMO_STORIES: Story[] = [
     title: "AI-Powered Fertility Tracking Apps See 300% Growth",
     summary:
       "Market analysis shows AI-enabled fertility and health tracking apps have tripled their user base in the past year. Women 25-35 are the primary adopters, citing personalized insights as the key differentiator.",
-    sourceUrl: "#",
+    sourceUrl: "https://news.google.com/search?q=AI+fertility+tracking+apps",
     sourcePlatform: "Google News",
     relevanceScore: 88,
     viralityScore: 72,
@@ -80,7 +80,7 @@ const DEMO_STORIES: Story[] = [
     title: "Endometriosis Awareness Post Goes Viral on Instagram",
     summary:
       "An infographic-style carousel about endometriosis myths vs. facts has garnered 500K+ saves on Instagram. The format — bold claim debunking — is highly shareable and aligns with educational content strategy.",
-    sourceUrl: "#",
+    sourceUrl: "https://www.instagram.com/explore/tags/endometriosisawareness/",
     sourcePlatform: "Instagram",
     relevanceScore: 80,
     viralityScore: 91,
@@ -92,7 +92,7 @@ const DEMO_STORIES: Story[] = [
 export default function MorningBriefView() {
   const [stories, setStories] = useState<Story[]>(DEMO_STORIES);
   const [generating, setGenerating] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
+  const [showSummary, setShowSummary] = useState(true);
 
   const updateStoryStatus = (id: string, status: "pending" | "selected" | "dismissed") => {
     setStories((prev) =>
@@ -201,17 +201,15 @@ export default function MorningBriefView() {
                     <span className="text-xs" style={{ color: "var(--muted)" }}>
                       Score: {Math.round(story.relevanceScore * 0.6 + story.viralityScore * 0.4)}
                     </span>
-                    {story.sourceUrl && story.sourceUrl !== "#" && (
-                      <a
-                        href={story.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium hover:underline"
-                        style={{ color: "var(--brand-primary)" }}
-                      >
-                        <ExternalLink size={12} /> View source
-                      </a>
-                    )}
+                    <a
+                      href={story.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-medium hover:underline"
+                      style={{ color: "var(--brand-primary)" }}
+                    >
+                      <ExternalLink size={12} /> View source
+                    </a>
                   </div>
                 </div>
               </li>
@@ -392,17 +390,15 @@ function StoryCard({
           >
             <XCircle size={14} /> Dismiss
           </button>
-          {story.sourceUrl && story.sourceUrl !== "#" && (
-            <a
-              href={story.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border hover:bg-gray-50"
-              style={{ borderColor: "var(--border)", color: "var(--muted)" }}
-            >
-              <ExternalLink size={14} /> Source
-            </a>
-          )}
+          <a
+            href={story.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border hover:bg-gray-50"
+            style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+          >
+            <ExternalLink size={14} /> Source
+          </a>
         </div>
       </div>
     </div>

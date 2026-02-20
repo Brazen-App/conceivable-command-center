@@ -11,6 +11,7 @@ import {
   Loader2,
   List,
   ChevronUp,
+  MessageSquare,
 } from "lucide-react";
 
 interface Story {
@@ -93,6 +94,7 @@ export default function MorningBriefView() {
   const [stories, setStories] = useState<Story[]>(DEMO_STORIES);
   const [generating, setGenerating] = useState(false);
   const [showSummary, setShowSummary] = useState(true);
+  const [pov, setPov] = useState("");
 
   const updateStoryStatus = (id: string, status: "pending" | "selected" | "dismissed") => {
     setStories((prev) =>
@@ -184,14 +186,14 @@ export default function MorningBriefView() {
           <h3 className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--foreground)" }}>
             Today&apos;s Brief Summary
           </h3>
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {stories.map((story) => (
               <li key={story.id} className="flex gap-2 text-sm" style={{ color: "var(--foreground)" }}>
                 <span className="shrink-0 mt-1" style={{ color: "var(--brand-primary)" }}>&bull;</span>
-                <div>
+                <div className="flex-1">
                   <span className="font-medium">{story.title}</span>
                   <span style={{ color: "var(--muted)" }}> — {story.summary}</span>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span
                       className="text-xs px-1.5 py-0.5 rounded-full"
                       style={{ backgroundColor: "#EDE9FE", color: "#7C3AED" }}
@@ -210,6 +212,39 @@ export default function MorningBriefView() {
                     >
                       <ExternalLink size={12} /> View source
                     </a>
+                    <span style={{ color: "var(--border)" }}>|</span>
+                    {story.status === "pending" && (
+                      <>
+                        <button
+                          onClick={() => updateStoryStatus(story.id, "selected")}
+                          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md text-white"
+                          style={{ backgroundColor: "var(--status-success)" }}
+                        >
+                          <CheckCircle size={12} /> Select
+                        </button>
+                        <button
+                          onClick={() => updateStoryStatus(story.id, "dismissed")}
+                          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md border hover:bg-gray-50"
+                          style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+                        >
+                          <XCircle size={12} /> Dismiss
+                        </button>
+                      </>
+                    )}
+                    {story.status === "selected" && (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--status-success)" }}>
+                        <CheckCircle size={12} /> Selected
+                      </span>
+                    )}
+                    {story.status === "dismissed" && (
+                      <button
+                        onClick={() => updateStoryStatus(story.id, "pending")}
+                        className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md border hover:bg-gray-50"
+                        style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+                      >
+                        Restore
+                      </button>
+                    )}
                   </div>
                 </div>
               </li>
@@ -224,11 +259,24 @@ export default function MorningBriefView() {
           className="rounded-xl p-5 mb-6 border-2"
           style={{ borderColor: "var(--status-success)", backgroundColor: "#F0FDF4" }}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle size={16} style={{ color: "var(--status-success)" }} />
-            <span className="text-xs font-semibold uppercase" style={{ color: "var(--status-success)" }}>
-              Selected for Content Creation
-            </span>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle size={16} style={{ color: "var(--status-success)" }} />
+              <span className="text-xs font-semibold uppercase" style={{ color: "var(--status-success)" }}>
+                Selected for Content Creation
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                updateStoryStatus(selectedStory.id, "pending");
+                setPov("");
+              }}
+              className="text-xs px-2 py-1 rounded hover:bg-green-100"
+              style={{ color: "var(--muted)" }}
+            >
+              <XCircle size={14} className="inline mr-1" />
+              Deselect
+            </button>
           </div>
           <h3 className="font-semibold mb-1" style={{ color: "var(--foreground)" }}>
             {selectedStory.title}
@@ -237,12 +285,48 @@ export default function MorningBriefView() {
             {selectedStory.summary}
           </p>
           <a
-            href={`/content?topic=${encodeURIComponent(selectedStory.title)}&context=${encodeURIComponent(selectedStory.summary)}`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
-            style={{ backgroundColor: "var(--brand-primary)" }}
+            href={selectedStory.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-medium hover:underline mb-4"
+            style={{ color: "var(--brand-primary)" }}
           >
-            Create Content <ArrowRight size={14} />
+            <ExternalLink size={12} /> View original article/video
           </a>
+
+          {/* POV Input */}
+          <div className="mt-4">
+            <label className="flex items-center gap-2 text-sm font-medium mb-2" style={{ color: "var(--foreground)" }}>
+              <MessageSquare size={14} />
+              Your POV / Angle
+            </label>
+            <textarea
+              value={pov}
+              onChange={(e) => setPov(e.target.value)}
+              placeholder="What's your take on this? What angle should the content take? Any key points to hit?"
+              className="w-full rounded-lg border p-3 text-sm resize-none focus:outline-none focus:ring-2"
+              style={{
+                borderColor: "var(--border)",
+                backgroundColor: "white",
+                color: "var(--foreground)",
+                minHeight: "80px",
+              }}
+              rows={3}
+            />
+          </div>
+
+          <div className="flex items-center gap-3 mt-4">
+            <a
+              href={`/content?topic=${encodeURIComponent(selectedStory.title)}&context=${encodeURIComponent(selectedStory.summary)}&pov=${encodeURIComponent(pov)}&sourceUrl=${encodeURIComponent(selectedStory.sourceUrl)}`}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+              style={{ backgroundColor: "var(--brand-primary)" }}
+            >
+              Create Content <ArrowRight size={14} />
+            </a>
+            <span className="text-xs" style={{ color: "var(--muted)" }}>
+              {pov.trim() ? "Your POV will be included" : "Add your POV above (optional)"}
+            </span>
+          </div>
         </div>
       )}
 

@@ -191,7 +191,15 @@ export default function MorningBriefView() {
               <li key={story.id} className="flex gap-2 text-sm" style={{ color: "var(--foreground)" }}>
                 <span className="shrink-0 mt-1" style={{ color: "var(--brand-primary)" }}>&bull;</span>
                 <div className="flex-1">
-                  <span className="font-medium">{story.title}</span>
+                  <a
+                    href={story.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium hover:underline inline-flex items-center gap-1"
+                    style={{ color: "var(--brand-primary)" }}
+                  >
+                    {story.title} <ExternalLink size={12} />
+                  </a>
                   <span style={{ color: "var(--muted)" }}> — {story.summary}</span>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span
@@ -203,18 +211,9 @@ export default function MorningBriefView() {
                     <span className="text-xs" style={{ color: "var(--muted)" }}>
                       Score: {Math.round(story.relevanceScore * 0.6 + story.viralityScore * 0.4)}
                     </span>
-                    <a
-                      href={story.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-medium hover:underline"
-                      style={{ color: "var(--brand-primary)" }}
-                    >
-                      <ExternalLink size={12} /> View source
-                    </a>
-                    <span style={{ color: "var(--border)" }}>|</span>
                     {story.status === "pending" && (
                       <>
+                        <span style={{ color: "var(--border)" }}>|</span>
                         <button
                           onClick={() => updateStoryStatus(story.id, "selected")}
                           className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md text-white"
@@ -232,18 +231,24 @@ export default function MorningBriefView() {
                       </>
                     )}
                     {story.status === "selected" && (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--status-success)" }}>
-                        <CheckCircle size={12} /> Selected
-                      </span>
+                      <>
+                        <span style={{ color: "var(--border)" }}>|</span>
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--status-success)" }}>
+                          <CheckCircle size={12} /> Selected
+                        </span>
+                      </>
                     )}
                     {story.status === "dismissed" && (
-                      <button
-                        onClick={() => updateStoryStatus(story.id, "pending")}
-                        className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md border hover:bg-gray-50"
-                        style={{ borderColor: "var(--border)", color: "var(--muted)" }}
-                      >
-                        Restore
-                      </button>
+                      <>
+                        <span style={{ color: "var(--border)" }}>|</span>
+                        <button
+                          onClick={() => updateStoryStatus(story.id, "pending")}
+                          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md border hover:bg-gray-50"
+                          style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+                        >
+                          Restore
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>

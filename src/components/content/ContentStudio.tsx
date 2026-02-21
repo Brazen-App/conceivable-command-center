@@ -211,6 +211,8 @@ export default function ContentStudio() {
 
   // Publishing integration
   const [bufferConnected, setBufferConnected] = useState(false);
+  const [bufferUser, setBufferUser] = useState<string | null>(null);
+  const [bufferProfiles, setBufferProfiles] = useState<Array<{ id: string; service: string; username: string; formattedService: string }>>([]);
   const [connectedPlatforms, setConnectedPlatforms] = useState<ConnectedPlatforms>({
     linkedin: false, instagram: false, x: false, pinterest: false,
   });
@@ -218,10 +220,18 @@ export default function ContentStudio() {
   const [sendingToBuffer, setSendingToBuffer] = useState(false);
   const [publishResults, setPublishResults] = useState<PublishResult[] | null>(null);
   const [publishingPlatform, setPublishingPlatform] = useState<ContentPlatform | null>(null);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleTime, setScheduleTime] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("buffer_access_token");
     setBufferConnected(!!token);
+    const savedUser = localStorage.getItem("buffer_user_name");
+    if (savedUser) setBufferUser(savedUser);
+    const savedProfiles = localStorage.getItem("buffer_profiles");
+    if (savedProfiles) {
+      try { setBufferProfiles(JSON.parse(savedProfiles)); } catch { /* ignore */ }
+    }
 
     // Check which platforms are directly connected
     setConnectedPlatforms({
@@ -456,7 +466,15 @@ export default function ContentStudio() {
     }
   };
 
-  // Send approved pieces to Buffer (kept as alternative)
+  // Build scheduled timestamp from date/time inputs
+  const getScheduledAt = (): string | undefined => {
+    if (!scheduleDate || !scheduleTime) return undefined;
+    const dt = new Date(`${scheduleDate}T${scheduleTime}`);
+    if (isNaN(dt.getTime())) return undefined;
+    return dt.toISOString();
+  };
+
+  // Send approved pieces to Buffer — primary publishing method
   const handleSendToBuffer = async (targetPieces?: GeneratedPiece[]) => {
     const token = localStorage.getItem("buffer_access_token");
     if (!token) return;
@@ -468,6 +486,7 @@ export default function ContentStudio() {
     setPublishResults(null);
 
     try {
+      const scheduledAt = getScheduledAt();
       const res = await fetch("/api/integrations/buffer/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -479,6 +498,7 @@ export default function ContentStudio() {
             imageUrl: p.imageUrl ?? undefined,
             alt: p.imagePrompt?.alt,
           })),
+          scheduledAt,
         }),
       });
 
@@ -560,80 +580,101 @@ export default function ContentStudio() {
         </div>
       </div>
 
-      {/* Publishing Connections Banner */}
+      {/* Publishing via Buffer — Primary Strategy */}
       <div
-        className="rounded-xl border p-4 mb-8"
-        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        className="rounded-xl border p-5 mb-8"
+        style={{
+          borderColor: bufferConnected ? "#168EEA" : "var(--border)",
+          backgroundColor: "var(--surface)",
+        }}
       >
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-            Publishing Connections
-          </h3>
+          <div className="flex items-center gap-2">
+            <ExternalLink size={16} style={{ color: bufferConnected ? "#168EEA" : "var(--muted)" }} />
+            <h3 className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+              Publish via Buffer
+            </h3>
+          </div>
           <a
             href="/settings"
             className="text-xs font-medium hover:underline"
             style={{ color: "var(--brand-primary)" }}
           >
-            Manage in Settings
+            Settings
           </a>
         </div>
-        <div className="flex flex-wrap gap-3">
-          {[
-            { key: "linkedin" as const, label: "LinkedIn", icon: Linkedin, color: "#0A66C2" },
-            { key: "instagram" as const, label: "Instagram", icon: Instagram, color: "#E4405F" },
-            { key: "x" as const, label: "X / Twitter", icon: Twitter, color: "#000000" },
-            { key: "pinterest" as const, label: "Pinterest", icon: null, color: "#E60023" },
-          ].map((p) => {
-            const connected = connectedPlatforms[p.key];
-            const Icon = p.icon;
-            return (
-              <div
-                key={p.key}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border"
-                style={{
-                  borderColor: connected ? "var(--status-success)" : "var(--border)",
-                  color: connected ? "var(--foreground)" : "var(--muted)",
-                }}
-              >
-                {Icon ? (
-                  <Icon size={12} style={{ color: connected ? p.color : "var(--muted)" }} />
-                ) : (
+
+        {bufferConnected ? (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <CheckCircle size={14} style={{ color: "var(--status-success)" }} />
+              <span className="text-sm" style={{ color: "var(--foreground)" }}>
+                Connected{bufferUser ? ` as ${bufferUser}` : ""}
+              </span>
+            </div>
+            {bufferProfiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {bufferProfiles.map((profile) => (
                   <span
-                    className="w-3 h-3 rounded-full flex items-center justify-center text-white text-[8px] font-bold"
-                    style={{ backgroundColor: connected ? p.color : "var(--muted)" }}
+                    key={profile.id}
+                    className="text-xs px-2.5 py-1 rounded-full border flex items-center gap-1.5"
+                    style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
                   >
-                    P
+                    <span className="font-medium">{profile.formattedService}</span>
+                    <span style={{ color: "var(--muted)" }}>@{profile.username}</span>
                   </span>
-                )}
-                <span>{p.label}</span>
-                {connected ? (
-                  <CheckCircle size={10} style={{ color: "var(--status-success)" }} />
-                ) : (
-                  <span style={{ color: "var(--muted)" }}>·</span>
-                )}
+                ))}
               </div>
-            );
-          })}
-          <div
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border"
-            style={{
-              borderColor: bufferConnected ? "#168EEA" : "var(--border)",
-              color: bufferConnected ? "var(--foreground)" : "var(--muted)",
-            }}
-          >
-            <ExternalLink size={12} style={{ color: bufferConnected ? "#168EEA" : "var(--muted)" }} />
-            <span>Buffer</span>
-            {bufferConnected ? (
-              <CheckCircle size={10} style={{ color: "#168EEA" }} />
-            ) : (
-              <span style={{ color: "var(--muted)" }}>·</span>
+            )}
+            {/* Schedule picker */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium" style={{ color: "var(--muted)" }}>
+                Schedule for:
+              </span>
+              <input
+                type="date"
+                value={scheduleDate}
+                onChange={(e) => setScheduleDate(e.target.value)}
+                className="px-2.5 py-1 rounded-lg border text-xs focus:outline-none focus:ring-2"
+                style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
+              />
+              <input
+                type="time"
+                value={scheduleTime}
+                onChange={(e) => setScheduleTime(e.target.value)}
+                className="px-2.5 py-1 rounded-lg border text-xs focus:outline-none focus:ring-2"
+                style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
+              />
+              {(scheduleDate || scheduleTime) && (
+                <button
+                  onClick={() => { setScheduleDate(""); setScheduleTime(""); }}
+                  className="text-xs"
+                  style={{ color: "var(--muted)" }}
+                >
+                  Clear (post now)
+                </button>
+              )}
+            </div>
+            {!scheduleDate && !scheduleTime && (
+              <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+                Leave empty to add to Buffer&apos;s queue immediately.
+              </p>
             )}
           </div>
-        </div>
-        {!anyPlatformConnected && !bufferConnected && (
-          <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
-            Connect at least one platform or Buffer in Settings to publish directly from here.
-          </p>
+        ) : (
+          <div>
+            <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
+              Connect Buffer to publish content across all your social platforms with one click.
+            </p>
+            <a
+              href="/api/integrations/buffer/authorize"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+              style={{ backgroundColor: "#168EEA" }}
+            >
+              <ExternalLink size={14} />
+              Connect Buffer
+            </a>
+          </div>
         )}
       </div>
 
@@ -645,26 +686,6 @@ export default function ContentStudio() {
               Generated Content ({approvedCount}/{pieces.length} approved)
             </h3>
             <div className="flex items-center gap-2">
-              {approvedCount > 0 && anyPlatformConnected && (
-                <button
-                  onClick={() => handlePublishDirect()}
-                  disabled={publishing}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
-                  style={{ backgroundColor: "var(--brand-primary)" }}
-                >
-                  {publishing ? (
-                    <>
-                      <Loader2 size={14} className="animate-spin" />
-                      Publishing...
-                    </>
-                  ) : (
-                    <>
-                      <Send size={14} />
-                      Publish {approvedCount} Direct
-                    </>
-                  )}
-                </button>
-              )}
               {approvedCount > 0 && bufferConnected && (
                 <button
                   onClick={() => handleSendToBuffer()}
@@ -679,20 +700,42 @@ export default function ContentStudio() {
                     </>
                   ) : (
                     <>
-                      <ExternalLink size={14} />
-                      Buffer Queue
+                      <Send size={14} />
+                      {scheduleDate && scheduleTime
+                        ? `Schedule ${approvedCount} via Buffer`
+                        : `Send ${approvedCount} to Buffer`}
                     </>
                   )}
                 </button>
               )}
-              {approvedCount > 0 && !anyPlatformConnected && !bufferConnected && (
+              {approvedCount > 0 && anyPlatformConnected && (
+                <button
+                  onClick={() => handlePublishDirect()}
+                  disabled={publishing}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border"
+                  style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+                >
+                  {publishing ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink size={14} />
+                      Publish {approvedCount} Direct
+                    </>
+                  )}
+                </button>
+              )}
+              {approvedCount > 0 && !bufferConnected && !anyPlatformConnected && (
                 <a
                   href="/settings"
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border"
-                  style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+                  style={{ backgroundColor: "#168EEA" }}
                 >
                   <ExternalLink size={14} />
-                  Connect platforms to publish
+                  Connect Buffer to Publish
                 </a>
               )}
             </div>
@@ -824,25 +867,42 @@ export default function ContentStudio() {
                   </p>
 
                   <div className="flex items-center gap-2 mt-3">
+                    {piece.status === "approved" && bufferConnected ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendToBuffer([piece]);
+                        }}
+                        disabled={sendingToBuffer}
+                        className="flex-1 flex items-center justify-center gap-1.5 text-xs py-1.5 rounded-md font-medium text-white"
+                        style={{ backgroundColor: "#168EEA" }}
+                      >
+                        <Send size={10} />
+                        {scheduleDate && scheduleTime ? "Schedule" : "Send to Buffer"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updatePieceStatus(piece.platform, "approved");
+                        }}
+                        className="flex-1 text-xs py-1.5 rounded-md font-medium text-white"
+                        style={{ backgroundColor: "var(--status-success)" }}
+                      >
+                        Approve
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        updatePieceStatus(piece.platform, "approved");
-                      }}
-                      className="flex-1 text-xs py-1.5 rounded-md font-medium text-white"
-                      style={{ backgroundColor: "var(--status-success)" }}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        updatePieceStatus(piece.platform, "rejected");
+                        piece.status === "approved"
+                          ? updatePieceStatus(piece.platform, "rejected")
+                          : updatePieceStatus(piece.platform, "rejected");
                       }}
                       className="flex-1 text-xs py-1.5 rounded-md font-medium border"
                       style={{ borderColor: "var(--border)", color: "var(--muted)" }}
                     >
-                      Reject
+                      {piece.status === "approved" ? "Unapprove" : "Reject"}
                     </button>
                   </div>
                 </div>
@@ -1017,23 +1077,6 @@ export default function ContentStudio() {
               >
                 Reject
               </button>
-              {selectedPiece.status === "approved" && hasPlatformConnection(selectedPiece.platform) && (
-                <button
-                  onClick={() => handlePublishSingle(selectedPiece)}
-                  disabled={publishingPlatform === selectedPiece.platform}
-                  className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-                  style={{ backgroundColor: "var(--brand-primary)" }}
-                >
-                  {publishingPlatform === selectedPiece.platform ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <>
-                      <Send size={14} />
-                      Publish
-                    </>
-                  )}
-                </button>
-              )}
               {selectedPiece.status === "approved" && bufferConnected && (
                 <button
                   onClick={() => handleSendToBuffer([selectedPiece])}
@@ -1045,8 +1088,25 @@ export default function ContentStudio() {
                     <Loader2 size={14} className="animate-spin" />
                   ) : (
                     <>
+                      <Send size={14} />
+                      {scheduleDate && scheduleTime ? "Schedule" : "Buffer"}
+                    </>
+                  )}
+                </button>
+              )}
+              {selectedPiece.status === "approved" && hasPlatformConnection(selectedPiece.platform) && (
+                <button
+                  onClick={() => handlePublishSingle(selectedPiece)}
+                  disabled={publishingPlatform === selectedPiece.platform}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium border disabled:opacity-50"
+                  style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+                >
+                  {publishingPlatform === selectedPiece.platform ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <>
                       <ExternalLink size={14} />
-                      Buffer
+                      Direct
                     </>
                   )}
                 </button>

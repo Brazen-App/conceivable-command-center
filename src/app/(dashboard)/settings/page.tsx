@@ -380,124 +380,13 @@ function SettingsContent() {
           </div>
         </section>
 
-        {/* Direct Platform Integrations */}
+        {/* Buffer Integration — Primary Publishing */}
         <section
           className="rounded-xl border p-6 mb-6"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium" style={{ color: "var(--foreground)" }}>
-              Social Platform Integrations
-            </h3>
-            {connectedPlatformCount > 0 && (
-              <div className="flex items-center gap-1.5">
-                <CheckCircle size={14} style={{ color: "var(--status-success)" }} />
-                <span className="text-xs font-medium" style={{ color: "var(--status-success)" }}>
-                  {connectedPlatformCount} connected
-                </span>
-              </div>
-            )}
-          </div>
-          <p className="text-sm mb-5" style={{ color: "var(--muted)" }}>
-            Connect your social accounts to publish approved content directly from the Content Studio.
-          </p>
-
-          <div className="space-y-4">
-            {SOCIAL_PLATFORMS.map((platform) => {
-              const conn = platforms[platform.key];
-              const Icon = platform.icon;
-
-              return (
-                <div
-                  key={platform.key}
-                  className="rounded-lg border p-4"
-                  style={{ borderColor: conn.connected ? "var(--status-success)" : "var(--border)" }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      {Icon ? (
-                        <Icon size={16} style={{ color: platform.color }} />
-                      ) : (
-                        <span
-                          className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
-                          style={{ backgroundColor: platform.color }}
-                        >
-                          P
-                        </span>
-                      )}
-                      <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-                        {platform.label}
-                      </span>
-                    </div>
-                    {conn.connected && (
-                      <div className="flex items-center gap-1.5">
-                        <CheckCircle size={12} style={{ color: "var(--status-success)" }} />
-                        <span className="text-xs" style={{ color: "var(--status-success)" }}>
-                          {conn.username ? `@${conn.username}` : "Connected"}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {conn.connected ? (
-                    <button
-                      onClick={() => handleDisconnectPlatform(platform.key)}
-                      className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-md border"
-                      style={{ borderColor: "var(--border)", color: "var(--muted)" }}
-                    >
-                      <Unlink size={12} />
-                      Disconnect
-                    </button>
-                  ) : (
-                    <div>
-                      <div className="flex gap-2">
-                        <input
-                          type="password"
-                          value={conn.token}
-                          onChange={(e) =>
-                            setPlatforms((prev) => ({
-                              ...prev,
-                              [platform.key]: { ...prev[platform.key], token: e.target.value },
-                            }))
-                          }
-                          placeholder={platform.placeholder}
-                          className="flex-1 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2"
-                          style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
-                        />
-                        <button
-                          onClick={() => handleConnectPlatform(platform.key)}
-                          disabled={conn.verifying || !conn.token.trim()}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-                          style={{ backgroundColor: platform.color }}
-                        >
-                          {conn.verifying ? (
-                            <Loader2 size={14} className="animate-spin" />
-                          ) : (
-                            "Connect"
-                          )}
-                        </button>
-                      </div>
-                      {conn.error && (
-                        <div className="flex items-center gap-1.5 mt-2">
-                          <XCircle size={14} className="text-red-500" />
-                          <span className="text-xs text-red-500">{conn.error}</span>
-                        </div>
-                      )}
-                      <p className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>
-                        {platform.help}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Buffer Integration */}
-        <section
-          className="rounded-xl border p-6 mb-6"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+          style={{
+            borderColor: bufferConnected ? "#168EEA" : "var(--border)",
+            backgroundColor: "var(--surface)",
+          }}
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-medium" style={{ color: "var(--foreground)" }}>
@@ -626,6 +515,120 @@ function SettingsContent() {
               )}
             </div>
           )}
+        </section>
+
+        {/* Direct Platform Integrations — Advanced */}
+        <section
+          className="rounded-xl border p-6 mb-6"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-medium" style={{ color: "var(--foreground)" }}>
+              Direct Platform Tokens <span className="text-xs font-normal" style={{ color: "var(--muted)" }}>(optional)</span>
+            </h3>
+            {connectedPlatformCount > 0 && (
+              <div className="flex items-center gap-1.5">
+                <CheckCircle size={14} style={{ color: "var(--status-success)" }} />
+                <span className="text-xs font-medium" style={{ color: "var(--status-success)" }}>
+                  {connectedPlatformCount} connected
+                </span>
+              </div>
+            )}
+          </div>
+          <p className="text-sm mb-5" style={{ color: "var(--muted)" }}>
+            For direct publishing without Buffer. Most users should use Buffer above instead.
+          </p>
+
+          <div className="space-y-4">
+            {SOCIAL_PLATFORMS.map((platform) => {
+              const conn = platforms[platform.key];
+              const Icon = platform.icon;
+
+              return (
+                <div
+                  key={platform.key}
+                  className="rounded-lg border p-4"
+                  style={{ borderColor: conn.connected ? "var(--status-success)" : "var(--border)" }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {Icon ? (
+                        <Icon size={16} style={{ color: platform.color }} />
+                      ) : (
+                        <span
+                          className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                          style={{ backgroundColor: platform.color }}
+                        >
+                          P
+                        </span>
+                      )}
+                      <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                        {platform.label}
+                      </span>
+                    </div>
+                    {conn.connected && (
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle size={12} style={{ color: "var(--status-success)" }} />
+                        <span className="text-xs" style={{ color: "var(--status-success)" }}>
+                          {conn.username ? `@${conn.username}` : "Connected"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {conn.connected ? (
+                    <button
+                      onClick={() => handleDisconnectPlatform(platform.key)}
+                      className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-md border"
+                      style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+                    >
+                      <Unlink size={12} />
+                      Disconnect
+                    </button>
+                  ) : (
+                    <div>
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          value={conn.token}
+                          onChange={(e) =>
+                            setPlatforms((prev) => ({
+                              ...prev,
+                              [platform.key]: { ...prev[platform.key], token: e.target.value },
+                            }))
+                          }
+                          placeholder={platform.placeholder}
+                          className="flex-1 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                          style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
+                        />
+                        <button
+                          onClick={() => handleConnectPlatform(platform.key)}
+                          disabled={conn.verifying || !conn.token.trim()}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+                          style={{ backgroundColor: platform.color }}
+                        >
+                          {conn.verifying ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            "Connect"
+                          )}
+                        </button>
+                      </div>
+                      {conn.error && (
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <XCircle size={14} className="text-red-500" />
+                          <span className="text-xs text-red-500">{conn.error}</span>
+                        </div>
+                      )}
+                      <p className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>
+                        {platform.help}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </section>
 
         {/* Morning Brief Schedule */}

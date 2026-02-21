@@ -4,6 +4,7 @@ import { v4 as uuid } from "uuid";
 
 const PLATFORMS: ContentPlatform[] = [
   "linkedin",
+  "x",
   "instagram-post",
   "instagram-carousel",
   "pinterest",
@@ -26,6 +27,11 @@ const PLATFORM_PROMPTS: Record<ContentPlatform, string> = {
   linkedin: `Write a LinkedIn post (thought leadership, long-form, narrative-driven).
 Include a compelling hook in the first line — something that makes people stop scrolling. Make it personal and insightful.
 Aim for 1000-1500 characters. Include a clear CTA.${IMAGE_PROMPT_INSTRUCTION}`,
+
+  x: `Write a tweet or short thread for X/Twitter (max 280 characters per tweet).
+Write a single punchy tweet with the key insight. Make it provocative, shareable, and authentic.
+If the topic warrants it, write a short thread (3-5 tweets) with the first tweet as the hook.
+Include relevant hashtags (max 2-3). Be direct and bold — X rewards strong takes.${IMAGE_PROMPT_INSTRUCTION}`,
 
   "instagram-post": `Write an Instagram post with a branded caption.
 Include the main message, storytelling element, and relevant hashtags.

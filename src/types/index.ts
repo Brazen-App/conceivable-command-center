@@ -44,6 +44,7 @@ export type ContentPlatform =
   | "linkedin"
   | "instagram-post"
   | "instagram-carousel"
+  | "x"
   | "pinterest"
   | "tiktok"
   | "youtube"

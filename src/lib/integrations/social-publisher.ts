@@ -101,19 +101,28 @@ export async function publishToPlatform(
     }
 
     // X / Twitter
+    if (base === "x") {
+      if (!tokens.x) {
+        return { platform: base, success: false, message: "X/Twitter not connected" };
+      }
+      // Truncate to 280 chars for tweet
+      const tweetText = piece.text.length > 280 ? piece.text.slice(0, 277) + "..." : piece.text;
+      const result = await createTweet(tokens.x, { text: tweetText });
+      return {
+        platform: base,
+        success: result.success,
+        message: result.success ? "Published to X/Twitter" : (result.error ?? "Failed"),
+        postId: result.tweetId,
+      };
+    }
+
+    // TikTok and YouTube — script-only, no direct API publishing
     if (base === "tiktok" || base === "youtube") {
-      // TikTok and YouTube don't have simple post APIs —
-      // return script-only for now
       return {
         platform: base,
         success: false,
         message: `${base === "tiktok" ? "TikTok" : "YouTube"} scripts are for manual use — direct publishing not supported`,
       };
-    }
-
-    // X / Twitter — we repurpose tiktok/youtube scripts but X has a real API
-    if (tokens.x && base !== "blog") {
-      // This shouldn't be reached for non-X platforms, but just in case
     }
 
     // Pinterest

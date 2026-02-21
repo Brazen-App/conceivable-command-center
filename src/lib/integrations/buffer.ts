@@ -108,6 +108,7 @@ export function mapPlatformToBufferService(
     linkedin: "linkedin",
     "instagram-post": "instagram",
     "instagram-carousel": "instagram",
+    x: "twitter",
     pinterest: "pinterest",
     tiktok: "tiktok",
     youtube: "youtube",

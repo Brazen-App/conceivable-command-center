@@ -12,7 +12,8 @@ import {
   CheckCircle,
   Eye,
   Edit3,
-  X,
+  X as XIcon,
+  Twitter,
   ImageIcon,
   Palette,
   Sparkles,
@@ -56,6 +57,7 @@ const PLATFORM_IMAGE_DEFAULTS: Record<ContentPlatform, { style: string; aspectRa
   linkedin: { style: "photography", aspectRatio: "1:1" },
   "instagram-post": { style: "photography", aspectRatio: "1:1" },
   "instagram-carousel": { style: "illustration", aspectRatio: "1:1" },
+  x: { style: "photography", aspectRatio: "16:9" },
   pinterest: { style: "infographic", aspectRatio: "2:3" },
   tiktok: { style: "photography", aspectRatio: "9:16" },
   youtube: { style: "photography", aspectRatio: "16:9" },
@@ -76,6 +78,20 @@ function generateDemoContent(topic: string, angle: string): GeneratedPiece[] {
         aspectRatio: "1:1",
         textOverlay: null,
         colorPalette: ["#7C3AED", "#F3F0FF", "#FAFAFA"],
+      },
+      status: "draft",
+    },
+    {
+      platform: "x",
+      title: `${topic} — X/Twitter`,
+      body: `${angle}\n\nThe data on ${t} is clear — and most people are getting it wrong.\n\nHere's what women need to know (thread) 🧵\n\n#WomensHealth #Conceivable`,
+      imagePrompt: {
+        prompt: `Clean, shareable Twitter/X graphic with a single bold stat or quote on a dark purple (#7C3AED) background. White sans-serif text, minimal design. Conceivable branding subtle in corner. 16:9 ratio for optimal timeline display.`,
+        alt: `X/Twitter graphic about ${t}`,
+        style: "typography",
+        aspectRatio: "16:9",
+        textOverlay: topic,
+        colorPalette: ["#7C3AED", "#FFFFFF", "#000000"],
       },
       status: "draft",
     },
@@ -173,6 +189,7 @@ const PLATFORM_CONFIG: Record<
   linkedin: { label: "LinkedIn", icon: Linkedin, color: "#0A66C2" },
   "instagram-post": { label: "IG Post", icon: Instagram, color: "#E4405F" },
   "instagram-carousel": { label: "IG Carousel", icon: Instagram, color: "#C13584" },
+  x: { label: "X / Twitter", icon: Twitter, color: "#000000" },
   pinterest: { label: "Pinterest", icon: PenTool, color: "#E60023" },
   tiktok: { label: "TikTok", icon: PenTool, color: "#000000" },
   youtube: { label: "YouTube", icon: Youtube, color: "#FF0000" },
@@ -355,8 +372,8 @@ export default function ContentStudio() {
   const hasPlatformConnection = (platform: ContentPlatform): boolean => {
     if (platform === "linkedin") return connectedPlatforms.linkedin;
     if (platform === "instagram-post" || platform === "instagram-carousel") return connectedPlatforms.instagram;
+    if (platform === "x") return connectedPlatforms.x;
     if (platform === "pinterest") return connectedPlatforms.pinterest;
-    // X token can be used for short-form content repurposing
     return false;
   };
 
@@ -538,6 +555,83 @@ export default function ContentStudio() {
         </div>
       </div>
 
+      {/* Publishing Connections Banner */}
+      <div
+        className="rounded-xl border p-4 mb-8"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+            Publishing Connections
+          </h3>
+          <a
+            href="/settings"
+            className="text-xs font-medium hover:underline"
+            style={{ color: "var(--brand-primary)" }}
+          >
+            Manage in Settings
+          </a>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {[
+            { key: "linkedin" as const, label: "LinkedIn", icon: Linkedin, color: "#0A66C2" },
+            { key: "instagram" as const, label: "Instagram", icon: Instagram, color: "#E4405F" },
+            { key: "x" as const, label: "X / Twitter", icon: Twitter, color: "#000000" },
+            { key: "pinterest" as const, label: "Pinterest", icon: null, color: "#E60023" },
+          ].map((p) => {
+            const connected = connectedPlatforms[p.key];
+            const Icon = p.icon;
+            return (
+              <div
+                key={p.key}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border"
+                style={{
+                  borderColor: connected ? "var(--status-success)" : "var(--border)",
+                  color: connected ? "var(--foreground)" : "var(--muted)",
+                }}
+              >
+                {Icon ? (
+                  <Icon size={12} style={{ color: connected ? p.color : "var(--muted)" }} />
+                ) : (
+                  <span
+                    className="w-3 h-3 rounded-full flex items-center justify-center text-white text-[8px] font-bold"
+                    style={{ backgroundColor: connected ? p.color : "var(--muted)" }}
+                  >
+                    P
+                  </span>
+                )}
+                <span>{p.label}</span>
+                {connected ? (
+                  <CheckCircle size={10} style={{ color: "var(--status-success)" }} />
+                ) : (
+                  <span style={{ color: "var(--muted)" }}>·</span>
+                )}
+              </div>
+            );
+          })}
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs border"
+            style={{
+              borderColor: bufferConnected ? "#168EEA" : "var(--border)",
+              color: bufferConnected ? "var(--foreground)" : "var(--muted)",
+            }}
+          >
+            <ExternalLink size={12} style={{ color: bufferConnected ? "#168EEA" : "var(--muted)" }} />
+            <span>Buffer</span>
+            {bufferConnected ? (
+              <CheckCircle size={10} style={{ color: "#168EEA" }} />
+            ) : (
+              <span style={{ color: "var(--muted)" }}>·</span>
+            )}
+          </div>
+        </div>
+        {!anyPlatformConnected && !bufferConnected && (
+          <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
+            Connect at least one platform or Buffer in Settings to publish directly from here.
+          </p>
+        )}
+      </div>
+
       {/* Platform Output Grid */}
       {pieces.length > 0 && (
         <div>
@@ -621,7 +715,7 @@ export default function ContentStudio() {
                   onClick={() => setPublishResults(null)}
                   className="ml-auto"
                 >
-                  <X size={14} style={{ color: "var(--muted)" }} />
+                  <XIcon size={14} style={{ color: "var(--muted)" }} />
                 </button>
               </div>
               <div className="space-y-1">
@@ -768,7 +862,7 @@ export default function ContentStudio() {
                 </span>
               </div>
               <button onClick={() => setSelectedPiece(null)}>
-                <X size={18} style={{ color: "var(--muted)" }} />
+                <XIcon size={18} style={{ color: "var(--muted)" }} />
               </button>
             </div>
 

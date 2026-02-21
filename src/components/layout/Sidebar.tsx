@@ -8,6 +8,7 @@ import {
   PenTool,
   TrendingUp,
   Upload,
+  Heart,
   Crown,
   Megaphone,
   Scale,
@@ -27,6 +28,7 @@ const NAV_SECTIONS = [
       { label: "Content Studio", href: "/content", icon: PenTool },
       { label: "Viral Insights", href: "/content/viral", icon: TrendingUp },
       { label: "Training Data", href: "/documents", icon: Upload },
+      { label: "Health OS", href: "/health", icon: Heart },
     ],
   },
   {

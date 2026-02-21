@@ -207,6 +207,7 @@ export default function ContentStudio() {
 
   // Nano Banana image generation
   const [generatingActualImage, setGeneratingActualImage] = useState<ContentPlatform | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   // Publishing integration
   const [bufferConnected, setBufferConnected] = useState(false);
@@ -318,6 +319,7 @@ export default function ContentStudio() {
   const handleGenerateActualImage = async (piece: GeneratedPiece) => {
     if (!piece.imagePrompt) return;
     setGeneratingActualImage(piece.platform);
+    setImageError(null);
 
     try {
       const res = await fetch("/api/content/generate-image-actual", {
@@ -330,8 +332,9 @@ export default function ContentStudio() {
         }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+
+      if (res.ok && data.imageData) {
         setPieces((prev) =>
           prev.map((p) =>
             p.platform === piece.platform ? { ...p, imageUrl: data.imageData } : p
@@ -340,9 +343,11 @@ export default function ContentStudio() {
         if (selectedPiece?.platform === piece.platform) {
           setSelectedPiece((prev) => prev ? { ...prev, imageUrl: data.imageData } : null);
         }
+      } else {
+        setImageError(data.error || "Image generation failed. Check that GOOGLE_GEMINI_API_KEY is set.");
       }
     } catch {
-      // silently fail — user can retry
+      setImageError("Network error — could not reach the image generation server.");
     } finally {
       setGeneratingActualImage(null);
     }
@@ -957,6 +962,11 @@ export default function ContentStudio() {
                     )}
                   </button>
                 </div>
+                {imageError && (
+                  <div className="mt-2 p-2 rounded-md text-xs text-red-600" style={{ backgroundColor: "#FEF2F2" }}>
+                    {imageError}
+                  </div>
+                )}
               </div>
             ) : (
               <button

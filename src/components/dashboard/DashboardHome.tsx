@@ -5,6 +5,7 @@ import {
   PenTool,
   TrendingUp,
   Upload,
+  Heart,
   Crown,
   Megaphone,
   Scale,
@@ -46,6 +47,14 @@ const QUICK_ACTIONS = [
     href: "/documents",
     color: "#10B981",
     bgColor: "#D1FAE5",
+  },
+  {
+    title: "Health OS",
+    description: "Track supplements, cycles & metrics",
+    icon: Heart,
+    href: "/health",
+    color: "#EC4899",
+    bgColor: "#FCE7F3",
   },
 ];
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Bot, User, Sparkles } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Loader2, Bot, User, Sparkles, Mic, MicOff } from "lucide-react";
 import { AgentConfig } from "@/types";
 
 interface Message {
@@ -15,11 +15,61 @@ interface AgentChatProps {
   config: AgentConfig;
 }
 
+function useSpeechRecognition(onResult: (text: string) => void) {
+  const [listening, setListening] = useState(false);
+  const [supported, setSupported] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  useEffect(() => {
+    const SpeechRecognition =
+      typeof window !== "undefined"
+        ? window.SpeechRecognition || window.webkitSpeechRecognition
+        : null;
+    setSupported(!!SpeechRecognition);
+
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = event.results[0]?.[0]?.transcript;
+        if (transcript) onResult(transcript);
+      };
+      recognition.onend = () => setListening(false);
+      recognition.onerror = () => setListening(false);
+
+      recognitionRef.current = recognition;
+    }
+  }, [onResult]);
+
+  const toggle = useCallback(() => {
+    if (!recognitionRef.current) return;
+    if (listening) {
+      recognitionRef.current.stop();
+      setListening(false);
+    } else {
+      recognitionRef.current.start();
+      setListening(true);
+    }
+  }, [listening]);
+
+  return { listening, supported, toggle };
+}
+
 export default function AgentChat({ config }: AgentChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleSpeechResult = useCallback(
+    (text: string) => setInput((prev) => (prev ? prev + " " + text : text)),
+    []
+  );
+  const { listening, supported: speechSupported, toggle: toggleSpeech } =
+    useSpeechRecognition(handleSpeechResult);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -49,8 +99,9 @@ export default function AgentChat({ config }: AgentChatProps) {
         }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        const data = await res.json();
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
@@ -58,13 +109,21 @@ export default function AgentChat({ config }: AgentChatProps) {
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: `Error: ${data.error || "Something went wrong"}. Please check that the ANTHROPIC_API_KEY environment variable is set and try again.`,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
       }
     } catch {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content:
-          "I encountered an error processing your request. Please check that the ANTHROPIC_API_KEY is configured and try again.",
+          "I encountered a network error processing your request. Please check that the ANTHROPIC_API_KEY is configured and try again.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -192,7 +251,7 @@ export default function AgentChat({ config }: AgentChatProps) {
         className="px-8 py-4 border-t"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
       >
-        <div className="flex gap-3 max-w-3xl">
+        <div className="flex gap-2 max-w-3xl">
           <input
             type="text"
             value={input}
@@ -203,6 +262,22 @@ export default function AgentChat({ config }: AgentChatProps) {
             style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
             disabled={loading}
           />
+          {speechSupported && (
+            <button
+              onClick={toggleSpeech}
+              className={`px-3 py-2.5 rounded-xl border transition-colors ${
+                listening ? "text-white" : ""
+              }`}
+              style={{
+                borderColor: listening ? "transparent" : "var(--border)",
+                backgroundColor: listening ? "#EF4444" : "var(--background)",
+                color: listening ? "white" : "var(--muted)",
+              }}
+              title={listening ? "Stop listening" : "Voice input"}
+            >
+              {listening ? <MicOff size={16} /> : <Mic size={16} />}
+            </button>
+          )}
           <button
             onClick={handleSend}
             disabled={loading || !input.trim()}

@@ -178,6 +178,38 @@ export interface Notification {
   createdAt: Date;
 }
 
+// --------------- Health OS ---------------
+
+export type HealthDatabaseType =
+  | "daily-log"
+  | "supplements"
+  | "cycle-tracker"
+  | "health-metrics";
+
+export interface HealthDatabaseColumn {
+  id: string;
+  name: string;
+  type: "text" | "number" | "select" | "multi-select" | "date" | "checkbox" | "url";
+  options?: string[];
+  width?: number;
+}
+
+export interface HealthDatabaseRow {
+  id: string;
+  cells: Record<string, string | number | boolean | string[]>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HealthDatabase {
+  id: HealthDatabaseType;
+  name: string;
+  icon: string;
+  description: string;
+  columns: HealthDatabaseColumn[];
+  rows: HealthDatabaseRow[];
+}
+
 // --------------- Monitoring Topics ---------------
 
 export const MONITORED_TOPICS = [

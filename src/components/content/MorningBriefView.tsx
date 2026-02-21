@@ -93,6 +93,7 @@ export default function MorningBriefView() {
   const router = useRouter();
   const [stories, setStories] = useState<Story[]>(DEMO_STORIES);
   const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pov, setPov] = useState("");
 
   const updateStoryStatus = (id: string, status: "pending" | "selected" | "dismissed") => {
@@ -113,16 +114,22 @@ export default function MorningBriefView() {
 
   const handleGenerateBrief = async () => {
     setGenerating(true);
+    setError(null);
     try {
       const res = await fetch("/api/briefs/generate", { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.stories?.length) {
-          setStories(data.stories);
-        }
+      const data = await res.json();
+
+      if (res.ok && data.stories?.length) {
+        setStories(
+          data.stories.map((s: Story) => ({ ...s, status: s.status ?? "pending" }))
+        );
+      } else {
+        setError(
+          data.error || "Failed to generate brief. Check that ANTHROPIC_API_KEY is set."
+        );
       }
     } catch {
-      // Keep demo stories on error
+      setError("Network error — could not reach the server.");
     } finally {
       setGenerating(false);
     }
@@ -182,6 +189,22 @@ export default function MorningBriefView() {
           {generating ? "Generating..." : "Generate Fresh Brief"}
         </button>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div
+          className="rounded-xl border p-4 mb-4 flex items-start gap-3"
+          style={{ borderColor: "#FCA5A5", backgroundColor: "#FEF2F2" }}
+        >
+          <XCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-red-700">{error}</p>
+            <p className="text-xs text-red-500 mt-1">
+              The demo stories are still shown below. Set your ANTHROPIC_API_KEY to generate live briefs.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Bulleted Summary */}
       <div

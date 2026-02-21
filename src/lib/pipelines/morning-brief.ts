@@ -53,7 +53,13 @@ Return ONLY the JSON array, no other text.`;
 
   let stories: BriefStory[];
   try {
-    const parsed: RawStory[] = JSON.parse(result.response);
+    // Strip markdown code fences if present (e.g. ```json ... ```)
+    let jsonStr = result.response.trim();
+    const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenceMatch) {
+      jsonStr = fenceMatch[1].trim();
+    }
+    const parsed: RawStory[] = JSON.parse(jsonStr);
     stories = parsed.map((s, index) => ({
       id: uuid(),
       briefId: "", // will be set below

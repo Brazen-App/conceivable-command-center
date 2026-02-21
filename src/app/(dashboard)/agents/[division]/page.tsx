@@ -1,5 +1,6 @@
 import Header from "@/components/layout/Header";
 import AgentChat from "@/components/agents/AgentChat";
+import ExecutiveCoachView from "@/components/agents/ExecutiveCoachView";
 import LegalDivisionView from "@/components/legal/LegalDivisionView";
 import { AGENT_CONFIGS } from "@/lib/agents/config";
 import { AgentDivision } from "@/types";
@@ -15,6 +16,15 @@ export default async function AgentPage({ params }: AgentPageProps) {
 
   if (!config) {
     notFound();
+  }
+
+  if (division === "executive-coach") {
+    return (
+      <>
+        <Header title={config.name} subtitle={config.description} />
+        <ExecutiveCoachView config={config} />
+      </>
+    );
   }
 
   if (division === "legal") {

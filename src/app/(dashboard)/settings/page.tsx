@@ -10,6 +10,8 @@ import {
   Linkedin,
   Instagram,
   Twitter,
+  BookOpen,
+  ExternalLink,
 } from "lucide-react";
 
 interface BufferProfile {
@@ -27,6 +29,13 @@ interface PlatformConnection {
   verifying: boolean;
   error: string | null;
   meta?: Record<string, unknown>;
+}
+
+interface NotionDatabase {
+  id: string;
+  title: string;
+  icon: string | null;
+  url: string;
 }
 
 const SOCIAL_PLATFORMS = [
@@ -93,6 +102,15 @@ export default function SettingsPage() {
     pinterest: getDefaultConnection(),
   });
 
+  // Notion state
+  const [notionToken, setNotionToken] = useState("");
+  const [notionConnected, setNotionConnected] = useState(false);
+  const [notionWorkspace, setNotionWorkspace] = useState<string | null>(null);
+  const [notionDatabases, setNotionDatabases] = useState<NotionDatabase[]>([]);
+  const [notionSelectedDb, setNotionSelectedDb] = useState<string | null>(null);
+  const [notionVerifying, setNotionVerifying] = useState(false);
+  const [notionError, setNotionError] = useState<string | null>(null);
+
   // Load saved state on mount
   useEffect(() => {
     // Buffer
@@ -136,6 +154,25 @@ export default function SettingsPage() {
       }
     }
     setPlatforms(updated);
+
+    // Notion
+    const notionSaved = localStorage.getItem("notion_token");
+    const notionWs = localStorage.getItem("notion_workspace");
+    const notionDbs = localStorage.getItem("notion_databases");
+    const notionDb = localStorage.getItem("notion_selected_database");
+    if (notionSaved) {
+      setNotionToken(notionSaved);
+      setNotionConnected(true);
+      if (notionWs) setNotionWorkspace(notionWs);
+      if (notionDbs) {
+        try {
+          setNotionDatabases(JSON.parse(notionDbs));
+        } catch {
+          /* ignore */
+        }
+      }
+      if (notionDb) setNotionSelectedDb(notionDb);
+    }
   }, []);
 
   // Buffer handlers
@@ -244,6 +281,54 @@ export default function SettingsPage() {
       ...prev,
       [key]: getDefaultConnection(),
     }));
+  };
+
+  // Notion handlers
+  const handleConnectNotion = async () => {
+    if (!notionToken.trim()) return;
+    setNotionVerifying(true);
+    setNotionError(null);
+
+    try {
+      const res = await fetch("/api/integrations/notion/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: notionToken }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.valid) {
+        localStorage.setItem("notion_token", notionToken);
+        localStorage.setItem("notion_workspace", data.workspaceName ?? "");
+        localStorage.setItem("notion_databases", JSON.stringify(data.databases ?? []));
+        setNotionConnected(true);
+        setNotionWorkspace(data.workspaceName);
+        setNotionDatabases(data.databases ?? []);
+      } else {
+        setNotionError(data.error || "Invalid integration token");
+      }
+    } catch {
+      setNotionError("Failed to connect to Notion");
+    } finally {
+      setNotionVerifying(false);
+    }
+  };
+
+  const handleDisconnectNotion = () => {
+    localStorage.removeItem("notion_token");
+    localStorage.removeItem("notion_workspace");
+    localStorage.removeItem("notion_databases");
+    localStorage.removeItem("notion_selected_database");
+    setNotionToken("");
+    setNotionConnected(false);
+    setNotionWorkspace(null);
+    setNotionDatabases([]);
+    setNotionSelectedDb(null);
+  };
+
+  const handleSelectNotionDb = (dbId: string) => {
+    setNotionSelectedDb(dbId);
+    localStorage.setItem("notion_selected_database", dbId);
   };
 
   const connectedPlatformCount = Object.values(platforms).filter((p) => p.connected).length;
@@ -513,6 +598,138 @@ export default function SettingsPage() {
               )}
               <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
                 Get your access token from Buffer Developer settings.
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* Notion Integration */}
+        <section
+          className="rounded-xl border p-6 mb-6"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <BookOpen size={18} style={{ color: "var(--foreground)" }} />
+              <h3 className="font-medium" style={{ color: "var(--foreground)" }}>
+                Notion Integration
+              </h3>
+            </div>
+            {notionConnected && (
+              <div className="flex items-center gap-1.5">
+                <CheckCircle size={14} style={{ color: "var(--status-success)" }} />
+                <span className="text-xs font-medium" style={{ color: "var(--status-success)" }}>
+                  Connected
+                </span>
+              </div>
+            )}
+          </div>
+
+          {notionConnected ? (
+            <div>
+              <p className="text-sm mb-3" style={{ color: "var(--foreground)" }}>
+                Connected to workspace: <strong>{notionWorkspace || "Notion"}</strong>
+              </p>
+
+              {notionDatabases.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-medium mb-2" style={{ color: "var(--muted)" }}>
+                    Select a content calendar database:
+                  </p>
+                  <div className="space-y-2">
+                    {notionDatabases.map((db) => (
+                      <button
+                        key={db.id}
+                        onClick={() => handleSelectNotionDb(db.id)}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg border text-sm text-left transition-colors"
+                        style={{
+                          borderColor: notionSelectedDb === db.id ? "var(--brand-primary)" : "var(--border)",
+                          backgroundColor: notionSelectedDb === db.id ? "var(--brand-primary-10, rgba(99,102,241,0.1))" : "transparent",
+                          color: "var(--foreground)",
+                        }}
+                      >
+                        <span className="flex items-center gap-2">
+                          {db.icon && <span>{db.icon}</span>}
+                          <span>{db.title}</span>
+                        </span>
+                        <span className="flex items-center gap-2">
+                          {notionSelectedDb === db.id && (
+                            <CheckCircle size={14} style={{ color: "var(--brand-primary)" }} />
+                          )}
+                          <a
+                            href={db.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="opacity-50 hover:opacity-100"
+                          >
+                            <ExternalLink size={12} />
+                          </a>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  {notionSelectedDb && (
+                    <p className="text-xs mt-2" style={{ color: "var(--status-success)" }}>
+                      Content will sync to this database when published.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {notionDatabases.length === 0 && (
+                <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
+                  No databases found. Make sure your integration has access to at least one database in Notion.
+                </p>
+              )}
+
+              <button
+                onClick={handleDisconnectNotion}
+                className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-md border"
+                style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+              >
+                <Unlink size={12} />
+                Disconnect Notion
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
+                Connect Notion to sync your content calendar, track content status, and push approved posts to a Notion database.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={notionToken}
+                  onChange={(e) => setNotionToken(e.target.value)}
+                  placeholder="Paste your Notion internal integration token"
+                  className="flex-1 px-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                  style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
+                />
+                <button
+                  onClick={handleConnectNotion}
+                  disabled={notionVerifying || !notionToken.trim()}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+                  style={{ backgroundColor: "#000000" }}
+                >
+                  {notionVerifying ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    "Connect"
+                  )}
+                </button>
+              </div>
+              {notionError && (
+                <div className="flex items-center gap-1.5 mt-2">
+                  <XCircle size={14} className="text-red-500" />
+                  <span className="text-xs text-red-500">{notionError}</span>
+                </div>
+              )}
+              <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
+                Create an internal integration at notion.so/my-integrations, then share your database with it.
               </p>
             </div>
           )}

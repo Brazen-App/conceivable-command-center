@@ -15,6 +15,9 @@ import {
   X,
   ImageIcon,
   Palette,
+  Sparkles,
+  ExternalLink,
+  AlertCircle,
 } from "lucide-react";
 import { ContentPlatform } from "@/types";
 
@@ -32,7 +35,14 @@ interface GeneratedPiece {
   title: string;
   body: string;
   imagePrompt?: ImagePromptData;
+  imageUrl?: string; // Actual generated image (base64 data URL from Nano Banana)
   status: "draft" | "approved" | "rejected";
+}
+
+interface BufferResult {
+  platform: string;
+  success: boolean;
+  message: string;
 }
 
 const PLATFORM_IMAGE_DEFAULTS: Record<ContentPlatform, { style: string; aspectRatio: string }> = {
@@ -171,6 +181,20 @@ export default function ContentStudio() {
   const [selectedPiece, setSelectedPiece] = useState<GeneratedPiece | null>(null);
   const [generatingImageFor, setGeneratingImageFor] = useState<ContentPlatform | null>(null);
 
+  // Nano Banana image generation
+  const [generatingActualImage, setGeneratingActualImage] = useState<ContentPlatform | null>(null);
+
+  // Buffer integration
+  const [bufferConnected, setBufferConnected] = useState(false);
+  const [sendingToBuffer, setSendingToBuffer] = useState(false);
+  const [bufferResults, setBufferResults] = useState<BufferResult[] | null>(null);
+  const [sendingPlatformToBuffer, setSendingPlatformToBuffer] = useState<ContentPlatform | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("buffer_access_token");
+    setBufferConnected(!!token);
+  }, []);
+
   useEffect(() => {
     const topicParam = searchParams.get("topic");
     const contextParam = searchParams.get("context");
@@ -187,6 +211,7 @@ export default function ContentStudio() {
     if (!topic.trim() || !founderAngle.trim()) return;
     setGenerating(true);
     setPieces([]);
+    setBufferResults(null);
 
     try {
       const res = await fetch("/api/content/generate", {
@@ -209,7 +234,7 @@ export default function ContentStudio() {
     }
   };
 
-  const handleGenerateImage = async (piece: GeneratedPiece) => {
+  const handleGenerateImagePrompt = async (piece: GeneratedPiece) => {
     setGeneratingImageFor(piece.platform);
     try {
       const res = await fetch("/api/content/generate-image", {
@@ -229,29 +254,140 @@ export default function ContentStudio() {
             p.platform === piece.platform ? { ...p, imagePrompt: imageData } : p
           )
         );
+        if (selectedPiece?.platform === piece.platform) {
+          setSelectedPiece((prev) => prev ? { ...prev, imagePrompt: imageData } : null);
+        }
       }
     } catch {
-      // If API fails, generate a default image prompt
       const defaults = PLATFORM_IMAGE_DEFAULTS[piece.platform];
+      const fallback: ImagePromptData = {
+        prompt: `Branded ${defaults.style} for ${piece.platform} about "${topic}". Conceivable brand colors: purple (#7C3AED), pink (#EC4899). Modern, clean, science-meets-warmth aesthetic. Target: women 20-40.`,
+        alt: `${piece.platform} visual for ${topic}`,
+        style: defaults.style,
+        aspectRatio: defaults.aspectRatio,
+        textOverlay: null,
+        colorPalette: ["#7C3AED", "#EC4899", "#FFFFFF"],
+      };
       setPieces((prev) =>
         prev.map((p) =>
-          p.platform === piece.platform
-            ? {
-                ...p,
-                imagePrompt: {
-                  prompt: `Branded ${defaults.style} for ${piece.platform} about "${topic}". Conceivable brand colors: purple (#7C3AED), pink (#EC4899). Modern, clean, science-meets-warmth aesthetic. Target: women 20-40.`,
-                  alt: `${piece.platform} visual for ${topic}`,
-                  style: defaults.style,
-                  aspectRatio: defaults.aspectRatio,
-                  textOverlay: null,
-                  colorPalette: ["#7C3AED", "#EC4899", "#FFFFFF"],
-                },
-              }
-            : p
+          p.platform === piece.platform ? { ...p, imagePrompt: fallback } : p
         )
       );
     } finally {
       setGeneratingImageFor(null);
+    }
+  };
+
+  // Generate actual image via Nano Banana (Gemini)
+  const handleGenerateActualImage = async (piece: GeneratedPiece) => {
+    if (!piece.imagePrompt) return;
+    setGeneratingActualImage(piece.platform);
+
+    try {
+      const res = await fetch("/api/content/generate-image-actual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: piece.imagePrompt.prompt,
+          aspectRatio: piece.imagePrompt.aspectRatio,
+          style: piece.imagePrompt.style,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setPieces((prev) =>
+          prev.map((p) =>
+            p.platform === piece.platform ? { ...p, imageUrl: data.imageData } : p
+          )
+        );
+        if (selectedPiece?.platform === piece.platform) {
+          setSelectedPiece((prev) => prev ? { ...prev, imageUrl: data.imageData } : null);
+        }
+      }
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setGeneratingActualImage(null);
+    }
+  };
+
+  // Send approved pieces to Buffer
+  const handleSendToBuffer = async (targetPieces?: GeneratedPiece[]) => {
+    const token = localStorage.getItem("buffer_access_token");
+    if (!token) return;
+
+    const piecesToSend = targetPieces ?? pieces.filter((p) => p.status === "approved");
+    if (piecesToSend.length === 0) return;
+
+    setSendingToBuffer(true);
+    setBufferResults(null);
+
+    try {
+      const res = await fetch("/api/integrations/buffer/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken: token,
+          pieces: piecesToSend.map((p) => ({
+            platform: p.platform,
+            text: p.body,
+            imageUrl: p.imageUrl ?? undefined,
+            alt: p.imagePrompt?.alt,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      setBufferResults(data.results ?? []);
+    } catch {
+      setBufferResults([{ platform: "all", success: false, message: "Network error — check your connection" }]);
+    } finally {
+      setSendingToBuffer(false);
+    }
+  };
+
+  // Send single piece to Buffer
+  const handleSendSingleToBuffer = async (piece: GeneratedPiece) => {
+    const token = localStorage.getItem("buffer_access_token");
+    if (!token) return;
+
+    setSendingPlatformToBuffer(piece.platform);
+    try {
+      const res = await fetch("/api/integrations/buffer/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken: token,
+          pieces: [{
+            platform: piece.platform,
+            text: piece.body,
+            imageUrl: piece.imageUrl ?? undefined,
+            alt: piece.imagePrompt?.alt,
+          }],
+        }),
+      });
+
+      const data = await res.json();
+      const result = data.results?.[0];
+      if (result?.success) {
+        setBufferResults((prev) => [
+          ...(prev ?? []),
+          { platform: piece.platform, success: true, message: "Sent to Buffer queue" },
+        ]);
+      } else {
+        setBufferResults((prev) => [
+          ...(prev ?? []),
+          { platform: piece.platform, success: false, message: result?.message ?? "Failed" },
+        ]);
+      }
+    } catch {
+      setBufferResults((prev) => [
+        ...(prev ?? []),
+        { platform: piece.platform, success: false, message: "Network error" },
+      ]);
+    } finally {
+      setSendingPlatformToBuffer(null);
     }
   };
 
@@ -260,6 +396,8 @@ export default function ContentStudio() {
       prev.map((p) => (p.platform === platform ? { ...p, status } : p))
     );
   };
+
+  const approvedCount = pieces.filter((p) => p.status === "approved").length;
 
   return (
     <div className="p-8 max-w-6xl">
@@ -327,18 +465,93 @@ export default function ContentStudio() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-medium" style={{ color: "var(--foreground)" }}>
-              Generated Content ({pieces.filter((p) => p.status === "approved").length}/{pieces.length} approved)
+              Generated Content ({approvedCount}/{pieces.length} approved)
             </h3>
-            {pieces.every((p) => p.status === "approved") && (
-              <button
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
-                style={{ backgroundColor: "var(--status-success)" }}
-              >
-                <Send size={14} />
-                Publish All
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {approvedCount > 0 && bufferConnected && (
+                <button
+                  onClick={() => handleSendToBuffer()}
+                  disabled={sendingToBuffer}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+                  style={{ backgroundColor: "#168EEA" }}
+                >
+                  {sendingToBuffer ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Sending to Buffer...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink size={14} />
+                      Send {approvedCount} to Buffer
+                    </>
+                  )}
+                </button>
+              )}
+              {approvedCount > 0 && !bufferConnected && (
+                <a
+                  href="/settings"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border"
+                  style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+                >
+                  <ExternalLink size={14} />
+                  Connect Buffer to publish
+                </a>
+              )}
+              {approvedCount === pieces.length && !bufferConnected && (
+                <button
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+                  style={{ backgroundColor: "var(--status-success)" }}
+                >
+                  <Send size={14} />
+                  Publish All
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Buffer Results Banner */}
+          {bufferResults && bufferResults.length > 0 && (
+            <div
+              className="rounded-xl border p-4 mb-4"
+              style={{
+                borderColor: bufferResults.every((r) => r.success) ? "var(--status-success)" : "var(--border)",
+                backgroundColor: "var(--surface)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                {bufferResults.every((r) => r.success) ? (
+                  <CheckCircle size={16} style={{ color: "var(--status-success)" }} />
+                ) : (
+                  <AlertCircle size={16} style={{ color: "#EAB308" }} />
+                )}
+                <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                  Buffer Results
+                </span>
+                <button
+                  onClick={() => setBufferResults(null)}
+                  className="ml-auto"
+                >
+                  <X size={14} style={{ color: "var(--muted)" }} />
+                </button>
+              </div>
+              <div className="space-y-1">
+                {bufferResults.map((result, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    {result.success ? (
+                      <CheckCircle size={12} style={{ color: "var(--status-success)" }} />
+                    ) : (
+                      <AlertCircle size={12} style={{ color: "#EF4444" }} />
+                    )}
+                    <span style={{ color: "var(--foreground)" }}>
+                      {PLATFORM_CONFIG[result.platform as ContentPlatform]?.label ?? result.platform}
+                    </span>
+                    <span style={{ color: "var(--muted)" }}>{result.message}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pieces.map((piece) => {
@@ -362,7 +575,10 @@ export default function ContentStudio() {
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      {piece.imagePrompt && (
+                      {piece.imageUrl && (
+                        <Sparkles size={14} style={{ color: "#10B981" }} />
+                      )}
+                      {piece.imagePrompt && !piece.imageUrl && (
                         <ImageIcon size={14} style={{ color: "var(--brand-primary)" }} />
                       )}
                       {piece.status === "approved" && (
@@ -371,8 +587,19 @@ export default function ContentStudio() {
                     </div>
                   </div>
 
-                  {/* Image Prompt Preview */}
-                  {piece.imagePrompt && (
+                  {/* Generated Image Preview */}
+                  {piece.imageUrl && (
+                    <div className="rounded-lg overflow-hidden mb-3">
+                      <img
+                        src={piece.imageUrl}
+                        alt={piece.imagePrompt?.alt ?? "Generated image"}
+                        className="w-full h-32 object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* Image Prompt Preview (no actual image yet) */}
+                  {piece.imagePrompt && !piece.imageUrl && (
                     <div
                       className="rounded-lg p-2.5 mb-3 flex items-start gap-2"
                       style={{ backgroundColor: "var(--background)" }}
@@ -448,6 +675,17 @@ export default function ContentStudio() {
               </button>
             </div>
 
+            {/* Generated Image Display */}
+            {selectedPiece.imageUrl && (
+              <div className="rounded-xl overflow-hidden mb-4">
+                <img
+                  src={selectedPiece.imageUrl}
+                  alt={selectedPiece.imagePrompt?.alt ?? "Generated image"}
+                  className="w-full"
+                />
+              </div>
+            )}
+
             {/* Image Prompt Section */}
             {selectedPiece.imagePrompt ? (
               <div
@@ -494,19 +732,44 @@ export default function ContentStudio() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(selectedPiece.imagePrompt!.prompt);
-                  }}
-                  className="mt-3 text-xs px-3 py-1.5 rounded-md font-medium border"
-                  style={{ borderColor: "var(--border)", color: "var(--brand-primary)" }}
-                >
-                  Copy Image Prompt
-                </button>
+                <div className="flex items-center gap-2 mt-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedPiece.imagePrompt!.prompt);
+                    }}
+                    className="text-xs px-3 py-1.5 rounded-md font-medium border"
+                    style={{ borderColor: "var(--border)", color: "var(--brand-primary)" }}
+                  >
+                    Copy Prompt
+                  </button>
+                  <button
+                    onClick={() => handleGenerateActualImage(selectedPiece)}
+                    disabled={generatingActualImage === selectedPiece.platform}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md font-medium text-white disabled:opacity-50"
+                    style={{ backgroundColor: "var(--brand-primary)" }}
+                  >
+                    {generatingActualImage === selectedPiece.platform ? (
+                      <>
+                        <Loader2 size={12} className="animate-spin" />
+                        Generating with Nano Banana...
+                      </>
+                    ) : selectedPiece.imageUrl ? (
+                      <>
+                        <Sparkles size={12} />
+                        Regenerate Image
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={12} />
+                        Generate Image
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             ) : (
               <button
-                onClick={() => handleGenerateImage(selectedPiece)}
+                onClick={() => handleGenerateImagePrompt(selectedPiece)}
                 disabled={generatingImageFor === selectedPiece.platform}
                 className="flex items-center gap-2 w-full justify-center py-3 rounded-xl border border-dashed mb-4 text-sm font-medium disabled:opacity-50"
                 style={{ borderColor: "var(--border)", color: "var(--brand-primary)" }}
@@ -531,6 +794,7 @@ export default function ContentStudio() {
             >
               {selectedPiece.body}
             </div>
+
             <div className="flex gap-2 mt-6">
               <button
                 onClick={() => {
@@ -552,6 +816,23 @@ export default function ContentStudio() {
               >
                 Reject
               </button>
+              {bufferConnected && selectedPiece.status === "approved" && (
+                <button
+                  onClick={() => handleSendSingleToBuffer(selectedPiece)}
+                  disabled={sendingPlatformToBuffer === selectedPiece.platform}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+                  style={{ backgroundColor: "#168EEA" }}
+                >
+                  {sendingPlatformToBuffer === selectedPiece.platform ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <>
+                      <ExternalLink size={14} />
+                      Buffer
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>

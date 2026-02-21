@@ -107,11 +107,10 @@ export async function generateContentBatch(
 ): Promise<ContentBatch> {
   const batchId = uuid();
 
-  const pieces: ContentPiece[] = [];
-
-  // Generate content for each platform
-  for (const platform of PLATFORMS) {
-    const prompt = `Topic: ${topic}
+  // Generate content for all platforms in parallel
+  const results = await Promise.allSettled(
+    PLATFORMS.map(async (platform): Promise<ContentPiece> => {
+      const prompt = `Topic: ${topic}
 
 Founder's POV/Angle: ${founderAngle}
 
@@ -122,26 +121,31 @@ ${PLATFORM_PROMPTS[platform]}
 
 Write the content now. Be authentic to the founder's voice and angle.`;
 
-    const result = await invokeAgent({
-      agentId: "content-engine",
-      message: prompt,
-    });
+      const result = await invokeAgent({
+        agentId: "content-engine",
+        message: prompt,
+      });
 
-    const { content, imagePrompt } = extractImagePrompt(result.response);
+      const { content, imagePrompt } = extractImagePrompt(result.response);
 
-    pieces.push({
-      id: uuid(),
-      platform,
-      title: `${topic} — ${platform}`,
-      body: content,
-      imagePrompt: imagePrompt || undefined,
-      hashtags: extractHashtags(content),
-      status: "draft",
-      sourceStoryId,
-      founderPov: founderAngle,
-      createdAt: new Date(),
-    });
-  }
+      return {
+        id: uuid(),
+        platform,
+        title: `${topic} — ${platform}`,
+        body: content,
+        imagePrompt: imagePrompt || undefined,
+        hashtags: extractHashtags(content),
+        status: "draft",
+        sourceStoryId,
+        founderPov: founderAngle,
+        createdAt: new Date(),
+      };
+    })
+  );
+
+  const pieces = results
+    .filter((r): r is PromiseFulfilledResult<ContentPiece> => r.status === "fulfilled")
+    .map((r) => r.value);
 
   return {
     id: batchId,

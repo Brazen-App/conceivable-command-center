@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import {
   CheckCircle,
@@ -10,6 +11,7 @@ import {
   Linkedin,
   Instagram,
   Twitter,
+  ExternalLink,
 } from "lucide-react";
 
 interface BufferProfile {
@@ -77,6 +79,24 @@ function getDefaultConnection(): PlatformConnection {
 }
 
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <>
+        <Header title="Settings" subtitle="Configure your command center" />
+        <div className="p-8 flex items-center gap-2" style={{ color: "var(--muted)" }}>
+          <Loader2 size={16} className="animate-spin" /> Loading settings...
+        </div>
+      </>
+    }>
+      <SettingsContent />
+    </Suspense>
+  );
+}
+
+function SettingsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   // Buffer state
   const [bufferToken, setBufferToken] = useState("");
   const [bufferConnected, setBufferConnected] = useState(false);
@@ -84,6 +104,7 @@ export default function SettingsPage() {
   const [bufferProfiles, setBufferProfiles] = useState<BufferProfile[]>([]);
   const [bufferVerifying, setBufferVerifying] = useState(false);
   const [bufferError, setBufferError] = useState<string | null>(null);
+  const [showManualToken, setShowManualToken] = useState(false);
 
   // Direct platform connections
   const [platforms, setPlatforms] = useState<Record<PlatformKey, PlatformConnection>>({
@@ -92,6 +113,55 @@ export default function SettingsPage() {
     x: getDefaultConnection(),
     pinterest: getDefaultConnection(),
   });
+
+  // Handle Buffer OAuth callback token from URL
+  useEffect(() => {
+    const oauthToken = searchParams.get("buffer_token");
+    const oauthError = searchParams.get("buffer_error");
+
+    if (oauthToken) {
+      // Auto-connect with the OAuth token
+      setBufferToken(oauthToken);
+      // Clean URL
+      router.replace("/settings");
+      // Verify and connect
+      (async () => {
+        setBufferVerifying(true);
+        try {
+          const res = await fetch("/api/integrations/buffer/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accessToken: oauthToken }),
+          });
+          const data = await res.json();
+          if (res.ok && data.valid) {
+            localStorage.setItem("buffer_access_token", oauthToken);
+            localStorage.setItem("buffer_user_name", data.user.name);
+            localStorage.setItem("buffer_profiles", JSON.stringify(data.profiles));
+            setBufferConnected(true);
+            setBufferUser(data.user.name);
+            setBufferProfiles(data.profiles);
+          } else {
+            setBufferError(data.error || "Failed to verify Buffer token");
+          }
+        } catch {
+          setBufferError("Failed to connect to Buffer");
+        } finally {
+          setBufferVerifying(false);
+        }
+      })();
+    } else if (oauthError) {
+      const errorMessages: Record<string, string> = {
+        no_code: "Buffer did not return an authorization code.",
+        missing_config: "BUFFER_CLIENT_ID or BUFFER_CLIENT_SECRET not configured on the server.",
+        token_exchange_failed: "Failed to exchange authorization code for a token.",
+        no_token: "Buffer did not return an access token.",
+        network: "Network error while connecting to Buffer.",
+      };
+      setBufferError(errorMessages[oauthError] || "Unknown error connecting to Buffer.");
+      router.replace("/settings");
+    }
+  }, [searchParams, router]);
 
   // Load saved state on mount
   useEffect(() => {
@@ -443,7 +513,14 @@ export default function SettingsPage() {
             )}
           </div>
 
-          {bufferConnected ? (
+          {bufferVerifying && !bufferConnected ? (
+            <div className="flex items-center gap-3 py-4">
+              <Loader2 size={20} className="animate-spin" style={{ color: "var(--brand-primary)" }} />
+              <span className="text-sm" style={{ color: "var(--muted)" }}>
+                Connecting to Buffer...
+              </span>
+            </div>
+          ) : bufferConnected ? (
             <div>
               <p className="text-sm mb-3" style={{ color: "var(--foreground)" }}>
                 Connected as <strong>{bufferUser}</strong>
@@ -478,43 +555,75 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div>
-              <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Alternative: Connect Buffer to queue content across platforms. Useful if you prefer Buffer&#39;s scheduling UI.
+              <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
+                Connect Buffer to schedule and publish content across all your social platforms from one place.
               </p>
-              <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={bufferToken}
-                  onChange={(e) => setBufferToken(e.target.value)}
-                  placeholder="Paste your Buffer access token"
-                  className="flex-1 px-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
-                  style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
-                />
+
+              {/* OAuth Connect Button */}
+              <a
+                href="/api/integrations/buffer/authorize"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white"
+                style={{ backgroundColor: "#168EEA" }}
+              >
+                <ExternalLink size={14} />
+                Connect with Buffer
+              </a>
+              <p className="text-xs mt-2 mb-4" style={{ color: "var(--muted)" }}>
+                Requires BUFFER_CLIENT_ID and BUFFER_CLIENT_SECRET environment variables.
+              </p>
+
+              {/* Manual token fallback */}
+              <div
+                className="pt-4 mt-2"
+                style={{ borderTop: "1px solid var(--border)" }}
+              >
                 <button
-                  onClick={handleConnectBuffer}
-                  disabled={bufferVerifying || !bufferToken.trim()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
-                  style={{ backgroundColor: "var(--brand-primary)" }}
+                  onClick={() => setShowManualToken(!showManualToken)}
+                  className="text-xs font-medium"
+                  style={{ color: "var(--muted)" }}
                 >
-                  {bufferVerifying ? (
-                    <>
-                      <Loader2 size={14} className="animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    "Connect"
-                  )}
+                  {showManualToken ? "Hide" : "Or paste access token manually"}
                 </button>
+                {showManualToken && (
+                  <div className="mt-3">
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        value={bufferToken}
+                        onChange={(e) => setBufferToken(e.target.value)}
+                        placeholder="Paste your Buffer access token"
+                        className="flex-1 px-4 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                        style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
+                      />
+                      <button
+                        onClick={handleConnectBuffer}
+                        disabled={bufferVerifying || !bufferToken.trim()}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+                        style={{ backgroundColor: "var(--brand-primary)" }}
+                      >
+                        {bufferVerifying ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" />
+                            Verifying...
+                          </>
+                        ) : (
+                          "Connect"
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>
+                      Get a token from Buffer Developer settings &rarr; Create App &rarr; Access Token.
+                    </p>
+                  </div>
+                )}
               </div>
+
               {bufferError && (
-                <div className="flex items-center gap-1.5 mt-2">
+                <div className="flex items-center gap-1.5 mt-3">
                   <XCircle size={14} className="text-red-500" />
                   <span className="text-xs text-red-500">{bufferError}</span>
                 </div>
               )}
-              <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
-                Get your access token from Buffer Developer settings.
-              </p>
             </div>
           )}
         </section>

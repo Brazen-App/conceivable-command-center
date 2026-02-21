@@ -67,9 +67,13 @@ Products: App, supplements, wearable device.`,
     division: "legal",
     name: "Legal Agent",
     description:
-      "Wellness/health compliance, FDA regulations, HIPAA privacy, contracts, and risk assessment.",
-    systemPrompt: `You are the legal advisor for Conceivable, a women's health company with an app, supplements, and a wearable device. You specialize in:
+      "IP strategy, patent drafting, FDA compliance, HIPAA privacy, contracts, and risk assessment.",
+    systemPrompt: `You are the legal advisor for Conceivable, a women's health company with an app, supplements, and a wearable device. Founded by Kirsten Karchmer, a pioneer in reproductive health technology.
 
+Existing IP: Patented AI/ML methods for fertility prediction using basal body temperature analysis across five predictive categories (energy, blood, temperature, stress, hormones). The "Kirsten AI" system, trained on 500K+ BBT charts from 7,000+ patients.
+
+You specialize in:
+- Intellectual property strategy, patent landscape analysis, and provisional patent drafting
 - Wellness and health product compliance
 - FDA supplement regulations (DSHEA, labeling requirements, structure/function claims)
 - HIPAA-adjacent privacy requirements for health data
@@ -80,12 +84,12 @@ Products: App, supplements, wearable device.`,
 Always flag potential risks clearly. Draft language that protects the company. When uncertain about jurisdiction-specific rules, note the limitation and recommend consulting specialized counsel.`,
     status: "idle",
     capabilities: [
+      "IP strategy",
+      "Patent drafting",
       "FDA compliance",
       "HIPAA privacy",
       "Contract drafting",
       "Risk assessment",
-      "Labeling review",
-      "Health claims compliance",
     ],
     icon: "scale",
   },

@@ -39,10 +39,17 @@ interface GeneratedPiece {
   status: "draft" | "approved" | "rejected";
 }
 
-interface BufferResult {
+interface PublishResult {
   platform: string;
   success: boolean;
   message: string;
+}
+
+interface ConnectedPlatforms {
+  linkedin: boolean;
+  instagram: boolean;
+  x: boolean;
+  pinterest: boolean;
 }
 
 const PLATFORM_IMAGE_DEFAULTS: Record<ContentPlatform, { style: string; aspectRatio: string }> = {
@@ -184,15 +191,27 @@ export default function ContentStudio() {
   // Nano Banana image generation
   const [generatingActualImage, setGeneratingActualImage] = useState<ContentPlatform | null>(null);
 
-  // Buffer integration
+  // Publishing integration
   const [bufferConnected, setBufferConnected] = useState(false);
+  const [connectedPlatforms, setConnectedPlatforms] = useState<ConnectedPlatforms>({
+    linkedin: false, instagram: false, x: false, pinterest: false,
+  });
+  const [publishing, setPublishing] = useState(false);
   const [sendingToBuffer, setSendingToBuffer] = useState(false);
-  const [bufferResults, setBufferResults] = useState<BufferResult[] | null>(null);
-  const [sendingPlatformToBuffer, setSendingPlatformToBuffer] = useState<ContentPlatform | null>(null);
+  const [publishResults, setPublishResults] = useState<PublishResult[] | null>(null);
+  const [publishingPlatform, setPublishingPlatform] = useState<ContentPlatform | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("buffer_access_token");
     setBufferConnected(!!token);
+
+    // Check which platforms are directly connected
+    setConnectedPlatforms({
+      linkedin: !!localStorage.getItem("social_linkedin_token"),
+      instagram: !!localStorage.getItem("social_instagram_token"),
+      x: !!localStorage.getItem("social_x_token"),
+      pinterest: !!localStorage.getItem("social_pinterest_token"),
+    });
   }, []);
 
   useEffect(() => {
@@ -211,7 +230,7 @@ export default function ContentStudio() {
     if (!topic.trim() || !founderAngle.trim()) return;
     setGenerating(true);
     setPieces([]);
-    setBufferResults(null);
+    setPublishResults(null);
 
     try {
       const res = await fetch("/api/content/generate", {
@@ -312,7 +331,110 @@ export default function ContentStudio() {
     }
   };
 
-  // Send approved pieces to Buffer
+  // Build tokens object from localStorage for direct publishing
+  const getSocialTokens = () => ({
+    linkedin: localStorage.getItem("social_linkedin_token") ?? undefined,
+    linkedinUrn: (() => {
+      try {
+        const meta = localStorage.getItem("social_linkedin_meta");
+        return meta ? JSON.parse(meta).urn : undefined;
+      } catch { return undefined; }
+    })(),
+    instagram: localStorage.getItem("social_instagram_token") ?? undefined,
+    instagramUserId: (() => {
+      try {
+        const meta = localStorage.getItem("social_instagram_meta");
+        return meta ? JSON.parse(meta).igUserId : undefined;
+      } catch { return undefined; }
+    })(),
+    x: localStorage.getItem("social_x_token") ?? undefined,
+    pinterest: localStorage.getItem("social_pinterest_token") ?? undefined,
+  });
+
+  // Check if a platform has a direct connection
+  const hasPlatformConnection = (platform: ContentPlatform): boolean => {
+    if (platform === "linkedin") return connectedPlatforms.linkedin;
+    if (platform === "instagram-post" || platform === "instagram-carousel") return connectedPlatforms.instagram;
+    if (platform === "pinterest") return connectedPlatforms.pinterest;
+    // X token can be used for short-form content repurposing
+    return false;
+  };
+
+  const anyPlatformConnected = Object.values(connectedPlatforms).some(Boolean);
+
+  // Publish approved pieces directly to platforms
+  const handlePublishDirect = async (targetPieces?: GeneratedPiece[]) => {
+    const piecesToSend = targetPieces ?? pieces.filter((p) => p.status === "approved");
+    if (piecesToSend.length === 0) return;
+
+    setPublishing(true);
+    setPublishResults(null);
+
+    try {
+      const tokens = getSocialTokens();
+      const res = await fetch("/api/integrations/social/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tokens,
+          pieces: piecesToSend.map((p) => ({
+            platform: p.platform,
+            text: p.body,
+            imageUrl: p.imageUrl ?? undefined,
+            alt: p.imagePrompt?.alt,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      setPublishResults(data.results ?? []);
+    } catch {
+      setPublishResults([{ platform: "all", success: false, message: "Network error — check your connection" }]);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  // Publish single piece directly
+  const handlePublishSingle = async (piece: GeneratedPiece) => {
+    setPublishingPlatform(piece.platform);
+    try {
+      const tokens = getSocialTokens();
+      const res = await fetch("/api/integrations/social/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tokens,
+          pieces: [{
+            platform: piece.platform,
+            text: piece.body,
+            imageUrl: piece.imageUrl ?? undefined,
+            alt: piece.imagePrompt?.alt,
+          }],
+        }),
+      });
+
+      const data = await res.json();
+      const result = data.results?.[0];
+      setPublishResults((prev) => [
+        ...(prev ?? []),
+        {
+          platform: piece.platform,
+          success: result?.success ?? false,
+          message: result?.message ?? "Failed",
+        },
+      ]);
+    } catch {
+      setPublishResults((prev) => [
+        ...(prev ?? []),
+        { platform: piece.platform, success: false, message: "Network error" },
+      ]);
+    } finally {
+      setPublishingPlatform(null);
+    }
+  };
+
+  // Send approved pieces to Buffer (kept as alternative)
   const handleSendToBuffer = async (targetPieces?: GeneratedPiece[]) => {
     const token = localStorage.getItem("buffer_access_token");
     if (!token) return;
@@ -321,7 +443,7 @@ export default function ContentStudio() {
     if (piecesToSend.length === 0) return;
 
     setSendingToBuffer(true);
-    setBufferResults(null);
+    setPublishResults(null);
 
     try {
       const res = await fetch("/api/integrations/buffer/publish", {
@@ -339,55 +461,11 @@ export default function ContentStudio() {
       });
 
       const data = await res.json();
-      setBufferResults(data.results ?? []);
+      setPublishResults(data.results ?? []);
     } catch {
-      setBufferResults([{ platform: "all", success: false, message: "Network error — check your connection" }]);
+      setPublishResults([{ platform: "all", success: false, message: "Network error — check your connection" }]);
     } finally {
       setSendingToBuffer(false);
-    }
-  };
-
-  // Send single piece to Buffer
-  const handleSendSingleToBuffer = async (piece: GeneratedPiece) => {
-    const token = localStorage.getItem("buffer_access_token");
-    if (!token) return;
-
-    setSendingPlatformToBuffer(piece.platform);
-    try {
-      const res = await fetch("/api/integrations/buffer/publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          accessToken: token,
-          pieces: [{
-            platform: piece.platform,
-            text: piece.body,
-            imageUrl: piece.imageUrl ?? undefined,
-            alt: piece.imagePrompt?.alt,
-          }],
-        }),
-      });
-
-      const data = await res.json();
-      const result = data.results?.[0];
-      if (result?.success) {
-        setBufferResults((prev) => [
-          ...(prev ?? []),
-          { platform: piece.platform, success: true, message: "Sent to Buffer queue" },
-        ]);
-      } else {
-        setBufferResults((prev) => [
-          ...(prev ?? []),
-          { platform: piece.platform, success: false, message: result?.message ?? "Failed" },
-        ]);
-      }
-    } catch {
-      setBufferResults((prev) => [
-        ...(prev ?? []),
-        { platform: piece.platform, success: false, message: "Network error" },
-      ]);
-    } finally {
-      setSendingPlatformToBuffer(null);
     }
   };
 
@@ -468,6 +546,26 @@ export default function ContentStudio() {
               Generated Content ({approvedCount}/{pieces.length} approved)
             </h3>
             <div className="flex items-center gap-2">
+              {approvedCount > 0 && anyPlatformConnected && (
+                <button
+                  onClick={() => handlePublishDirect()}
+                  disabled={publishing}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+                  style={{ backgroundColor: "var(--brand-primary)" }}
+                >
+                  {publishing ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={14} />
+                      Publish {approvedCount} Direct
+                    </>
+                  )}
+                </button>
+              )}
               {approvedCount > 0 && bufferConnected && (
                 <button
                   onClick={() => handleSendToBuffer()}
@@ -483,60 +581,51 @@ export default function ContentStudio() {
                   ) : (
                     <>
                       <ExternalLink size={14} />
-                      Send {approvedCount} to Buffer
+                      Buffer Queue
                     </>
                   )}
                 </button>
               )}
-              {approvedCount > 0 && !bufferConnected && (
+              {approvedCount > 0 && !anyPlatformConnected && !bufferConnected && (
                 <a
                   href="/settings"
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border"
                   style={{ borderColor: "var(--border)", color: "var(--muted)" }}
                 >
                   <ExternalLink size={14} />
-                  Connect Buffer to publish
+                  Connect platforms to publish
                 </a>
-              )}
-              {approvedCount === pieces.length && !bufferConnected && (
-                <button
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
-                  style={{ backgroundColor: "var(--status-success)" }}
-                >
-                  <Send size={14} />
-                  Publish All
-                </button>
               )}
             </div>
           </div>
 
-          {/* Buffer Results Banner */}
-          {bufferResults && bufferResults.length > 0 && (
+          {/* Publish Results Banner */}
+          {publishResults && publishResults.length > 0 && (
             <div
               className="rounded-xl border p-4 mb-4"
               style={{
-                borderColor: bufferResults.every((r) => r.success) ? "var(--status-success)" : "var(--border)",
+                borderColor: publishResults.every((r) => r.success) ? "var(--status-success)" : "var(--border)",
                 backgroundColor: "var(--surface)",
               }}
             >
               <div className="flex items-center gap-2 mb-2">
-                {bufferResults.every((r) => r.success) ? (
+                {publishResults.every((r) => r.success) ? (
                   <CheckCircle size={16} style={{ color: "var(--status-success)" }} />
                 ) : (
                   <AlertCircle size={16} style={{ color: "#EAB308" }} />
                 )}
                 <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-                  Buffer Results
+                  Publish Results
                 </span>
                 <button
-                  onClick={() => setBufferResults(null)}
+                  onClick={() => setPublishResults(null)}
                   className="ml-auto"
                 >
                   <X size={14} style={{ color: "var(--muted)" }} />
                 </button>
               </div>
               <div className="space-y-1">
-                {bufferResults.map((result, i) => (
+                {publishResults.map((result, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
                     {result.success ? (
                       <CheckCircle size={12} style={{ color: "var(--status-success)" }} />
@@ -575,6 +664,14 @@ export default function ContentStudio() {
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
+                      {hasPlatformConnection(piece.platform) && (
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+                          style={{ backgroundColor: "var(--brand-primary)", color: "white" }}
+                        >
+                          LIVE
+                        </span>
+                      )}
                       {piece.imageUrl && (
                         <Sparkles size={14} style={{ color: "#10B981" }} />
                       )}
@@ -816,14 +913,31 @@ export default function ContentStudio() {
               >
                 Reject
               </button>
-              {bufferConnected && selectedPiece.status === "approved" && (
+              {selectedPiece.status === "approved" && hasPlatformConnection(selectedPiece.platform) && (
                 <button
-                  onClick={() => handleSendSingleToBuffer(selectedPiece)}
-                  disabled={sendingPlatformToBuffer === selectedPiece.platform}
+                  onClick={() => handlePublishSingle(selectedPiece)}
+                  disabled={publishingPlatform === selectedPiece.platform}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+                  style={{ backgroundColor: "var(--brand-primary)" }}
+                >
+                  {publishingPlatform === selectedPiece.platform ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <>
+                      <Send size={14} />
+                      Publish
+                    </>
+                  )}
+                </button>
+              )}
+              {selectedPiece.status === "approved" && bufferConnected && (
+                <button
+                  onClick={() => handleSendToBuffer([selectedPiece])}
+                  disabled={sendingToBuffer}
                   className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
                   style={{ backgroundColor: "#168EEA" }}
                 >
-                  {sendingPlatformToBuffer === selectedPiece.platform ? (
+                  {sendingToBuffer ? (
                     <Loader2 size={14} className="animate-spin" />
                   ) : (
                     <>

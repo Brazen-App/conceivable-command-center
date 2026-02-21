@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
-import { CheckCircle, Loader2, XCircle, Unlink } from "lucide-react";
+import {
+  CheckCircle,
+  Loader2,
+  XCircle,
+  Unlink,
+  Linkedin,
+  Instagram,
+  Twitter,
+} from "lucide-react";
 
 interface BufferProfile {
   id: string;
@@ -12,7 +20,64 @@ interface BufferProfile {
   avatar: string;
 }
 
+interface PlatformConnection {
+  connected: boolean;
+  username: string | null;
+  token: string;
+  verifying: boolean;
+  error: string | null;
+  meta?: Record<string, unknown>;
+}
+
+const SOCIAL_PLATFORMS = [
+  {
+    key: "linkedin" as const,
+    label: "LinkedIn",
+    icon: Linkedin,
+    color: "#0A66C2",
+    placeholder: "Paste your LinkedIn access token",
+    help: "Requires a LinkedIn app with r_liteprofile and w_member_social scopes.",
+  },
+  {
+    key: "instagram" as const,
+    label: "Instagram",
+    icon: Instagram,
+    color: "#E4405F",
+    placeholder: "Paste your Facebook/Instagram access token",
+    help: "Requires a Facebook app with instagram_basic and instagram_content_publish permissions.",
+  },
+  {
+    key: "x" as const,
+    label: "X / Twitter",
+    icon: Twitter,
+    color: "#000000",
+    placeholder: "Paste your X OAuth 2.0 bearer token",
+    help: "Requires an X app with tweet.write scope.",
+  },
+  {
+    key: "pinterest" as const,
+    label: "Pinterest",
+    icon: null,
+    color: "#E60023",
+    placeholder: "Paste your Pinterest access token",
+    help: "Requires a Pinterest app with boards:read and pins:write scopes.",
+  },
+] as const;
+
+type PlatformKey = (typeof SOCIAL_PLATFORMS)[number]["key"];
+
+function getDefaultConnection(): PlatformConnection {
+  return {
+    connected: false,
+    username: null,
+    token: "",
+    verifying: false,
+    error: null,
+  };
+}
+
 export default function SettingsPage() {
+  // Buffer state
   const [bufferToken, setBufferToken] = useState("");
   const [bufferConnected, setBufferConnected] = useState(false);
   const [bufferUser, setBufferUser] = useState<string | null>(null);
@@ -20,7 +85,17 @@ export default function SettingsPage() {
   const [bufferVerifying, setBufferVerifying] = useState(false);
   const [bufferError, setBufferError] = useState<string | null>(null);
 
+  // Direct platform connections
+  const [platforms, setPlatforms] = useState<Record<PlatformKey, PlatformConnection>>({
+    linkedin: getDefaultConnection(),
+    instagram: getDefaultConnection(),
+    x: getDefaultConnection(),
+    pinterest: getDefaultConnection(),
+  });
+
+  // Load saved state on mount
   useEffect(() => {
+    // Buffer
     const savedToken = localStorage.getItem("buffer_access_token");
     const savedUser = localStorage.getItem("buffer_user_name");
     const savedProfiles = localStorage.getItem("buffer_profiles");
@@ -31,11 +106,39 @@ export default function SettingsPage() {
       if (savedProfiles) {
         try {
           setBufferProfiles(JSON.parse(savedProfiles));
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
     }
+
+    // Direct platforms
+    const updated: Record<PlatformKey, PlatformConnection> = {
+      linkedin: getDefaultConnection(),
+      instagram: getDefaultConnection(),
+      x: getDefaultConnection(),
+      pinterest: getDefaultConnection(),
+    };
+
+    for (const p of SOCIAL_PLATFORMS) {
+      const token = localStorage.getItem(`social_${p.key}_token`);
+      const username = localStorage.getItem(`social_${p.key}_username`);
+      const meta = localStorage.getItem(`social_${p.key}_meta`);
+      if (token) {
+        updated[p.key] = {
+          connected: true,
+          username,
+          token,
+          verifying: false,
+          error: null,
+          meta: meta ? JSON.parse(meta) : undefined,
+        };
+      }
+    }
+    setPlatforms(updated);
   }, []);
 
+  // Buffer handlers
   const handleConnectBuffer = async () => {
     if (!bufferToken.trim()) return;
     setBufferVerifying(true);
@@ -75,6 +178,75 @@ export default function SettingsPage() {
     setBufferUser(null);
     setBufferProfiles([]);
   };
+
+  // Direct platform handlers
+  const handleConnectPlatform = async (key: PlatformKey) => {
+    const current = platforms[key];
+    if (!current.token.trim()) return;
+
+    setPlatforms((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], verifying: true, error: null },
+    }));
+
+    try {
+      const res = await fetch("/api/integrations/social/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platform: key, accessToken: current.token }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.valid) {
+        localStorage.setItem(`social_${key}_token`, current.token);
+        localStorage.setItem(`social_${key}_username`, data.username ?? "");
+        if (data.meta) {
+          localStorage.setItem(`social_${key}_meta`, JSON.stringify(data.meta));
+        }
+        setPlatforms((prev) => ({
+          ...prev,
+          [key]: {
+            ...prev[key],
+            connected: true,
+            username: data.username,
+            verifying: false,
+            error: null,
+            meta: data.meta,
+          },
+        }));
+      } else {
+        setPlatforms((prev) => ({
+          ...prev,
+          [key]: {
+            ...prev[key],
+            verifying: false,
+            error: data.error || "Invalid token",
+          },
+        }));
+      }
+    } catch {
+      setPlatforms((prev) => ({
+        ...prev,
+        [key]: {
+          ...prev[key],
+          verifying: false,
+          error: "Failed to verify token",
+        },
+      }));
+    }
+  };
+
+  const handleDisconnectPlatform = (key: PlatformKey) => {
+    localStorage.removeItem(`social_${key}_token`);
+    localStorage.removeItem(`social_${key}_username`);
+    localStorage.removeItem(`social_${key}_meta`);
+    setPlatforms((prev) => ({
+      ...prev,
+      [key]: getDefaultConnection(),
+    }));
+  };
+
+  const connectedPlatformCount = Object.values(platforms).filter((p) => p.connected).length;
 
   return (
     <>
@@ -137,6 +309,120 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* Direct Platform Integrations */}
+        <section
+          className="rounded-xl border p-6 mb-6"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-medium" style={{ color: "var(--foreground)" }}>
+              Social Platform Integrations
+            </h3>
+            {connectedPlatformCount > 0 && (
+              <div className="flex items-center gap-1.5">
+                <CheckCircle size={14} style={{ color: "var(--status-success)" }} />
+                <span className="text-xs font-medium" style={{ color: "var(--status-success)" }}>
+                  {connectedPlatformCount} connected
+                </span>
+              </div>
+            )}
+          </div>
+          <p className="text-sm mb-5" style={{ color: "var(--muted)" }}>
+            Connect your social accounts to publish approved content directly from the Content Studio.
+          </p>
+
+          <div className="space-y-4">
+            {SOCIAL_PLATFORMS.map((platform) => {
+              const conn = platforms[platform.key];
+              const Icon = platform.icon;
+
+              return (
+                <div
+                  key={platform.key}
+                  className="rounded-lg border p-4"
+                  style={{ borderColor: conn.connected ? "var(--status-success)" : "var(--border)" }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {Icon ? (
+                        <Icon size={16} style={{ color: platform.color }} />
+                      ) : (
+                        <span
+                          className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                          style={{ backgroundColor: platform.color }}
+                        >
+                          P
+                        </span>
+                      )}
+                      <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                        {platform.label}
+                      </span>
+                    </div>
+                    {conn.connected && (
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle size={12} style={{ color: "var(--status-success)" }} />
+                        <span className="text-xs" style={{ color: "var(--status-success)" }}>
+                          {conn.username ? `@${conn.username}` : "Connected"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {conn.connected ? (
+                    <button
+                      onClick={() => handleDisconnectPlatform(platform.key)}
+                      className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-md border"
+                      style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+                    >
+                      <Unlink size={12} />
+                      Disconnect
+                    </button>
+                  ) : (
+                    <div>
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          value={conn.token}
+                          onChange={(e) =>
+                            setPlatforms((prev) => ({
+                              ...prev,
+                              [platform.key]: { ...prev[platform.key], token: e.target.value },
+                            }))
+                          }
+                          placeholder={platform.placeholder}
+                          className="flex-1 px-3 py-1.5 rounded-lg border text-sm focus:outline-none focus:ring-2"
+                          style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
+                        />
+                        <button
+                          onClick={() => handleConnectPlatform(platform.key)}
+                          disabled={conn.verifying || !conn.token.trim()}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white disabled:opacity-50"
+                          style={{ backgroundColor: platform.color }}
+                        >
+                          {conn.verifying ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            "Connect"
+                          )}
+                        </button>
+                      </div>
+                      {conn.error && (
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <XCircle size={14} className="text-red-500" />
+                          <span className="text-xs text-red-500">{conn.error}</span>
+                        </div>
+                      )}
+                      <p className="text-xs mt-1.5" style={{ color: "var(--muted)" }}>
+                        {platform.help}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Buffer Integration */}
         <section
           className="rounded-xl border p-6 mb-6"
@@ -192,7 +478,7 @@ export default function SettingsPage() {
           ) : (
             <div>
               <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Connect your Buffer account to publish approved content directly to your social media channels.
+                Alternative: Connect Buffer to queue content across platforms. Useful if you prefer Buffer&#39;s scheduling UI.
               </p>
               <div className="flex gap-2">
                 <input
@@ -226,7 +512,7 @@ export default function SettingsPage() {
                 </div>
               )}
               <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
-                Get your access token from Buffer Developer settings. Approved content will be added to your Buffer queue for review before posting.
+                Get your access token from Buffer Developer settings.
               </p>
             </div>
           )}

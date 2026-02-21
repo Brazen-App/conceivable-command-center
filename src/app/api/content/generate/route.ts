@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
         platform: p.platform,
         title: p.title,
         body: p.body,
+        imagePrompt: p.imagePrompt,
         hashtags: p.hashtags,
         status: p.status,
       })),

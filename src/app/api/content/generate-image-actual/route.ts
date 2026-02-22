@@ -309,6 +309,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Try Gemini API first
+    console.log("[generate-image-actual] Attempting Gemini image generation...");
     try {
       const result = await generateImage({
         prompt,
@@ -316,27 +317,60 @@ export async function POST(request: NextRequest) {
         style: style ?? "photography",
       });
 
+      console.log("[generate-image-actual] Gemini succeeded:", result.mimeType);
       return NextResponse.json({
         imageData: `data:${result.mimeType};base64,${result.base64}`,
         mimeType: result.mimeType,
         alt: result.alt,
+        source: "gemini",
       });
-    } catch {
-      // Gemini API unavailable — generate a branded image locally
-      const svg = generateBrandedSvg(
-        prompt,
-        aspectRatio ?? "1:1",
-        style ?? "photography",
-        textOverlay,
-        colorPalette
-      );
-      const base64 = Buffer.from(svg).toString("base64");
+    } catch (geminiError) {
+      const geminiMsg = geminiError instanceof Error ? geminiError.message : String(geminiError);
+      console.error("[generate-image-actual] Gemini FAILED:", geminiMsg);
+      if (geminiError instanceof Error && geminiError.stack) {
+        console.error("[generate-image-actual] Stack:", geminiError.stack);
+      }
 
-      return NextResponse.json({
-        imageData: `data:image/svg+xml;base64,${base64}`,
-        mimeType: "image/svg+xml",
-        alt: prompt.slice(0, 200),
-      });
+      // Try OpenAI DALL-E as fallback
+      try {
+        const { generateImageWithDallE } = await import("@/lib/integrations/openai-images");
+        console.log("[generate-image-actual] Attempting DALL-E fallback...");
+        const result = await generateImageWithDallE({
+          prompt,
+          aspectRatio: aspectRatio ?? "1:1",
+          style: style ?? "photography",
+        });
+
+        console.log("[generate-image-actual] DALL-E succeeded:", result.mimeType);
+        return NextResponse.json({
+          imageData: `data:${result.mimeType};base64,${result.base64}`,
+          mimeType: result.mimeType,
+          alt: result.alt,
+          source: "dall-e",
+        });
+      } catch (dallEError) {
+        const dallEMsg = dallEError instanceof Error ? dallEError.message : String(dallEError);
+        console.error("[generate-image-actual] DALL-E FAILED:", dallEMsg);
+
+        // Both APIs failed — return SVG placeholder with error details
+        console.warn("[generate-image-actual] All image APIs failed. Returning SVG placeholder.");
+        const svg = generateBrandedSvg(
+          prompt,
+          aspectRatio ?? "1:1",
+          style ?? "photography",
+          textOverlay,
+          colorPalette
+        );
+        const base64 = Buffer.from(svg).toString("base64");
+
+        return NextResponse.json({
+          imageData: `data:image/svg+xml;base64,${base64}`,
+          mimeType: "image/svg+xml",
+          alt: prompt.slice(0, 200),
+          source: "svg-placeholder",
+          fallbackReason: `Gemini: ${geminiMsg} | DALL-E: ${dallEMsg}`,
+        });
+      }
     }
   } catch (error) {
     const message =

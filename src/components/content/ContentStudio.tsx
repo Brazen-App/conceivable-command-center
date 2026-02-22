@@ -357,15 +357,27 @@ export default function ContentStudio() {
       });
 
       const data = await res.json();
-      console.log("[ContentStudio] API response:", { ok: res.ok, hasImageData: !!data.imageData, error: data.error });
+      console.log("[ContentStudio] API response:", {
+        ok: res.ok,
+        hasImageData: !!data.imageData,
+        source: data.source,
+        fallbackReason: data.fallbackReason,
+        error: data.error,
+      });
 
       if (res.ok && data.imageData) {
+        if (data.source === "svg-placeholder") {
+          console.warn("[ContentStudio] Got SVG placeholder — APIs failed:", data.fallbackReason);
+          setImageError(`Image APIs unavailable (using placeholder). ${data.fallbackReason}`);
+        }
         setPieces((prev) =>
           prev.map((p) =>
             p.platform === piece.platform ? { ...p, imageUrl: data.imageData } : p
           )
         );
-        console.log("[ContentStudio] Image set successfully, scrolling to top");
+        if (data.source !== "svg-placeholder") {
+          console.log("[ContentStudio] Real image set successfully from:", data.source);
+        }
         setTimeout(() => modalRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 100);
       } else {
         const errMsg = data.error || "Image generation failed";

@@ -318,13 +318,22 @@ export default function ContentStudio() {
   };
 
   // Single-click image generation: resolves prompt if needed, then generates the image
-  const handleGenerateImage = async (piece: GeneratedPiece) => {
+  const handleGenerateImage = async (piece: GeneratedPiece | null) => {
+    if (!piece) return;
+    console.log("[ContentStudio] handleGenerateImage called for:", piece.platform);
     setGeneratingActualImage(piece.platform);
     setImageError(null);
 
+    // Wait for browser to paint the loading state before starting async work
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+
     try {
       // Step 1: Ensure we have an image prompt
+      console.log("[ContentStudio] Resolving image prompt...");
       const imagePrompt = await resolveImagePrompt(piece);
+      console.log("[ContentStudio] Image prompt resolved:", imagePrompt.prompt.slice(0, 50));
 
       // Save the prompt to pieces state so it shows in the UI
       setPieces((prev) =>
@@ -334,6 +343,7 @@ export default function ContentStudio() {
       );
 
       // Step 2: Generate the actual image
+      console.log("[ContentStudio] Calling generate-image-actual API...");
       const res = await fetch("/api/content/generate-image-actual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -345,6 +355,7 @@ export default function ContentStudio() {
       });
 
       const data = await res.json();
+      console.log("[ContentStudio] API response:", { ok: res.ok, hasImageData: !!data.imageData, demo: data.demo, error: data.error });
 
       if (res.ok && data.imageData) {
         setPieces((prev) =>
@@ -352,13 +363,18 @@ export default function ContentStudio() {
             p.platform === piece.platform ? { ...p, imageUrl: data.imageData } : p
           )
         );
+        console.log("[ContentStudio] Image set successfully, scrolling to top");
         // Scroll modal to top so user sees the generated image
-        setTimeout(() => modalRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 50);
+        setTimeout(() => modalRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 100);
       } else {
-        setImageError(data.error || "Image generation failed. Check that GOOGLE_GEMINI_API_KEY is set.");
+        const errMsg = data.error || "Image generation failed. Check that GOOGLE_GEMINI_API_KEY is set.";
+        console.error("[ContentStudio] Image generation error:", errMsg);
+        setImageError(errMsg);
       }
     } catch (err) {
-      setImageError("Failed to generate image" + (err instanceof Error ? ": " + err.message : ""));
+      const errMsg = "Failed to generate image" + (err instanceof Error ? ": " + err.message : "");
+      console.error("[ContentStudio] Exception in handleGenerateImage:", err);
+      setImageError(errMsg);
     } finally {
       setGeneratingActualImage(null);
     }
@@ -992,6 +1008,7 @@ export default function ContentStudio() {
 
                 <div className="flex items-center gap-2 mt-3">
                   <button
+                    type="button"
                     onClick={() => {
                       navigator.clipboard.writeText(selectedPiece.imagePrompt!.prompt);
                     }}
@@ -1001,7 +1018,8 @@ export default function ContentStudio() {
                     Copy Prompt
                   </button>
                   <button
-                    onClick={() => handleGenerateImage(selectedPiece)}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleGenerateImage(selectedPiece); }}
                     disabled={generatingActualImage === selectedPiece.platform}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md font-medium text-white disabled:opacity-50"
                     style={{ backgroundColor: "var(--brand-primary)" }}
@@ -1024,8 +1042,14 @@ export default function ContentStudio() {
                     )}
                   </button>
                 </div>
+                {generatingActualImage === selectedPiece.platform && (
+                  <div className="mt-2 p-2 rounded-md text-xs font-medium flex items-center gap-2" style={{ backgroundColor: "#F3F0FF", color: "var(--brand-primary)" }}>
+                    <Loader2 size={12} className="animate-spin" />
+                    Generating your image — this may take a few seconds...
+                  </div>
+                )}
                 {imageError && (
-                  <div className="mt-2 p-2 rounded-md text-xs text-red-600" style={{ backgroundColor: "#FEF2F2" }}>
+                  <div className="mt-2 p-3 rounded-md text-xs text-red-600 font-medium border border-red-200" style={{ backgroundColor: "#FEF2F2" }}>
                     {imageError}
                   </div>
                 )}
@@ -1033,7 +1057,8 @@ export default function ContentStudio() {
             ) : (
               <>
                 <button
-                  onClick={() => handleGenerateImage(selectedPiece)}
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleGenerateImage(selectedPiece); }}
                   disabled={generatingActualImage === selectedPiece.platform}
                   className="flex items-center gap-2 w-full justify-center py-3 rounded-xl border border-dashed mb-4 text-sm font-medium disabled:opacity-50"
                   style={{ borderColor: "var(--border)", color: "var(--brand-primary)" }}
@@ -1050,8 +1075,14 @@ export default function ContentStudio() {
                     </>
                   )}
                 </button>
+                {generatingActualImage === selectedPiece.platform && (
+                  <div className="p-2 rounded-md text-xs font-medium flex items-center gap-2 mb-4" style={{ backgroundColor: "#F3F0FF", color: "var(--brand-primary)" }}>
+                    <Loader2 size={12} className="animate-spin" />
+                    Generating your image — this may take a few seconds...
+                  </div>
+                )}
                 {imageError && (
-                  <div className="p-2 rounded-md text-xs text-red-600 mb-4" style={{ backgroundColor: "#FEF2F2" }}>
+                  <div className="p-3 rounded-md text-xs text-red-600 font-medium mb-4 border border-red-200" style={{ backgroundColor: "#FEF2F2" }}>
                     {imageError}
                   </div>
                 )}

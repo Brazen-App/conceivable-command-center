@@ -25,66 +25,30 @@ interface Story {
   status: "pending" | "selected" | "dismissed";
 }
 
-// Demo stories for initial UI
+// Initial stories shown before the user clicks "Generate Fresh Brief"
 const DEMO_STORIES: Story[] = [
   {
-    id: "1",
-    title: "New Study Links Gut Microbiome to Fertility Outcomes",
+    id: "init-1",
+    title: "Welcome to Your Morning Brief",
     summary:
-      "Researchers at Stanford published findings showing a direct correlation between gut microbiome diversity and IVF success rates. The study of 2,400 women found that those with higher microbial diversity had 34% better outcomes.",
-    sourceUrl: "https://pubmed.ncbi.nlm.nih.gov/?term=gut+microbiome+fertility+IVF",
-    sourcePlatform: "PubMed",
-    relevanceScore: 95,
-    viralityScore: 78,
-    topics: ["fertility", "women's health"],
+      "This is your daily content intelligence hub. Click \"Generate Fresh Brief\" above to fetch today's curated stories across PubMed, TikTok, Instagram, X, and Google News — ranked by relevance and virality for Conceivable's audience.",
+    sourceUrl: "#",
+    sourcePlatform: "System",
+    relevanceScore: 100,
+    viralityScore: 0,
+    topics: [],
     status: "pending",
   },
   {
-    id: "2",
-    title: "TikTok Creator's PCOS Journey Reaches 4M Views",
+    id: "init-2",
+    title: "How the Brief Works",
     summary:
-      "A creator documenting her PCOS diagnosis and lifestyle changes has gone viral. Her approach of combining clinical data with personal storytelling mirrors Conceivable's brand voice perfectly.",
-    sourceUrl: "https://www.tiktok.com/search?q=PCOS+journey",
-    sourcePlatform: "TikTok",
-    relevanceScore: 82,
-    viralityScore: 95,
-    topics: ["PCOS", "women's health"],
-    status: "pending",
-  },
-  {
-    id: "3",
-    title: "FDA Updates Supplement Labeling Requirements for 2026",
-    summary:
-      "The FDA announced new labeling standards for dietary supplements effective Q3 2026, with specific emphasis on reproductive health claims. Conceivable's supplement line should be reviewed against these new guidelines.",
-    sourceUrl: "https://www.fda.gov/food/dietary-supplements",
-    sourcePlatform: "Google News",
-    relevanceScore: 90,
-    viralityScore: 45,
-    topics: ["women's health"],
-    status: "pending",
-  },
-  {
-    id: "4",
-    title: "AI-Powered Fertility Tracking Apps See 300% Growth",
-    summary:
-      "Market analysis shows AI-enabled fertility and health tracking apps have tripled their user base in the past year. Women 25-35 are the primary adopters, citing personalized insights as the key differentiator.",
-    sourceUrl: "https://news.google.com/search?q=AI+fertility+tracking+apps",
-    sourcePlatform: "Google News",
-    relevanceScore: 88,
-    viralityScore: 72,
-    topics: ["AI", "AI in healthcare", "fertility"],
-    status: "pending",
-  },
-  {
-    id: "5",
-    title: "Endometriosis Awareness Post Goes Viral on Instagram",
-    summary:
-      "An infographic-style carousel about endometriosis myths vs. facts has garnered 500K+ saves on Instagram. The format — bold claim debunking — is highly shareable and aligns with educational content strategy.",
-    sourceUrl: "https://www.instagram.com/explore/tags/endometriosisawareness/",
-    sourcePlatform: "Instagram",
-    relevanceScore: 80,
-    viralityScore: 91,
-    topics: ["endometriosis", "women's health"],
+      "Each morning, the Content Engine agent scans monitored sources for stories relevant to women's health, fertility, PCOS, endometriosis, and AI in healthcare. Stories are scored for relevance (alignment with Conceivable's mission) and virality (engagement potential). Select a story to create multi-platform content from it.",
+    sourceUrl: "#",
+    sourcePlatform: "System",
+    relevanceScore: 100,
+    viralityScore: 0,
+    topics: [],
     status: "pending",
   },
 ];
@@ -94,6 +58,7 @@ export default function MorningBriefView() {
   const [stories, setStories] = useState<Story[]>(DEMO_STORIES);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [pov, setPov] = useState("");
 
   const updateStoryStatus = (id: string, status: "pending" | "selected" | "dismissed") => {
@@ -115,20 +80,26 @@ export default function MorningBriefView() {
   const handleGenerateBrief = async () => {
     setGenerating(true);
     setError(null);
+    setSuccess(null);
     try {
+      console.log("[MorningBrief] Generating fresh brief...");
       const res = await fetch("/api/briefs/generate", { method: "POST" });
       const data = await res.json();
+      console.log("[MorningBrief] Response:", { ok: res.ok, storiesCount: data.stories?.length, error: data.error });
 
       if (res.ok && data.stories?.length) {
         setStories(
           data.stories.map((s: Story) => ({ ...s, status: s.status ?? "pending" }))
         );
+        setSuccess(`Fresh brief loaded — ${data.stories.length} stories curated.`);
+        setTimeout(() => setSuccess(null), 5000);
       } else {
         setError(
           data.error || "Failed to generate brief. Check that ANTHROPIC_API_KEY is set."
         );
       }
-    } catch {
+    } catch (err) {
+      console.error("[MorningBrief] Fetch error:", err);
       setError("Network error — could not reach the server.");
     } finally {
       setGenerating(false);
@@ -189,6 +160,17 @@ export default function MorningBriefView() {
           {generating ? "Generating..." : "Generate Fresh Brief"}
         </button>
       </div>
+
+      {/* Success Banner */}
+      {success && (
+        <div
+          className="rounded-xl border p-4 mb-4 flex items-start gap-3"
+          style={{ borderColor: "#86EFAC", backgroundColor: "#F0FDF4" }}
+        >
+          <CheckCircle size={16} className="text-green-500 shrink-0 mt-0.5" />
+          <p className="text-sm font-medium text-green-700">{success}</p>
+        </div>
+      )}
 
       {/* Error Banner */}
       {error && (

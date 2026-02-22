@@ -13,6 +13,8 @@ interface Message {
 
 interface AgentChatProps {
   config: AgentConfig;
+  /** When true, uses flex-1 instead of fixed viewport height (for nesting inside other views) */
+  embedded?: boolean;
 }
 
 function useSpeechRecognition(onResult: (text: string) => void) {
@@ -58,7 +60,7 @@ function useSpeechRecognition(onResult: (text: string) => void) {
   return { listening, supported, toggle };
 }
 
-export default function AgentChat({ config }: AgentChatProps) {
+export default function AgentChat({ config, embedded }: AgentChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -133,7 +135,7 @@ export default function AgentChat({ config }: AgentChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-73px)]">
+    <div className={`flex flex-col ${embedded ? "flex-1 min-h-0" : "h-[calc(100vh-73px)]"}`}>
       {/* Agent Info Bar */}
       <div
         className="px-8 py-3 border-b flex items-center gap-3"
@@ -262,22 +264,27 @@ export default function AgentChat({ config }: AgentChatProps) {
             style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
             disabled={loading}
           />
-          {speechSupported && (
-            <button
-              onClick={toggleSpeech}
-              className={`px-3 py-2.5 rounded-xl border transition-colors ${
-                listening ? "text-white" : ""
-              }`}
-              style={{
-                borderColor: listening ? "transparent" : "var(--border)",
-                backgroundColor: listening ? "#EF4444" : "var(--background)",
-                color: listening ? "white" : "var(--muted)",
-              }}
-              title={listening ? "Stop listening" : "Voice input"}
-            >
-              {listening ? <MicOff size={16} /> : <Mic size={16} />}
-            </button>
-          )}
+          <button
+            onClick={speechSupported ? toggleSpeech : undefined}
+            disabled={!speechSupported}
+            className={`px-3 py-2.5 rounded-xl border transition-colors ${
+              listening ? "text-white" : ""
+            } disabled:opacity-40 disabled:cursor-not-allowed`}
+            style={{
+              borderColor: listening ? "transparent" : "var(--border)",
+              backgroundColor: listening ? "#EF4444" : "var(--background)",
+              color: listening ? "white" : "var(--muted)",
+            }}
+            title={
+              !speechSupported
+                ? "Voice input requires Chrome or Edge"
+                : listening
+                  ? "Stop listening"
+                  : "Voice input"
+            }
+          >
+            {listening ? <MicOff size={16} /> : <Mic size={16} />}
+          </button>
           <button
             onClick={handleSend}
             disabled={loading || !input.trim()}

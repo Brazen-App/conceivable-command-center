@@ -202,7 +202,7 @@ export default function ExecutiveCoachView({ config }: ExecutiveCoachViewProps) 
       </div>
 
       {activeTab === "chat" ? (
-        <AgentChat config={config} />
+        <AgentChat config={config} embedded />
       ) : (
         <div className="flex-1 overflow-y-auto p-8">
           <div className="max-w-3xl">

@@ -304,6 +304,9 @@ export default function ContentStudio() {
         if (selectedPiece?.platform === piece.platform) {
           setSelectedPiece((prev) => prev ? { ...prev, imagePrompt: imageData } : null);
         }
+      } else {
+        // API returned an error — fall through to the catch fallback
+        throw new Error("Image prompt API error");
       }
     } catch {
       const defaults = PLATFORM_IMAGE_DEFAULTS[piece.platform];

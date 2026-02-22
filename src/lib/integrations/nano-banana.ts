@@ -31,7 +31,7 @@ export async function generateImage(
   const client = getClient();
 
   const response = await client.models.generateContent({
-    model: "gemini-2.5-flash-preview-image-generation",
+    model: "gemini-2.0-flash-exp",
     contents: `Generate an image based on this description. Make it high quality, professional, and visually striking.\n\nImage description: ${options.prompt}\n\nAspect ratio: ${options.aspectRatio ?? "1:1"}\nStyle: ${options.style ?? "photography"}`,
     config: {
       responseModalities: ["TEXT", "IMAGE"],

@@ -351,11 +351,13 @@ export default function ContentStudio() {
           prompt: imagePrompt.prompt,
           aspectRatio: imagePrompt.aspectRatio,
           style: imagePrompt.style,
+          textOverlay: imagePrompt.textOverlay,
+          colorPalette: imagePrompt.colorPalette,
         }),
       });
 
       const data = await res.json();
-      console.log("[ContentStudio] API response:", { ok: res.ok, hasImageData: !!data.imageData, demo: data.demo, error: data.error });
+      console.log("[ContentStudio] API response:", { ok: res.ok, hasImageData: !!data.imageData, error: data.error });
 
       if (res.ok && data.imageData) {
         setPieces((prev) =>
@@ -364,10 +366,9 @@ export default function ContentStudio() {
           )
         );
         console.log("[ContentStudio] Image set successfully, scrolling to top");
-        // Scroll modal to top so user sees the generated image
         setTimeout(() => modalRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 100);
       } else {
-        const errMsg = data.error || "Image generation failed. Check that GOOGLE_GEMINI_API_KEY is set.";
+        const errMsg = data.error || "Image generation failed";
         console.error("[ContentStudio] Image generation error:", errMsg);
         setImageError(errMsg);
       }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Linkedin,
@@ -211,6 +211,7 @@ export default function ContentStudio() {
   // Nano Banana image generation
   const [generatingActualImage, setGeneratingActualImage] = useState<ContentPlatform | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Publishing integration
   const [bufferConnected, setBufferConnected] = useState(false);
@@ -351,11 +352,13 @@ export default function ContentStudio() {
             p.platform === piece.platform ? { ...p, imageUrl: data.imageData } : p
           )
         );
+        // Scroll modal to top so user sees the generated image
+        setTimeout(() => modalRef.current?.scrollTo({ top: 0, behavior: "smooth" }), 50);
       } else {
         setImageError(data.error || "Image generation failed. Check that GOOGLE_GEMINI_API_KEY is set.");
       }
-    } catch {
-      setImageError("Network error — could not reach the image generation server.");
+    } catch (err) {
+      setImageError("Failed to generate image" + (err instanceof Error ? ": " + err.message : ""));
     } finally {
       setGeneratingActualImage(null);
     }
@@ -914,6 +917,7 @@ export default function ContentStudio() {
       {selectedPiece && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-8">
           <div
+            ref={modalRef}
             className="rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
             style={{ backgroundColor: "var(--surface)" }}
           >
@@ -1027,24 +1031,31 @@ export default function ContentStudio() {
                 )}
               </div>
             ) : (
-              <button
-                onClick={() => handleGenerateImage(selectedPiece)}
-                disabled={generatingActualImage === selectedPiece.platform}
-                className="flex items-center gap-2 w-full justify-center py-3 rounded-xl border border-dashed mb-4 text-sm font-medium disabled:opacity-50"
-                style={{ borderColor: "var(--border)", color: "var(--brand-primary)" }}
-              >
-                {generatingActualImage === selectedPiece.platform ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Generating Image...
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon size={16} />
-                    Generate Image
-                  </>
+              <>
+                <button
+                  onClick={() => handleGenerateImage(selectedPiece)}
+                  disabled={generatingActualImage === selectedPiece.platform}
+                  className="flex items-center gap-2 w-full justify-center py-3 rounded-xl border border-dashed mb-4 text-sm font-medium disabled:opacity-50"
+                  style={{ borderColor: "var(--border)", color: "var(--brand-primary)" }}
+                >
+                  {generatingActualImage === selectedPiece.platform ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Generating Image...
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon size={16} />
+                      Generate Image
+                    </>
+                  )}
+                </button>
+                {imageError && (
+                  <div className="p-2 rounded-md text-xs text-red-600 mb-4" style={{ backgroundColor: "#FEF2F2" }}>
+                    {imageError}
+                  </div>
                 )}
-              </button>
+              </>
             )}
 
             <div

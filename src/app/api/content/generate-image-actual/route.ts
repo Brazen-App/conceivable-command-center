@@ -36,16 +36,21 @@ function generatePlaceholderSvg(prompt: string, aspectRatio: string, style: stri
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.08"/>
-      <stop offset="100%" stop-color="#EC4899" stop-opacity="0.12"/>
+      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.15"/>
+      <stop offset="50%" stop-color="#F3F0FF"/>
+      <stop offset="100%" stop-color="#EC4899" stop-opacity="0.15"/>
     </linearGradient>
   </defs>
-  <rect width="${w}" height="${h}" fill="url(#bg)"/>
-  <rect x="1" y="1" width="${w - 2}" height="${h - 2}" rx="16" fill="none" stroke="#7C3AED" stroke-opacity="0.25" stroke-width="2" stroke-dasharray="8 4"/>
-  <circle cx="${w / 2}" cy="${h / 2 - 50}" r="32" fill="#7C3AED" fill-opacity="0.12"/>
-  <path d="M${w / 2 - 12} ${h / 2 - 58} l8 -8 8 8 M${w / 2 - 16} ${h / 2 - 42} l12 -16 10 12 6 -6 12 16z" fill="none" stroke="#7C3AED" stroke-opacity="0.5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="${w / 2}" y="${h / 2 - 14}" text-anchor="middle" fill="#7C3AED" font-size="12" font-weight="600" font-family="system-ui, sans-serif" text-transform="uppercase" letter-spacing="1">${escapeXml(style)} · ${escapeXml(aspectRatio)} · DEMO</text>
+  <rect width="${w}" height="${h}" rx="16" fill="url(#bg)"/>
+  <rect x="2" y="2" width="${w - 4}" height="${h - 4}" rx="14" fill="none" stroke="#7C3AED" stroke-opacity="0.3" stroke-width="2"/>
+  <circle cx="${w / 2}" cy="${h / 2 - 60}" r="44" fill="#7C3AED" fill-opacity="0.12"/>
+  <path d="M${w / 2 - 16} ${h / 2 - 70} l16 -16 16 16" fill="none" stroke="#7C3AED" stroke-opacity="0.6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M${w / 2 - 20} ${h / 2 - 48} l16 -20 12 14 8 -8 16 20z" fill="#7C3AED" fill-opacity="0.15" stroke="#7C3AED" stroke-opacity="0.4" stroke-width="1.5"/>
+  <text x="${w / 2}" y="${h / 2 + 4}" text-anchor="middle" fill="#7C3AED" font-size="16" font-weight="700" font-family="system-ui, sans-serif">DEMO IMAGE PLACEHOLDER</text>
+  <text x="${w / 2}" y="${h / 2 + 28}" text-anchor="middle" fill="#7C3AED" font-size="13" font-weight="500" font-family="system-ui, sans-serif">${escapeXml(style)} | ${escapeXml(aspectRatio)}</text>
+  <line x1="${w / 2 - 100}" y1="${h / 2 + 42}" x2="${w / 2 + 100}" y2="${h / 2 + 42}" stroke="#7C3AED" stroke-opacity="0.2"/>
   ${lineElements}
+  <text x="${w / 2}" y="${h - 30}" text-anchor="middle" fill="#a78bfa" font-size="11" font-family="system-ui, sans-serif">Connect Gemini API for AI-generated images</text>
 </svg>`;
 
   return svg;

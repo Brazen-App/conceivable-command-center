@@ -211,6 +211,7 @@ export default function ContentStudio() {
   // Nano Banana image generation
   const [generatingActualImage, setGeneratingActualImage] = useState<ContentPlatform | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [imageProgress, setImageProgress] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Publishing integration
@@ -323,6 +324,7 @@ export default function ContentStudio() {
     console.log("[ContentStudio] handleGenerateImage called for:", piece.platform);
     setGeneratingActualImage(piece.platform);
     setImageError(null);
+    setImageProgress("Preparing image prompt...");
 
     // Wait for browser to paint the loading state before starting async work
     await new Promise<void>((resolve) => {
@@ -343,6 +345,7 @@ export default function ContentStudio() {
       );
 
       // Step 2: Generate the actual image
+      setImageProgress("Generating image (Imagen 3.0 → Gemini → DALL-E)...");
       console.log("[ContentStudio] Calling generate-image-actual API...");
       const res = await fetch("/api/content/generate-image-actual", {
         method: "POST",
@@ -368,7 +371,7 @@ export default function ContentStudio() {
       if (res.ok && data.imageData) {
         if (data.source === "svg-placeholder") {
           console.warn("[ContentStudio] Got SVG placeholder — APIs failed:", data.fallbackReason);
-          setImageError(`Image APIs unavailable (using placeholder). ${data.fallbackReason}`);
+          setImageError(`Image APIs unavailable (using placeholder). Details: ${data.fallbackReason}`);
         }
         setPieces((prev) =>
           prev.map((p) =>
@@ -390,6 +393,7 @@ export default function ContentStudio() {
       setImageError(errMsg);
     } finally {
       setGeneratingActualImage(null);
+      setImageProgress(null);
     }
   };
 
@@ -1058,7 +1062,7 @@ export default function ContentStudio() {
                 {generatingActualImage === selectedPiece.platform && (
                   <div className="mt-2 p-2 rounded-md text-xs font-medium flex items-center gap-2" style={{ backgroundColor: "#F3F0FF", color: "var(--brand-primary)" }}>
                     <Loader2 size={12} className="animate-spin" />
-                    Generating your image — this may take a few seconds...
+                    {imageProgress || "Generating your image — this may take a few seconds..."}
                   </div>
                 )}
                 {imageError && (
@@ -1091,7 +1095,7 @@ export default function ContentStudio() {
                 {generatingActualImage === selectedPiece.platform && (
                   <div className="p-2 rounded-md text-xs font-medium flex items-center gap-2 mb-4" style={{ backgroundColor: "#F3F0FF", color: "var(--brand-primary)" }}>
                     <Loader2 size={12} className="animate-spin" />
-                    Generating your image — this may take a few seconds...
+                    {imageProgress || "Generating your image — this may take a few seconds..."}
                   </div>
                 )}
                 {imageError && (

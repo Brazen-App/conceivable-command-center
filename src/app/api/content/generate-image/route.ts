@@ -1,5 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { invokeAgent } from "@/lib/agents/invoke";
+import { ContentPlatform } from "@/types";
+
+const PLATFORM_IMAGE_DEFAULTS: Record<ContentPlatform, { style: string; aspectRatio: string }> = {
+  linkedin: { style: "photography", aspectRatio: "1:1" },
+  "instagram-post": { style: "photography", aspectRatio: "1:1" },
+  "instagram-carousel": { style: "illustration", aspectRatio: "1:1" },
+  x: { style: "photography", aspectRatio: "16:9" },
+  pinterest: { style: "infographic", aspectRatio: "2:3" },
+  tiktok: { style: "photography", aspectRatio: "9:16" },
+  youtube: { style: "photography", aspectRatio: "16:9" },
+  blog: { style: "photography", aspectRatio: "16:9" },
+};
+
+function buildFallbackPrompt(platform: string, topic: string) {
+  const defaults = PLATFORM_IMAGE_DEFAULTS[platform as ContentPlatform] ?? { style: "photography", aspectRatio: "1:1" };
+  return {
+    prompt: `Professional ${defaults.style} for ${platform} about "${topic}". Conceivable brand colors: deep purple (#7C3AED), soft pink (#EC4899), warm white. Modern, clean, science-meets-warmth aesthetic — think Glossier meets medical journal. Target audience: women 20-40. High quality, well-lit, empowering mood.`,
+    alt: `${platform} visual for ${topic}`,
+    style: defaults.style,
+    aspectRatio: defaults.aspectRatio,
+    textOverlay: null,
+    colorPalette: ["#7C3AED", "#EC4899", "#FFFFFF"],
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,16 +57,26 @@ Return ONLY a JSON object (no markdown, no code fences) with these fields:
   "colorPalette": ["#hex1", "#hex2", "#hex3"]
 }`;
 
-    const result = await invokeAgent(
-      { agentId: "content-engine", message: prompt },
-      { systemPromptOverride: "You are a visual creative director. Return only valid JSON, no markdown." }
-    );
+    try {
+      const result = await invokeAgent(
+        { agentId: "content-engine", message: prompt },
+        { systemPromptOverride: "You are a visual creative director. Return only valid JSON, no markdown." }
+      );
 
-    // Parse the JSON response
-    const cleaned = result.response.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
-    const imageData = JSON.parse(cleaned);
+      // Parse the JSON response
+      let cleaned = result.response.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+      // Try to extract a JSON object if surrounded by text
+      const objMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (objMatch) {
+        cleaned = objMatch[0];
+      }
+      const imageData = JSON.parse(cleaned);
 
-    return NextResponse.json(imageData);
+      return NextResponse.json(imageData);
+    } catch {
+      // AI returned non-JSON or demo mode — return a platform-appropriate fallback
+      return NextResponse.json(buildFallbackPrompt(platform, topic));
+    }
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to generate image prompt";

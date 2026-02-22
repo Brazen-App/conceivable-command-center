@@ -202,8 +202,12 @@ export default function ContentStudio() {
   const [founderAngle, setFounderAngle] = useState("");
   const [generating, setGenerating] = useState(false);
   const [pieces, setPieces] = useState<GeneratedPiece[]>([]);
-  const [selectedPiece, setSelectedPiece] = useState<GeneratedPiece | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<ContentPlatform | null>(null);
   const [generatingImageFor, setGeneratingImageFor] = useState<ContentPlatform | null>(null);
+
+  // Derive selectedPiece from pieces so it always reflects latest data
+  const selectedPiece = selectedPlatform ? pieces.find((p) => p.platform === selectedPlatform) ?? null : null;
+  const setSelectedPiece = (piece: GeneratedPiece | null) => setSelectedPlatform(piece?.platform ?? null);
 
   // Nano Banana image generation
   const [generatingActualImage, setGeneratingActualImage] = useState<ContentPlatform | null>(null);
@@ -301,9 +305,6 @@ export default function ContentStudio() {
             p.platform === piece.platform ? { ...p, imagePrompt: imageData } : p
           )
         );
-        if (selectedPiece?.platform === piece.platform) {
-          setSelectedPiece((prev) => prev ? { ...prev, imagePrompt: imageData } : null);
-        }
       } else {
         // API returned an error — fall through to the catch fallback
         throw new Error("Image prompt API error");
@@ -353,9 +354,6 @@ export default function ContentStudio() {
             p.platform === piece.platform ? { ...p, imageUrl: data.imageData } : p
           )
         );
-        if (selectedPiece?.platform === piece.platform) {
-          setSelectedPiece((prev) => prev ? { ...prev, imageUrl: data.imageData } : null);
-        }
       } else {
         setImageError(data.error || "Image generation failed. Check that GOOGLE_GEMINI_API_KEY is set.");
       }

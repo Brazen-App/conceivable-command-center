@@ -203,7 +203,6 @@ export default function ContentStudio() {
   const [generating, setGenerating] = useState(false);
   const [pieces, setPieces] = useState<GeneratedPiece[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<ContentPlatform | null>(null);
-  const [generatingImageFor, setGeneratingImageFor] = useState<ContentPlatform | null>(null);
 
   // Derive selectedPiece from pieces so it always reflects latest data
   const selectedPiece = selectedPlatform ? pieces.find((p) => p.platform === selectedPlatform) ?? null : null;
@@ -285,8 +284,10 @@ export default function ContentStudio() {
     }
   };
 
-  const handleGenerateImagePrompt = async (piece: GeneratedPiece) => {
-    setGeneratingImageFor(piece.platform);
+  // Resolve image prompt — either from piece or by fetching/generating a fallback
+  const resolveImagePrompt = async (piece: GeneratedPiece): Promise<ImagePromptData> => {
+    if (piece.imagePrompt) return piece.imagePrompt;
+
     try {
       const res = await fetch("/api/content/generate-image", {
         method: "POST",
@@ -297,52 +298,48 @@ export default function ContentStudio() {
           contentBody: piece.body,
         }),
       });
-
       if (res.ok) {
-        const imageData: ImagePromptData = await res.json();
-        setPieces((prev) =>
-          prev.map((p) =>
-            p.platform === piece.platform ? { ...p, imagePrompt: imageData } : p
-          )
-        );
-      } else {
-        // API returned an error — fall through to the catch fallback
-        throw new Error("Image prompt API error");
+        return await res.json();
       }
     } catch {
-      const defaults = PLATFORM_IMAGE_DEFAULTS[piece.platform];
-      const fallback: ImagePromptData = {
-        prompt: `Branded ${defaults.style} for ${piece.platform} about "${topic}". Conceivable brand colors: purple (#7C3AED), pink (#EC4899). Modern, clean, science-meets-warmth aesthetic. Target: women 20-40.`,
-        alt: `${piece.platform} visual for ${topic}`,
-        style: defaults.style,
-        aspectRatio: defaults.aspectRatio,
-        textOverlay: null,
-        colorPalette: ["#7C3AED", "#EC4899", "#FFFFFF"],
-      };
-      setPieces((prev) =>
-        prev.map((p) =>
-          p.platform === piece.platform ? { ...p, imagePrompt: fallback } : p
-        )
-      );
-    } finally {
-      setGeneratingImageFor(null);
+      // fall through to fallback
     }
+
+    const defaults = PLATFORM_IMAGE_DEFAULTS[piece.platform];
+    return {
+      prompt: `Branded ${defaults.style} for ${piece.platform} about "${topic}". Conceivable brand colors: purple (#7C3AED), pink (#EC4899). Modern, clean, science-meets-warmth aesthetic. Target: women 20-40.`,
+      alt: `${piece.platform} visual for ${topic}`,
+      style: defaults.style,
+      aspectRatio: defaults.aspectRatio,
+      textOverlay: null,
+      colorPalette: ["#7C3AED", "#EC4899", "#FFFFFF"],
+    };
   };
 
-  // Generate actual image via Nano Banana (Gemini)
-  const handleGenerateActualImage = async (piece: GeneratedPiece) => {
-    if (!piece.imagePrompt) return;
+  // Single-click image generation: resolves prompt if needed, then generates the image
+  const handleGenerateImage = async (piece: GeneratedPiece) => {
     setGeneratingActualImage(piece.platform);
     setImageError(null);
 
     try {
+      // Step 1: Ensure we have an image prompt
+      const imagePrompt = await resolveImagePrompt(piece);
+
+      // Save the prompt to pieces state so it shows in the UI
+      setPieces((prev) =>
+        prev.map((p) =>
+          p.platform === piece.platform ? { ...p, imagePrompt } : p
+        )
+      );
+
+      // Step 2: Generate the actual image
       const res = await fetch("/api/content/generate-image-actual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: piece.imagePrompt.prompt,
-          aspectRatio: piece.imagePrompt.aspectRatio,
-          style: piece.imagePrompt.style,
+          prompt: imagePrompt.prompt,
+          aspectRatio: imagePrompt.aspectRatio,
+          style: imagePrompt.style,
         }),
       });
 
@@ -1000,7 +997,7 @@ export default function ContentStudio() {
                     Copy Prompt
                   </button>
                   <button
-                    onClick={() => handleGenerateActualImage(selectedPiece)}
+                    onClick={() => handleGenerateImage(selectedPiece)}
                     disabled={generatingActualImage === selectedPiece.platform}
                     className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md font-medium text-white disabled:opacity-50"
                     style={{ backgroundColor: "var(--brand-primary)" }}
@@ -1008,7 +1005,7 @@ export default function ContentStudio() {
                     {generatingActualImage === selectedPiece.platform ? (
                       <>
                         <Loader2 size={12} className="animate-spin" />
-                        Generating with Nano Banana...
+                        Generating Image...
                       </>
                     ) : selectedPiece.imageUrl ? (
                       <>
@@ -1031,20 +1028,20 @@ export default function ContentStudio() {
               </div>
             ) : (
               <button
-                onClick={() => handleGenerateImagePrompt(selectedPiece)}
-                disabled={generatingImageFor === selectedPiece.platform}
+                onClick={() => handleGenerateImage(selectedPiece)}
+                disabled={generatingActualImage === selectedPiece.platform}
                 className="flex items-center gap-2 w-full justify-center py-3 rounded-xl border border-dashed mb-4 text-sm font-medium disabled:opacity-50"
                 style={{ borderColor: "var(--border)", color: "var(--brand-primary)" }}
               >
-                {generatingImageFor === selectedPiece.platform ? (
+                {generatingActualImage === selectedPiece.platform ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    Generating image concept...
+                    Generating Image...
                   </>
                 ) : (
                   <>
                     <ImageIcon size={16} />
-                    Generate Image Concept
+                    Generate Image
                   </>
                 )}
               </button>

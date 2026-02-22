@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   ArrowLeft,
   Send,
@@ -11,6 +11,8 @@ import {
   Download,
   Copy,
   CheckCircle2,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import type { PatentOpportunity } from "./IPOpportunities";
 
@@ -26,14 +28,34 @@ interface PatentDrafterProps {
   onBack: () => void;
 }
 
+/**
+ * Convert markdown-formatted text to simple HTML for rendering.
+ * Handles bold, italic, headers, numbered lists, and bullet lists.
+ */
+function renderMarkdown(text: string): string {
+  return text
+    // Headers: ### Header → <strong>Header</strong>
+    .replace(/^#{1,4}\s+(.+)$/gm, "<strong>$1</strong>")
+    // Bold: **text** → <strong>text</strong>
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    // Italic: *text* → <em>text</em>
+    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, "<em>$1</em>")
+    // Bullet lists: - item → • item
+    .replace(/^- (.+)$/gm, "  • $1")
+    // Newlines to <br> for whitespace preservation
+    .replace(/\n/g, "<br>");
+}
+
 export default function PatentDrafter({ opportunity, onBack }: PatentDrafterProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [draftGenerated, setDraftGenerated] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [listening, setListening] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasStarted = useRef(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,6 +67,15 @@ export default function PatentDrafter({ opportunity, onBack }: PatentDrafterProp
     hasStarted.current = true;
     startConversation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Clean up speech recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
   }, []);
 
   const startConversation = async () => {
@@ -61,16 +92,25 @@ export default function PatentDrafter({ opportunity, onBack }: PatentDrafterProp
 
       if (res.ok) {
         const data = await res.json();
+        // Check if the response is actually about this patent (not a generic demo response)
+        const response = data.response as string;
+        const isPatentRelevant =
+          response.includes(opportunity.title) ||
+          response.includes("patent") ||
+          response.includes("provisional") ||
+          response.includes("claims") ||
+          response.includes("invention") ||
+          response.includes("prior art");
+
         setMessages([
           {
             id: "1",
             role: "assistant",
-            content: data.response,
+            content: isPatentRelevant ? response : getFallbackIntro(),
             timestamp: new Date(),
           },
         ]);
       } else {
-        // Fallback intro
         setMessages([
           {
             id: "1",
@@ -126,23 +166,59 @@ Important question areas to cover across the conversation:
 - Specific use cases and examples
 - Inventor details (who contributed to the invention?)
 
+FORMATTING: Use plain text only. Do not use markdown formatting like ** or ##. Use numbered lists for questions. Keep it conversational and clean.
+
 Be conversational but thorough. Ask 2-3 questions at a time, not all at once. After gathering enough information (typically 3-4 rounds of Q&A), offer to generate the provisional patent draft.
 
 Start now with your introduction and first questions.`;
   };
 
   const getFallbackIntro = () => {
-    return `Great choice — "${opportunity.title}" is a strong patent opportunity.
+    return `Great choice \u2014 "${opportunity.title}" is a strong patent opportunity.
+
+${opportunity.description}
 
 Before I draft the provisional application, I need to gather some technical details from you. Let me start with a few questions:
 
-1. **Technical Implementation**: Can you describe how this system would work at a technical level? Walk me through the data flow — what inputs go in, what processing happens, and what outputs come out?
+1. Technical Implementation: Can you describe how this system would work at a technical level? Walk me through the data flow \u2014 what inputs go in, what processing happens, and what outputs come out?
 
-2. **Novelty**: What specifically makes your approach different from anything else on the market? Are there particular algorithms, data combinations, or methodologies that are unique to Conceivable?
+2. Novelty: What specifically makes your approach different from anything else on the market? Are there particular algorithms, data combinations, or methodologies that are unique to Conceivable?
 
-3. **Current Status**: Do you have a working prototype, proof of concept, or test data for this? Or is this still at the concept/design stage?
+3. Current Status: Do you have a working prototype, proof of concept, or test data for this? Or is this still at the concept/design stage?
 
-Take your time — the more detail you provide, the stronger the provisional application will be.`;
+Take your time \u2014 the more detail you provide, the stronger the provisional application will be.`;
+  };
+
+  const getFallbackFollowUp = (userMessage: string) => {
+    const msgCount = messages.filter((m) => m.role === "user").length;
+
+    if (msgCount <= 1) {
+      return `Thanks for those details about "${opportunity.title}." That gives me a solid foundation.
+
+Let me dig deeper with a few follow-up questions:
+
+1. Data Sources: What specific data signals or inputs does this system use? For example, are you combining BBT data, HRV, questionnaire responses, supplement adherence, or other signals?
+
+2. Algorithm Details: Can you describe the specific algorithms, models, or logic that process this data? Is it rule-based, ML-based, or a hybrid approach?
+
+3. Integration: How does this relate to your existing Kirsten AI prediction engine? Does it extend the same model, or is it a separate system that feeds into it?`;
+    }
+
+    if (msgCount <= 2) {
+      return `Excellent \u2014 this is very helpful for building strong claims. A couple more questions:
+
+1. Inventor Contributions: Who are the key inventors who contributed to the conception of this technology? Were there specific "aha moments" or breakthroughs that led to this approach?
+
+2. Real-World Validation: Do you have any clinical data, user testing results, or case studies that demonstrate this system works? Even preliminary data strengthens a provisional filing.
+
+3. Competitive Landscape: Are you aware of any competitors or existing patents that cover similar territory? This helps me frame the claims to maximize novelty.`;
+    }
+
+    return `I now have enough information to draft the provisional patent application for "${opportunity.title}."
+
+Based on what you've shared, I can see several strong angles for independent claims around the core method, the system architecture, and the data processing pipeline.
+
+Would you like me to proceed with generating the full provisional patent draft? You can click the "Generate Provisional Patent Draft" button below, or share any additional details you'd like me to include first.`;
   };
 
   const handleSend = async () => {
@@ -172,6 +248,9 @@ Take your time — the more detail you provide, the stronger the provisional app
           agentId: "legal",
           message: `You are acting as a patent attorney drafting a provisional patent application for "${opportunity.title}" for Conceivable (women's health tech company, founder Kirsten Karchmer).
 
+Patent description: ${opportunity.description}
+Potential claims: ${opportunity.claims.join("; ")}
+
 CONVERSATION SO FAR:
 ${conversationHistory}
 
@@ -180,36 +259,59 @@ Continue the conversation. Based on the founder's answers:
 - If you have enough information to draft, say "I now have enough information to draft the provisional patent application" and ask if they'd like you to proceed
 - When drafting, produce a complete provisional patent application with: Title, Field of Invention, Background, Summary, Detailed Description, Claims (independent and dependent), and Abstract
 
+FORMATTING: Use plain text only. No markdown ** or ##. Use numbered lists. Be conversational and clean.
+
 Respond as the patent advisor now:`,
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
+        const response = data.response as string;
+
+        // Check if response is relevant to the patent conversation
+        const isRelevant =
+          response.includes("patent") ||
+          response.includes("claim") ||
+          response.includes("invention") ||
+          response.includes("provisional") ||
+          response.includes("?") ||
+          response.includes(opportunity.title);
+
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: data.response,
+          content: isRelevant ? response : getFallbackFollowUp(input),
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
 
         // Check if a draft was generated
         if (
-          data.response.includes("PROVISIONAL PATENT APPLICATION") ||
-          data.response.includes("Field of Invention") ||
-          data.response.includes("CLAIMS") ||
-          data.response.includes("Detailed Description")
+          response.includes("PROVISIONAL PATENT APPLICATION") ||
+          response.includes("Field of Invention") ||
+          response.includes("CLAIMS") ||
+          response.includes("Detailed Description")
         ) {
           setDraftGenerated(true);
         }
+      } else {
+        // API returned an error — use contextual fallback
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: getFallbackFollowUp(input),
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
       }
     } catch {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content:
-          "I encountered an error. Please check that the ANTHROPIC_API_KEY is configured and try again.",
+          "I encountered a connection error. Let me continue with what I have.\n\n" +
+          getFallbackFollowUp(input),
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -281,12 +383,20 @@ Write the complete application now. Be thorough and technically precise.`,
         };
         setMessages((prev) => [...prev, draftMessage]);
         setDraftGenerated(true);
+      } else {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "The draft generation failed. Please try again — the AI service may be temporarily unavailable.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
       }
     } catch {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "Failed to generate the draft. Please try again.",
+        content: "Failed to generate the draft. Please check your connection and try again.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -306,6 +416,61 @@ Write the complete application now. Be thorough and technically precise.`,
       setTimeout(() => setCopied(false), 2000);
     }
   };
+
+  // Speech recognition via Web Speech API
+  const toggleListening = useCallback(() => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const SpeechRecognition =
+      typeof window !== "undefined"
+        ? window.SpeechRecognition || window.webkitSpeechRecognition
+        : null;
+
+    if (!SpeechRecognition) {
+      setInput((prev) =>
+        prev
+          ? prev
+          : "Voice input is not supported in this browser. Please use Chrome or Edge."
+      );
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    let finalTranscript = input;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += (finalTranscript ? " " : "") + transcript;
+        } else {
+          interim = transcript;
+        }
+      }
+      setInput(finalTranscript + (interim ? " " + interim : ""));
+    };
+
+    recognition.onerror = () => {
+      setListening(false);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setListening(true);
+  }, [listening, input]);
 
   return (
     <div className="flex flex-col h-full">
@@ -406,9 +571,16 @@ Write the complete application now. Be thorough and technically precise.`,
                     msg.role === "assistant" ? "1px solid var(--border)" : "none",
                 }}
               >
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                  {msg.content}
-                </p>
+                {msg.role === "assistant" ? (
+                  <div
+                    className="text-sm leading-relaxed [&_strong]:font-semibold"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
+                  />
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                    {msg.content}
+                  </p>
+                )}
               </div>
               {msg.role === "user" && (
                 <div
@@ -472,6 +644,21 @@ Write the complete application now. Be thorough and technically precise.`,
             disabled={loading}
           />
           <button
+            onClick={toggleListening}
+            disabled={loading}
+            className={`px-3 py-2.5 rounded-xl border disabled:opacity-50 ${
+              listening ? "ring-2 ring-red-400" : ""
+            }`}
+            style={{
+              borderColor: listening ? "#EF4444" : "var(--border)",
+              backgroundColor: listening ? "#FEF2F2" : "var(--background)",
+              color: listening ? "#EF4444" : "var(--muted)",
+            }}
+            title={listening ? "Stop recording" : "Start voice input"}
+          >
+            {listening ? <MicOff size={16} /> : <Mic size={16} />}
+          </button>
+          <button
             onClick={handleSend}
             disabled={loading || !input.trim()}
             className="px-4 py-2.5 rounded-xl text-white disabled:opacity-50"
@@ -480,6 +667,11 @@ Write the complete application now. Be thorough and technically precise.`,
             <Send size={16} />
           </button>
         </div>
+        {listening && (
+          <p className="text-xs mt-2" style={{ color: "#EF4444" }}>
+            Listening... speak now. Click the mic button to stop.
+          </p>
+        )}
       </div>
     </div>
   );

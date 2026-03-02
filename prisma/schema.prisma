@@ -1,162 +1,162 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================================
-// Agent System
+// Core — Departments & Cross-Department Systems
 // ============================================================
 
-model Agent {
-  id          String   @id @default(uuid())
-  division    String   // executive-coach, marketing, legal, scientific-research, content-engine
-  name        String
-  description String
-  systemPrompt String  @db.Text
-  status      String   @default("idle") // idle, working, error, disabled
-  capabilities String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  messages    AgentMessage[]
-}
-
-model AgentMessage {
-  id        String   @id @default(uuid())
-  agentId   String
-  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  role      String   // user, assistant, system
-  content   String   @db.Text
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  status    String   @default("green") // green, yellow, red
+  briefs    Brief[]
+  tasks     Task[]
+  metrics   Metric[]
+  alerts    Alert[]
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-// ============================================================
-// Content Engine — Morning Brief
-// ============================================================
-
-model MorningBrief {
-  id          String   @id @default(uuid())
-  date        DateTime @db.Date
-  generatedAt DateTime @default(now())
-  status      String   @default("generated") // generated, reviewed, actioned
-
-  stories     BriefStory[]
-
-  @@unique([date])
+model Brief {
+  id           String     @id @default(cuid())
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  weekOf       DateTime
+  status       String
+  content      Json       // structured brief content
+  createdAt    DateTime   @default(now())
 }
 
-model BriefStory {
-  id             String   @id @default(uuid())
-  briefId        String
-  brief          MorningBrief @relation(fields: [briefId], references: [id], onDelete: Cascade)
-  title          String
-  summary        String   @db.Text
-  sourceUrl      String
-  sourcePlatform String
-  relevanceScore Float    @default(0)
-  viralityScore  Float    @default(0)
-  topics         String[]
-  publishedAt    DateTime?
-  status         String   @default("pending") // pending, reviewed, selected, dismissed
-
-  contentBatches ContentBatch[]
+model Task {
+  id           String     @id @default(cuid())
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  title        String
+  description  String?
+  status       String     @default("pending") // pending, in_progress, done, blocked
+  priority     String     @default("medium") // low, medium, high, critical
+  assignee     String?
+  dueDate      DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
-// ============================================================
-// Content Engine — Content Creation
-// ============================================================
-
-model ContentBatch {
-  id            String   @id @default(uuid())
-  topic         String
-  founderAngle  String   @db.Text
-  sourceStoryId String?
-  sourceStory   BriefStory? @relation(fields: [sourceStoryId], references: [id])
-  status        String   @default("generating") // generating, in-review, approved, published
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  pieces        ContentPiece[]
+model Metric {
+  id           String     @id @default(cuid())
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  name         String
+  value        Float
+  target       Float?
+  trend        String?    // up, down, flat
+  recordedAt   DateTime   @default(now())
 }
 
-model ContentPiece {
-  id          String   @id @default(uuid())
-  batchId     String
-  batch       ContentBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  platform    String   // linkedin, instagram-post, instagram-carousel, pinterest, tiktok, youtube, blog
-  title       String
-  body        String   @db.Text
-  imagePrompt String?  @db.Text
-  imageUrl    String?
-  hashtags    String[]
-  status      String   @default("draft") // draft, in-review, approved, published, rejected
-  createdAt   DateTime @default(now())
-  publishedAt DateTime?
-}
-
-// ============================================================
-// Content Engine — Viral Analyzer
-// ============================================================
-
-model ViralInsight {
-  id                String   @id @default(uuid())
-  sourceUrl         String
-  platform          String
-  hook              String   @db.Text
-  format            String
-  emotionalTriggers String[]
-  engagementLikes   Int?
-  engagementShares  Int?
-  engagementComments Int?
-  engagementViews   Int?
-  rewrittenContent  String   @db.Text
-  analyzedAt        DateTime @default(now())
-}
-
-// ============================================================
-// Training & Voice Layer
-// ============================================================
-
-model TrainingDocument {
-  id          String   @id @default(uuid())
-  name        String
-  type        String   // book, video-transcript, brand-guidelines, script, article, other
-  filePath    String
-  fileSize    Int
-  mimeType    String
-  chunkCount  Int      @default(0)
-  status      String   @default("uploading") // uploading, processing, indexed, error
-  uploadedAt  DateTime @default(now())
-  processedAt DateTime?
-
-  chunks      DocumentChunk[]
-}
-
-model DocumentChunk {
-  id         String   @id @default(uuid())
-  documentId String
-  document   TrainingDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  content    String   @db.Text
-  embedding  Float[]
-  metadata   Json?
-  chunkIndex Int
-  createdAt  DateTime @default(now())
-}
-
-// ============================================================
-// Notifications
-// ============================================================
-
-model Notification {
-  id            String   @id @default(uuid())
+model Alert {
+  id            String     @id @default(cuid())
+  sourceDeptId  String
+  sourceDept    Department @relation(fields: [sourceDeptId], references: [id])
+  targetDeptIds String[]   // departments that need to see this
+  type          String     // compliance_flag, budget_alert, deadline, cross_dept
+  severity      String     // info, warning, critical
   title         String
-  message       String   @db.Text
-  type          String   @default("info") // info, success, warning, error
-  read          Boolean  @default(false)
-  agentDivision String?
-  createdAt     DateTime @default(now())
+  description   String
+  resolved      Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  resolvedAt    DateTime?
+}
+
+// ============================================================
+// Email Strategy
+// ============================================================
+
+model Email {
+  id          String    @id @default(cuid())
+  week        Int
+  sequence    Int
+  subject     String
+  preview     String
+  body        String    @db.Text
+  status      String    @default("pending") // pending, approved, published
+  mailchimpId String?
+  approvedAt  DateTime?
+  publishedAt DateTime?
+  metrics     Json?     // open rate, click rate, etc.
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============================================================
+// Content Engine
+// ============================================================
+
+model Content {
+  id           String    @id @default(cuid())
+  type         String    // social_post, carousel, video_clip, thread, blog, email_segment
+  platform     String    // instagram, tiktok, linkedin, x, youtube, blog
+  sourceType   String    // podcast, research, email, original
+  sourceRef    String?   // reference to source material
+  title        String
+  body         String    @db.Text
+  status       String    @default("draft") // draft, legal_review, approved, scheduled, published
+  scheduledFor DateTime?
+  publishedAt  DateTime?
+  metrics      Json?     // platform-specific engagement metrics
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ============================================================
+// Legal / IP / Compliance
+// ============================================================
+
+model Patent {
+  id             String    @id @default(cuid())
+  title          String
+  type           String    // utility, provisional, continuation
+  status         String    // filed, pending, granted, expired
+  filingDate     DateTime?
+  expirationDate DateTime?
+  patentNumber   String?
+  claims         Json?     // key claims summary
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model ComplianceClaim {
+  id         String   @id @default(cuid())
+  claim      String   // the specific claim text
+  category   String   // efficacy, safety, testimonial, comparison
+  status     String   // approved, restricted, prohibited
+  citation   String?  // supporting evidence
+  disclaimer String?  // required disclaimer text
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ============================================================
+// Fundraising
+// ============================================================
+
+model Investor {
+  id             String    @id @default(cuid())
+  name           String
+  firm           String?
+  type           String    // angel, seed, series_a, strategic
+  status         String    @default("prospect") // prospect, contacted, meeting, due_diligence, term_sheet, closed, passed
+  notes          String?   @db.Text
+  lastContact    DateTime?
+  nextAction     String?
+  nextActionDate DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }

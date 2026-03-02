@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import late from "@/lib/late";
+import getLate from "@/lib/late";
 
 interface PublishPiece {
   platform: string;
@@ -23,7 +23,7 @@ let accountsCache: Array<{ _id: string; platform: string; isActive: boolean }> |
 
 async function getAccounts() {
   if (accountsCache) return accountsCache;
-  const res = await late.accounts.listAccounts();
+  const res = await getLate().accounts.listAccounts();
   accountsCache = (res.data as { accounts?: Array<{ _id: string; platform: string; isActive: boolean }> })?.accounts ?? [];
   return accountsCache;
 }
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
         ? `${piece.copy}\n\n${piece.hashtags.map((t) => `#${t}`).join(" ")}`
         : piece.copy;
 
-      const res = await late.posts.createPost({
+      const res = await getLate().posts.createPost({
         body: {
           content: fullContent,
           platforms: [{ platform: latePlatform, accountId: account._id }],

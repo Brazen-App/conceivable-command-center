@@ -11,6 +11,7 @@ import {
   Rocket,
   Brain,
   FlaskConical,
+  Heart,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -39,6 +40,13 @@ const DEPARTMENTS = [
     href: "/departments/content",
     icon: PenTool,
     description: "The Mouth",
+    accent: "#E37FB1",  // pink
+  },
+  {
+    label: "Community",
+    href: "/departments/community",
+    icon: Heart,
+    description: "The Heartbeat",
     accent: "#1EAA55",  // green
   },
   {
@@ -294,7 +302,7 @@ export default function DepartmentNav() {
               className="text-[11px]"
               style={{ color: "var(--sidebar-text-muted)" }}
             >
-              8 departments connected
+              9 departments connected
             </span>
           </div>
         </div>

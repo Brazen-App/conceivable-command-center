@@ -45,7 +45,7 @@ const DEPARTMENTS = [
     href: "/departments/legal",
     icon: Shield,
     description: "The Immune System",
-    accent: "#356FB6",  // navy
+    accent: "#E24D47",  // red
   },
   {
     label: "Finance",
@@ -59,7 +59,7 @@ const DEPARTMENTS = [
     href: "/departments/fundraising",
     icon: Rocket,
     description: "The Growth Engine",
-    accent: "#E24D47",  // red
+    accent: "#356FB6",  // navy blue
   },
   {
     label: "Strategy / Coaching",

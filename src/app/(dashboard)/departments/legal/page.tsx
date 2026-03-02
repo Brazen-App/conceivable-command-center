@@ -1,241 +1,258 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Shield, FileText, Scale, Lock } from "lucide-react";
-import PatentPortfolio from "@/components/departments/legal/PatentPortfolio";
-import ComplianceDashboard from "@/components/departments/legal/ComplianceDashboard";
-import PrivacySecurity from "@/components/departments/legal/PrivacySecurity";
-import PatentDraftPanel from "@/components/departments/legal/PatentDraftPanel";
-import type {
-  Patent,
-  CompetitorFiling,
-  ComplianceClaim,
-  RegulatoryItem,
-  PendingReview,
-  TestimonialFlag,
-  HIPAAChecklistItem,
-  VendorReview,
-  PrivacyPolicy,
-} from "@/lib/data/legal-data";
+import {
+  Shield,
+  FileText,
+  Scale,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  MessageSquare,
+  Bell,
+} from "lucide-react";
 
-const TABS = [
-  { id: "patents", label: "Patent & IP Portfolio", icon: FileText },
-  { id: "compliance", label: "Compliance Dashboard", icon: Scale },
-  { id: "privacy", label: "Privacy & Security", icon: Lock },
-] as const;
+const ACCENT = "#E24D47";
 
-type TabId = (typeof TABS)[number]["id"];
+const COMPLIANCE_SCORE = 98;
 
-interface LegalData {
-  patents: Patent[];
-  competitorFilings: CompetitorFiling[];
-  claims: ComplianceClaim[];
-  regulatory: RegulatoryItem[];
-  pendingReviews: PendingReview[];
-  testimonialFlags: TestimonialFlag[];
-  hipaaChecklist: HIPAAChecklistItem[];
-  vendorReviews: VendorReview[];
-  privacyPolicies: PrivacyPolicy[];
-}
+const PATENT_SUMMARY = {
+  total: 5,
+  filed: 3,
+  provisional: 1,
+  critical: 1,
+};
 
-export default function LegalDepartmentPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("patents");
-  const [data, setData] = useState<LegalData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [draftPatent, setDraftPatent] = useState<Patent | null>(null);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+const RECENT_ALERTS = [
+  { id: "a01", type: "critical" as const, message: "Closed-Loop Physiologic Correction patent: file provisional BEFORE fundraise", date: "2026-02-28", department: "Legal + Fundraising" },
+  { id: "a02", type: "warning" as const, message: "3 email testimonials need FTC compliance verification", date: "2026-03-01", department: "Legal + Email" },
+  { id: "a03", type: "info" as const, message: "Quarterly HIPAA compliance review due March 15", date: "2026-03-02", department: "Legal" },
+  { id: "a04", type: "info" as const, message: "Natural Cycles published new patent filing -- monitor for overlap", date: "2026-02-27", department: "Legal" },
+];
 
-  const handleStartDraft = useCallback((patent: Patent) => {
-    setDraftPatent(patent);
-    setIsPanelOpen(true);
-  }, []);
-
-  const handleClosePanel = useCallback(() => {
-    setIsPanelOpen(false);
-    // Clear patent after animation completes
-    setTimeout(() => setDraftPatent(null), 300);
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/legal")
-      .then((res) => res.json())
-      .then((d) => {
-        setData(d);
-        setLoading(false);
-      });
-  }, []);
-
-  const handleReviewAction = async (id: string, action: "approved" | "rejected" | "needs_revision") => {
-    const res = await fetch("/api/legal", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, action }),
-    });
-    const updated = await res.json();
-    if (data) {
-      setData({
-        ...data,
-        pendingReviews: data.pendingReviews.map((r) => (r.id === id ? updated : r)),
-      });
-    }
-  };
-
-  const urgentCount = data
-    ? data.patents.filter((p) => p.status === "urgent" || p.filingPriority === "critical").length
-    : 0;
-  const pendingReviewCount = data
-    ? data.pendingReviews.filter((r) => r.status === "pending").length
-    : 0;
-  const unresolvedTestimonials = data
-    ? data.testimonialFlags.filter((t) => t.status === "unresolved").length
-    : 0;
+function ComplianceScoreRing({ score }: { score: number }) {
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  const color = score >= 90 ? "#1EAA55" : score >= 70 ? "#F1C028" : "#E24D47";
 
   return (
-    <div className="p-6 md:p-8 lg:p-10 max-w-7xl">
-      {/* Header */}
-      <header className="mb-6">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ backgroundColor: "#E24D4714" }}
-          >
-            <Shield size={20} style={{ color: "#E24D47" }} strokeWidth={1.8} />
+    <div className="relative w-36 h-36 mx-auto">
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r={radius} fill="none" stroke="var(--border)" strokeWidth="8" />
+        <circle
+          cx="60" cy="60" r={radius} fill="none" stroke={color}
+          strokeWidth="8" strokeLinecap="round"
+          strokeDasharray={circumference} strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 1s ease-out" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-3xl font-bold" style={{ color: "var(--foreground)" }}>{score}</span>
+        <span className="text-xs" style={{ color: "var(--muted)" }}>/ 100</span>
+      </div>
+    </div>
+  );
+}
+
+function AlertBadge({ type }: { type: "critical" | "warning" | "info" }) {
+  const config = {
+    critical: { bg: "#E24D4718", color: "#E24D47", label: "Critical" },
+    warning: { bg: "#F1C02818", color: "#F1C028", label: "Warning" },
+    info: { bg: "#356FB618", color: "#356FB6", label: "Info" },
+  };
+  const c = config[type];
+  return (
+    <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: c.bg, color: c.color }}>
+      {c.label}
+    </span>
+  );
+}
+
+export default function LegalDashboardPage() {
+  return (
+    <div className="space-y-6">
+      {/* Hero: Compliance Score */}
+      <div
+        className="rounded-2xl p-6 text-center"
+        style={{ backgroundColor: `${ACCENT}08`, border: `1px solid ${ACCENT}20` }}
+      >
+        <p className="text-xs font-medium uppercase tracking-widest mb-4" style={{ color: ACCENT }}>
+          Compliance Score
+        </p>
+        <ComplianceScoreRing score={COMPLIANCE_SCORE} />
+        <p className="text-sm mt-4" style={{ color: "var(--muted)" }}>
+          Composite of FDA claims, FTC advertising, HIPAA compliance, and testimonial verification
+        </p>
+        <div className="flex items-center justify-center gap-2 mt-3">
+          <TrendingUp size={14} style={{ color: "#1EAA55" }} />
+          <span className="text-xs font-medium" style={{ color: "#1EAA55" }}>
+            The Gain: Started at 62 -- now at {COMPLIANCE_SCORE} (+{COMPLIANCE_SCORE - 62} points)
+          </span>
+        </div>
+      </div>
+
+      {/* KPI Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Patent Portfolio */}
+        <div
+          className="rounded-xl p-5"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <FileText size={16} style={{ color: ACCENT }} />
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Patent Portfolio
+            </span>
           </div>
-          <div>
-            <h1
-              className="text-2xl font-bold"
-              style={{
-                fontFamily: "var(--font-display)",
-                letterSpacing: "0.06em",
-                color: "var(--foreground)",
-              }}
-            >
-              Legal / IP / Compliance
-            </h1>
-            <p
-              className="mt-0.5"
-              style={{
-                fontFamily: "var(--font-caption)",
-                fontSize: "10px",
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                color: "var(--muted)",
-              }}
-            >
-              The Immune System — Protecting Everything
-            </p>
+          <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>{PATENT_SUMMARY.total}</p>
+          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>total filings</p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#1EAA5518", color: "#1EAA55" }}>
+              {PATENT_SUMMARY.filed} filed
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F1C02818", color: "#F1C028" }}>
+              {PATENT_SUMMARY.provisional} provisional
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#E24D4718", color: "#E24D47" }}>
+              {PATENT_SUMMARY.critical} critical
+            </span>
           </div>
         </div>
-      </header>
 
-      {/* Alert banner */}
-      {(urgentCount > 0 || unresolvedTestimonials > 0) && (
+        {/* Active Compliance Reviews */}
         <div
-          className="rounded-2xl p-4 mb-6 flex items-center gap-4 flex-wrap"
-          style={{
-            backgroundColor: "#E24D470A",
-            border: "1px solid #E24D4718",
-          }}
+          className="rounded-xl p-5"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
         >
-          <div className="flex items-center gap-3 flex-1 min-w-[200px]">
-            <Shield size={20} style={{ color: "#E24D47" }} strokeWidth={2} />
-            <div>
-              <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-                {urgentCount} urgent patent filing{urgentCount !== 1 ? "s" : ""} &middot;{" "}
-                {unresolvedTestimonials} testimonial flag{unresolvedTestimonials !== 1 ? "s" : ""}
-              </p>
-              <p className="text-xs" style={{ color: "var(--muted)" }}>
-                {pendingReviewCount} content pieces awaiting compliance review
-              </p>
+          <div className="flex items-center gap-2 mb-2">
+            <Scale size={16} style={{ color: "#356FB6" }} />
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Compliance Reviews
+            </span>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>7</p>
+          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>active reviews</p>
+          <div className="mt-3 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs" style={{ color: "var(--muted)" }}>FDA claims</span>
+              <CheckCircle2 size={12} style={{ color: "#1EAA55" }} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs" style={{ color: "var(--muted)" }}>FTC advertising</span>
+              <CheckCircle2 size={12} style={{ color: "#1EAA55" }} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs" style={{ color: "var(--muted)" }}>HIPAA</span>
+              <Clock size={12} style={{ color: "#F1C028" }} />
             </div>
           </div>
         </div>
-      )}
 
-      {/* Tab bar */}
-      <div
-        className="flex gap-1 mb-6 p-1 rounded-xl overflow-x-auto"
-        style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
-      >
-        {TABS.map((tab) => {
-          const active = activeTab === tab.id;
-          const Icon = tab.icon;
-          const hasAlert =
-            (tab.id === "patents" && urgentCount > 0) ||
-            (tab.id === "compliance" && (pendingReviewCount > 0 || unresolvedTestimonials > 0));
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
-                transition-all duration-150 whitespace-nowrap
-                ${active ? "shadow-sm" : ""}
-              `}
-              style={
-                active
-                  ? { backgroundColor: "var(--surface)", color: "#E24D47" }
-                  : { color: "var(--muted)" }
-              }
-            >
-              <Icon size={15} strokeWidth={active ? 2 : 1.5} />
-              {tab.label}
-              {hasAlert && (
-                <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#E24D47" }} />
-              )}
-            </button>
-          );
-        })}
+        {/* Testimonial Compliance */}
+        <div
+          className="rounded-xl p-5"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <MessageSquare size={16} style={{ color: "#9686B9" }} />
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Testimonial Status
+            </span>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>12</p>
+          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>testimonials tracked</p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#1EAA5518", color: "#1EAA55" }}>
+              8 compliant
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F1C02818", color: "#F1C028" }}>
+              3 needs disclaimer
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#E24D4718", color: "#E24D47" }}>
+              1 non-compliant
+            </span>
+          </div>
+        </div>
+
+        {/* Alerts */}
+        <div
+          className="rounded-xl p-5"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Bell size={16} style={{ color: "#F1C028" }} />
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Active Alerts
+            </span>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
+            {RECENT_ALERTS.length}
+          </p>
+          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>recent flags</p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#E24D4718", color: "#E24D47" }}>
+              {RECENT_ALERTS.filter((a) => a.type === "critical").length} critical
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F1C02818", color: "#F1C028" }}>
+              {RECENT_ALERTS.filter((a) => a.type === "warning").length} warning
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Tab content */}
-      {loading || !data ? (
-        <div
-          className="rounded-xl border p-12 text-center"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <div
-            className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-3"
-            style={{ borderColor: "#E24D47", borderTopColor: "transparent" }}
-          />
-          <p className="text-sm" style={{ color: "var(--muted)" }}>Loading legal data...</p>
+      {/* Recent Alerts */}
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div className="px-5 py-4">
+          <h2 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+            Recent Flags & Alerts
+          </h2>
         </div>
-      ) : (
-        <>
-          {activeTab === "patents" && (
-            <PatentPortfolio
-              patents={data.patents}
-              competitorFilings={data.competitorFilings}
-              onStartDraft={handleStartDraft}
-            />
-          )}
-          {activeTab === "compliance" && (
-            <ComplianceDashboard
-              claims={data.claims}
-              regulatory={data.regulatory}
-              pendingReviews={data.pendingReviews}
-              testimonialFlags={data.testimonialFlags}
-              onReviewAction={handleReviewAction}
-            />
-          )}
-          {activeTab === "privacy" && (
-            <PrivacySecurity
-              hipaaChecklist={data.hipaaChecklist}
-              vendorReviews={data.vendorReviews}
-              privacyPolicies={data.privacyPolicies}
-            />
-          )}
-        </>
-      )}
+        <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+          {RECENT_ALERTS.map((alert) => (
+            <div key={alert.id} className="px-5 py-3 flex items-start gap-3">
+              <AlertTriangle
+                size={16}
+                style={{ color: alert.type === "critical" ? "#E24D47" : alert.type === "warning" ? "#F1C028" : "#356FB6" }}
+                className="shrink-0 mt-0.5"
+              />
+              <div className="flex-1">
+                <p className="text-sm" style={{ color: "var(--foreground)" }}>{alert.message}</p>
+                <div className="flex items-center gap-3 mt-1">
+                  <AlertBadge type={alert.type} />
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>{alert.date}</span>
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>{alert.department}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      {/* Patent Draft Panel */}
-      {draftPatent && (
-        <PatentDraftPanel
-          patent={draftPatent}
-          isOpen={isPanelOpen}
-          onClose={handleClosePanel}
-        />
-      )}
+      {/* Sullivan: Compliance as Moat */}
+      <div
+        className="rounded-xl p-4"
+        style={{ backgroundColor: "#9686B910", border: "1px solid #9686B920" }}
+      >
+        <div className="flex items-start gap-3">
+          <div className="px-2 py-1 rounded text-xs font-bold shrink-0" style={{ backgroundColor: "#9686B920", color: "#9686B9" }}>
+            10x
+          </div>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+              Multiplier: Compliance Infrastructure as Competitive Moat
+            </p>
+            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+              Patent portfolio + HIPAA compliance + FDA-aware claims = barriers competitors cannot easily replicate.
+              The Closed-Loop patent filing before fundraise is the single highest-leverage legal action. Impacts
+              Legal, Fundraising, and Clinical simultaneously.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

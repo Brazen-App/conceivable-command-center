@@ -1,193 +1,233 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Rocket, Users, Package, BarChart3 } from "lucide-react";
-import InvestorPipeline from "@/components/departments/fundraising/InvestorPipeline";
-import PitchMaterials from "@/components/departments/fundraising/PitchMaterials";
-import NarrativeMetrics from "@/components/departments/fundraising/NarrativeMetrics";
-import type {
-  Investor,
-  MeetingNote,
-  PitchMaterial,
-  FundraiseMetric,
-  WeeklyRecommendation,
-} from "@/lib/data/fundraising-data";
-import { PIPELINE_STAGES } from "@/lib/data/fundraising-data";
+import { TrendingUp, Users, DollarSign, Clock, ArrowRight, MessageSquare, AlertTriangle } from "lucide-react";
 
 const ACCENT = "#356FB6";
 
-const TABS = [
-  { id: "pipeline", label: "Investor CRM & Pipeline", icon: Users },
-  { id: "materials", label: "Pitch Materials & Data Room", icon: Package },
-  { id: "narrative", label: "Narrative & Metrics", icon: BarChart3 },
-] as const;
+const PIPELINE_VALUE = 8250000;
 
-type TabId = (typeof TABS)[number]["id"];
+const STAGE_FUNNEL = [
+  { stage: "Prospect", count: 23, value: 5500000, color: "#9686B9" },
+  { stage: "Contacted", count: 12, value: 3800000, color: "#78C3BF" },
+  { stage: "Meeting", count: 7, value: 2400000, color: "#356FB6" },
+  { stage: "Due Diligence", count: 3, value: 1200000, color: "#F1C028" },
+  { stage: "Term Sheet", count: 1, value: 500000, color: "#1EAA55" },
+];
 
-interface FundraisingData {
-  movementBoard: Investor[];
-  ventureInvestors: Investor[];
-  strategicPartners: Investor[];
-  pitchMaterials: PitchMaterial[];
-  meetingNotes: MeetingNote[];
-  metrics: FundraiseMetric[];
-  weeklyRecommendation: WeeklyRecommendation;
-  narrative: string;
-  storyAngles: { investorFocus: string; angle: string; openingLine: string }[];
+const RECENT_ACTIVITY = [
+  { date: "2026-03-01", type: "meeting" as const, description: "Follow-up call with Serena Ventures associate", investor: "Serena Williams / Serena Ventures" },
+  { date: "2026-02-28", type: "email" as const, description: "Sent updated pitch deck to Alice Walton team", investor: "Alice Walton" },
+  { date: "2026-02-27", type: "research" as const, description: "Completed weekly intel update on MacKenzie Scott giving patterns", investor: "MacKenzie Scott" },
+  { date: "2026-02-26", type: "meeting" as const, description: "Intro meeting with FemTech VC partner", investor: "Spring Health Ventures" },
+  { date: "2026-02-25", type: "milestone" as const, description: "Data room checklist 85% complete", investor: "All" },
+  { date: "2026-02-24", type: "email" as const, description: "Cold outreach to Melinda Gates Foundation program officer", investor: "Melinda Gates" },
+];
+
+function formatCurrency(value: number): string {
+  if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+  if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+  return `$${value}`;
 }
 
-export default function FundraisingDepartmentPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("pipeline");
-  const [data, setData] = useState<FundraisingData | null>(null);
-  const [loading, setLoading] = useState(true);
+function ActivityIcon({ type }: { type: "meeting" | "email" | "research" | "milestone" }) {
+  const config = {
+    meeting: { color: "#356FB6", icon: Users },
+    email: { color: "#78C3BF", icon: MessageSquare },
+    research: { color: "#9686B9", icon: TrendingUp },
+    milestone: { color: "#1EAA55", icon: DollarSign },
+  };
+  const c = config[type];
+  const Icon = c.icon;
+  return (
+    <div
+      className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+      style={{ backgroundColor: `${c.color}18` }}
+    >
+      <Icon size={12} style={{ color: c.color }} />
+    </div>
+  );
+}
 
-  useEffect(() => {
-    fetch("/api/fundraising")
-      .then((res) => res.json())
-      .then((d) => {
-        setData(d);
-        setLoading(false);
-      });
-  }, []);
-
-  const totalInvestors = data
-    ? data.movementBoard.length + data.ventureInvestors.length + data.strategicPartners.length
-    : 0;
-  const activeConversations = data
-    ? [...data.movementBoard, ...data.ventureInvestors, ...data.strategicPartners].filter(
-        (i) => i.stage !== "prospect" && i.stage !== "passed"
-      ).length
-    : 0;
-  const materialsReady = data
-    ? data.pitchMaterials.filter((m) => m.status === "ready").length
-    : 0;
-  const totalMaterials = data ? data.pitchMaterials.length : 0;
+export default function FundraisingDashboardPage() {
+  const activeConversations = STAGE_FUNNEL.reduce((sum, s) => sum + s.count, 0) - STAGE_FUNNEL[0].count;
 
   return (
-    <div className="p-6 md:p-8 lg:p-10 max-w-7xl">
-      {/* Header */}
-      <header className="mb-6">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ backgroundColor: `${ACCENT}14` }}
-          >
-            <Rocket size={20} style={{ color: ACCENT }} strokeWidth={1.8} />
-          </div>
-          <div>
-            <h1
-              className="text-2xl font-bold"
-              style={{
-                fontFamily: "var(--font-display)",
-                letterSpacing: "0.06em",
-                color: "var(--foreground)",
-              }}
-            >
-              Fundraising
-            </h1>
-            <p
-              className="mt-0.5"
-              style={{
-                fontFamily: "var(--font-caption)",
-                fontSize: "10px",
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                color: "var(--muted)",
-              }}
-            >
-              The Growth Engine — $150K Bridge + $5M Series A
-            </p>
-          </div>
-        </div>
-      </header>
-
-      {/* Alert banner */}
+    <div className="space-y-6">
+      {/* Hero: Pipeline Value */}
       <div
-        className="rounded-2xl p-4 mb-6 flex items-center gap-4 flex-wrap"
-        style={{
-          backgroundColor: `${ACCENT}0A`,
-          border: `1px solid ${ACCENT}18`,
-        }}
+        className="rounded-2xl p-6 text-center"
+        style={{ backgroundColor: `${ACCENT}08`, border: `1px solid ${ACCENT}20` }}
       >
-        <div className="flex items-center gap-3 flex-1 min-w-[200px]">
-          <Rocket size={20} style={{ color: ACCENT }} strokeWidth={2} />
+        <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: ACCENT }}>
+          Pipeline Value
+        </p>
+        <p className="text-5xl font-bold" style={{ color: "var(--foreground)" }}>
+          {formatCurrency(PIPELINE_VALUE)}
+        </p>
+        <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
+          total potential funding in pipeline
+        </p>
+        <div className="flex items-center justify-center gap-2 mt-3">
+          <TrendingUp size={14} style={{ color: "#1EAA55" }} />
+          <span className="text-xs font-medium" style={{ color: "#1EAA55" }}>
+            The Gain: From $0 pipeline to {formatCurrency(PIPELINE_VALUE)} in 6 months
+          </span>
+        </div>
+      </div>
+
+      {/* KPI Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div
+          className="rounded-xl p-5"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Users size={16} style={{ color: ACCENT }} />
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Active Conversations
+            </span>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>{activeConversations}</p>
+          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>investors beyond prospect stage</p>
+        </div>
+
+        <div
+          className="rounded-xl p-5"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Clock size={16} style={{ color: "#F1C028" }} />
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Runway Urgency
+            </span>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: "#F1C028" }}>4.2 mo</p>
+          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>remaining at current burn rate</p>
+        </div>
+
+        <div
+          className="rounded-xl p-5"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign size={16} style={{ color: "#1EAA55" }} />
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Closest to Close
+            </span>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>{formatCurrency(500000)}</p>
+          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>at term sheet stage</p>
+        </div>
+      </div>
+
+      {/* Stage Funnel */}
+      <div
+        className="rounded-xl p-5"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <h2 className="text-sm font-semibold mb-4" style={{ color: "var(--foreground)" }}>
+          Pipeline Funnel
+        </h2>
+        <div className="space-y-3">
+          {STAGE_FUNNEL.map((stage, i) => {
+            const maxCount = STAGE_FUNNEL[0].count;
+            const pct = (stage.count / maxCount) * 100;
+            return (
+              <div key={stage.stage}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                      {stage.stage}
+                    </span>
+                    {i < STAGE_FUNNEL.length - 1 && (
+                      <ArrowRight size={12} style={{ color: "var(--muted)" }} />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-medium" style={{ color: stage.color }}>
+                      {stage.count} investors
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      {formatCurrency(stage.value)}
+                    </span>
+                  </div>
+                </div>
+                <div className="w-full h-3 rounded-full" style={{ backgroundColor: "var(--border)" }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${pct}%`, backgroundColor: stage.color }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent Activity Feed */}
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div className="px-5 py-4">
+          <h2 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+            Recent Activity
+          </h2>
+        </div>
+        <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+          {RECENT_ACTIVITY.map((activity, i) => (
+            <div key={i} className="px-5 py-3 flex items-start gap-3">
+              <ActivityIcon type={activity.type} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm" style={{ color: "var(--foreground)" }}>{activity.description}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs" style={{ color: ACCENT }}>{activity.investor}</span>
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>{activity.date}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Runway Urgency Alert */}
+      <div
+        className="rounded-xl p-4 flex items-start gap-3"
+        style={{ backgroundColor: "#F1C02810", border: "1px solid #F1C02820" }}
+      >
+        <AlertTriangle size={16} style={{ color: "#F1C028" }} className="shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-semibold" style={{ color: "#F1C028" }}>
+            Runway Alert: 4.2 Months Remaining
+          </p>
+          <p className="text-xs mt-1" style={{ color: "var(--foreground)" }}>
+            At current burn rate, bridge funding or Series A commitment needed by Q3 2026.
+            Priority: close $150K bridge from existing angels while pursuing $5M Series A.
+          </p>
+        </div>
+      </div>
+
+      {/* Sullivan Multiplier */}
+      <div
+        className="rounded-xl p-4"
+        style={{ backgroundColor: "#9686B910", border: "1px solid #9686B920" }}
+      >
+        <div className="flex items-start gap-3">
+          <div className="px-2 py-1 rounded text-xs font-bold shrink-0" style={{ backgroundColor: "#9686B920", color: "#9686B9" }}>
+            10x
+          </div>
           <div>
             <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-              {totalInvestors} investors tracked &middot; {activeConversations} active conversations
+              Multiplier: Patent Filing + Publication + Pitch = Triple Validation
             </p>
-            <p className="text-xs" style={{ color: "var(--muted)" }}>
-              {materialsReady}/{totalMaterials} pitch materials ready &middot; Closed-Loop patent must file before fundraise
+            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+              Filing the Closed-Loop patent (Legal), submitting the pilot study paper (Clinical),
+              and updating the pitch deck (Fundraising) create a synchronized validation event that
+              dramatically strengthens the Series A narrative. One coordinated push, three departments aligned.
             </p>
           </div>
         </div>
       </div>
-
-      {/* Tab bar */}
-      <div
-        className="flex gap-1 mb-6 p-1 rounded-xl overflow-x-auto"
-        style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
-      >
-        {TABS.map((tab) => {
-          const active = activeTab === tab.id;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
-                transition-all duration-150 whitespace-nowrap
-                ${active ? "shadow-sm" : ""}
-              `}
-              style={
-                active
-                  ? { backgroundColor: "var(--surface)", color: ACCENT }
-                  : { color: "var(--muted)" }
-              }
-            >
-              <Icon size={15} strokeWidth={active ? 2 : 1.5} />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab content */}
-      {loading || !data ? (
-        <div
-          className="rounded-xl border p-12 text-center"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <div
-            className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-3"
-            style={{ borderColor: ACCENT, borderTopColor: "transparent" }}
-          />
-          <p className="text-sm" style={{ color: "var(--muted)" }}>Loading fundraising data...</p>
-        </div>
-      ) : (
-        <>
-          {activeTab === "pipeline" && (
-            <InvestorPipeline
-              movementBoard={data.movementBoard}
-              ventureInvestors={data.ventureInvestors}
-              strategicPartners={data.strategicPartners}
-              meetingNotes={data.meetingNotes}
-              pipelineStages={PIPELINE_STAGES}
-            />
-          )}
-          {activeTab === "materials" && (
-            <PitchMaterials materials={data.pitchMaterials} />
-          )}
-          {activeTab === "narrative" && (
-            <NarrativeMetrics
-              narrative={data.narrative}
-              metrics={data.metrics}
-              weeklyRecommendation={data.weeklyRecommendation}
-              storyAngles={data.storyAngles}
-            />
-          )}
-        </>
-      )}
     </div>
   );
 }

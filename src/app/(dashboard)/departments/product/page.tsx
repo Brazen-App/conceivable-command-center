@@ -1,215 +1,337 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Boxes, LayoutGrid, Search, Network } from "lucide-react";
-import VerticalsGrid from "@/components/departments/product/VerticalsGrid";
-import VerticalDetail from "@/components/departments/product/VerticalDetail";
-import CrossVerticalMap from "@/components/departments/product/CrossVerticalMap";
-import type {
-  Vertical,
-  VerticalId,
-  ResearchItem,
-  Feature,
-  CompetitorEntry,
-  UserInsight,
-  ReadinessCheckItem,
-  CrossVerticalConnection,
-} from "@/lib/data/product-data";
+import { useState } from "react";
+import {
+  Zap,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  Beaker,
+  ArrowRight,
+  LayoutGrid,
+} from "lucide-react";
 
-const ACCENT = "#E37FB1";
+const ACCENT = "#ACB7FF";
 
-const TABS = [
-  { id: "verticals", label: "10 Verticals", icon: LayoutGrid },
-  { id: "connections", label: "Cross-Vertical Map", icon: Network },
-] as const;
+/* ── Sprint Data ── */
+const CURRENT_SPRINT = {
+  name: "Sprint 7 - Core Fertility Engine",
+  progress: 62,
+  startDate: "2026-02-17",
+  endDate: "2026-03-02",
+};
 
-type TabId = (typeof TABS)[number]["id"];
+const SPRINT_PRIORITIES = [
+  { title: "Halo Ring BLE Sync", status: "in_progress" as const, owner: "Lakshmi" },
+  { title: "50-Factor Dashboard v1", status: "in_progress" as const, owner: "Lakshmi" },
+  { title: "Onboarding Flow Assessment", status: "done" as const, owner: "Product" },
+  { title: "Ovulation Detection Model", status: "review" as const, owner: "Lakshmi" },
+  { title: "Clinical Report Export", status: "backlog" as const, owner: "Product" },
+];
 
-interface ProductData {
-  verticals: Vertical[];
-  research: ResearchItem[];
-  features: Feature[];
-  competitors: CompetitorEntry[];
-  insights: UserInsight[];
-  readiness: ReadinessCheckItem[];
-  connections: CrossVerticalConnection[];
-}
+const FEATURE_STATS = {
+  total: 12,
+  shipped: 0,
+  inEngineering: 2,
+  ready: 1,
+  defined: 3,
+  researching: 3,
+  idea: 3,
+};
 
-export default function ProductDepartmentPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("verticals");
-  const [data, setData] = useState<ProductData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedVertical, setSelectedVertical] = useState<VerticalId | null>(null);
+/* ── Verticals Mini Grid ── */
+const VERTICALS_MINI = [
+  { name: "Pre-Period", score: 0, status: "future" },
+  { name: "Period Problems", score: 0, status: "planned" },
+  { name: "PCOS", score: 0, status: "planned" },
+  { name: "Endometriosis", score: 0, status: "future" },
+  { name: "Infertility", score: 72, status: "active" },
+  { name: "Pregnancy", score: 0, status: "research" },
+  { name: "Postpartum", score: 0, status: "future" },
+  { name: "Perimenopause", score: 0, status: "planned" },
+  { name: "Menopause", score: 0, status: "future" },
+  { name: "Post-Menopause", score: 0, status: "future" },
+];
 
-  useEffect(() => {
-    fetch("/api/product")
-      .then((res) => res.json())
-      .then((d) => {
-        setData(d);
-        setLoading(false);
-      });
-  }, []);
+const STATUS_COLORS: Record<string, string> = {
+  in_progress: "#5A6FFF",
+  done: "#1EAA55",
+  review: "#F1C028",
+  backlog: "var(--muted)",
+  active: "#1EAA55",
+  planned: "#5A6FFF",
+  research: "#F1C028",
+  future: "var(--muted)",
+};
 
-  const handleSelectVertical = (id: VerticalId) => {
-    setSelectedVertical(id);
-  };
+const STATUS_LABELS: Record<string, string> = {
+  in_progress: "In Progress",
+  done: "Done",
+  review: "Review",
+  backlog: "Backlog",
+  active: "Active",
+  planned: "Planned",
+  research: "Research",
+  future: "Future",
+};
 
-  const handleBackToGrid = () => {
-    setSelectedVertical(null);
-  };
-
-  const activeVerticals = data ? data.verticals.filter((v) => v.status === "active").length : 0;
-  const totalFeatures = data ? data.features.length : 0;
-  const totalResearch = data ? data.research.length : 0;
+export default function ProductDashboardPage() {
+  const [expandedVertical, setExpandedVertical] = useState<string | null>(null);
 
   return (
-    <div className="p-6 md:p-8 lg:p-10 max-w-7xl">
-      {/* Header */}
-      <header className="mb-6">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ backgroundColor: `${ACCENT}14` }}
-          >
-            <Boxes size={20} style={{ color: ACCENT }} strokeWidth={1.8} />
-          </div>
-          <div>
-            <h1
-              className="text-2xl font-bold"
-              style={{
-                fontFamily: "var(--font-display)",
-                letterSpacing: "0.06em",
-                color: "var(--foreground)",
-              }}
-            >
-              Product Development
-            </h1>
-            <p
-              className="mt-0.5"
-              style={{
-                fontFamily: "var(--font-caption)",
-                fontSize: "10px",
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                color: "var(--muted)",
-              }}
-            >
-              The Product Brain — Research, Ideate, Validate Before Engineering
-            </p>
-          </div>
-        </div>
-      </header>
-
-      {/* Alert banner */}
+    <div>
+      {/* Hero: Build Status */}
       <div
-        className="rounded-2xl p-4 mb-6 flex items-center gap-4 flex-wrap"
+        className="rounded-2xl p-6 mb-6"
         style={{
-          backgroundColor: `${ACCENT}0A`,
-          border: `1px solid ${ACCENT}18`,
+          background: `linear-gradient(135deg, ${ACCENT}18, ${ACCENT}08)`,
+          border: `1px solid ${ACCENT}25`,
         }}
       >
-        <div className="flex items-center gap-3 flex-1 min-w-[200px]">
-          <Boxes size={20} style={{ color: ACCENT }} strokeWidth={2} />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <p
-              className="text-sm font-semibold"
+              className="text-[10px] font-bold uppercase tracking-wider mb-1"
+              style={{ color: ACCENT }}
+            >
+              Build Status
+            </p>
+            <h2
+              className="text-xl font-bold"
               style={{ color: "var(--foreground)" }}
             >
-              10 verticals mapped &middot; {activeVerticals} active &middot;{" "}
-              {totalFeatures} features &middot; {totalResearch} research items
+              {CURRENT_SPRINT.name}
+            </h2>
+            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+              {CURRENT_SPRINT.startDate} - {CURRENT_SPRINT.endDate}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p
+                className="text-4xl font-bold"
+                style={{ color: ACCENT }}
+              >
+                {CURRENT_SPRINT.progress}%
+              </p>
+              <p className="text-xs" style={{ color: "var(--muted)" }}>
+                Sprint Complete
+              </p>
+            </div>
+          </div>
+        </div>
+        {/* Progress bar */}
+        <div
+          className="mt-4 h-2 rounded-full overflow-hidden"
+          style={{ backgroundColor: `${ACCENT}20` }}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${CURRENT_SPRINT.progress}%`,
+              backgroundColor: ACCENT,
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Sprint Priorities */}
+        <div
+          className="rounded-2xl border p-5"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Zap size={16} style={{ color: ACCENT }} />
+            <h3
+              className="text-xs font-bold uppercase tracking-wider"
+              style={{ color: "var(--foreground)" }}
+            >
+              Sprint Priorities
+            </h3>
+          </div>
+          <div className="space-y-2">
+            {SPRINT_PRIORITIES.map((item, i) => {
+              const color = STATUS_COLORS[item.status];
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-xl border p-3"
+                  style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
+                >
+                  {item.status === "done" ? (
+                    <CheckCircle2 size={16} style={{ color }} />
+                  ) : item.status === "in_progress" ? (
+                    <Clock size={16} style={{ color }} />
+                  ) : item.status === "review" ? (
+                    <AlertCircle size={16} style={{ color }} />
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2" style={{ borderColor: color }} />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
+                      {item.title}
+                    </p>
+                    <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+                      {item.owner}
+                    </p>
+                  </div>
+                  <span
+                    className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full shrink-0"
+                    style={{ backgroundColor: `${color}14`, color }}
+                  >
+                    {STATUS_LABELS[item.status]}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Feature Completion Stats */}
+        <div
+          className="rounded-2xl border p-5"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <CheckCircle2 size={16} style={{ color: ACCENT }} />
+            <h3
+              className="text-xs font-bold uppercase tracking-wider"
+              style={{ color: "var(--foreground)" }}
+            >
+              Feature Completion
+            </h3>
+          </div>
+          <div className="text-center mb-4">
+            <p className="text-5xl font-bold" style={{ color: ACCENT }}>
+              {FEATURE_STATS.total}
             </p>
             <p className="text-xs" style={{ color: "var(--muted)" }}>
-              Women&apos;s health lifecycle from Pre-Period through Post-Menopause
+              Total Features Tracked
             </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: "Shipped", count: FEATURE_STATS.shipped, color: "#1EAA55" },
+              { label: "In Engineering", count: FEATURE_STATS.inEngineering, color: "#5A6FFF" },
+              { label: "Ready", count: FEATURE_STATS.ready, color: "#1EAA55" },
+              { label: "Defined", count: FEATURE_STATS.defined, color: "#F1C028" },
+              { label: "Researching", count: FEATURE_STATS.researching, color: "#9686B9" },
+              { label: "Idea", count: FEATURE_STATS.idea, color: ACCENT },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-lg p-2 text-center"
+                style={{ backgroundColor: `${stat.color}10` }}
+              >
+                <p className="text-lg font-bold" style={{ color: stat.color }}>
+                  {stat.count}
+                </p>
+                <p className="text-[9px] font-medium uppercase tracking-wider" style={{ color: stat.color }}>
+                  {stat.label}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Show detail view or tab view */}
-      {selectedVertical && data ? (
-        <VerticalDetail
-          vertical={data.verticals.find((v) => v.id === selectedVertical)!}
-          research={data.research.filter((r) => r.verticalId === selectedVertical)}
-          features={data.features.filter((f) => f.verticalId === selectedVertical)}
-          competitors={data.competitors.filter((c) => c.verticalId === selectedVertical)}
-          insights={data.insights.filter((i) => i.verticalId === selectedVertical)}
-          readiness={data.readiness.filter((r) => r.verticalId === selectedVertical)}
-          onBack={handleBackToGrid}
-        />
-      ) : (
-        <>
-          {/* Tab bar */}
-          <div
-            className="flex gap-1 mb-6 p-1 rounded-xl overflow-x-auto"
-            style={{
-              backgroundColor: "var(--background)",
-              border: "1px solid var(--border)",
-            }}
+      {/* Health Vertical Readiness Summary */}
+      <div
+        className="rounded-2xl border p-5 mb-6"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <LayoutGrid size={16} style={{ color: ACCENT }} />
+          <h3
+            className="text-xs font-bold uppercase tracking-wider"
+            style={{ color: "var(--foreground)" }}
           >
-            {TABS.map((tab) => {
-              const active = activeTab === tab.id;
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium
-                    transition-all duration-150 whitespace-nowrap
-                    ${active ? "shadow-sm" : ""}
-                  `}
-                  style={
-                    active
-                      ? { backgroundColor: "var(--surface)", color: ACCENT }
-                      : { color: "var(--muted)" }
-                  }
-                >
-                  <Icon size={15} strokeWidth={active ? 2 : 1.5} />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Tab content */}
-          {loading || !data ? (
-            <div
-              className="rounded-xl border p-12 text-center"
-              style={{
-                borderColor: "var(--border)",
-                backgroundColor: "var(--surface)",
-              }}
-            >
-              <div
-                className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-3"
+            Health Vertical Readiness
+          </h3>
+          <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}>
+            10 Verticals
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {VERTICALS_MINI.map((v) => {
+            const statusColor = STATUS_COLORS[v.status] || "var(--muted)";
+            const isExpanded = expandedVertical === v.name;
+            return (
+              <button
+                key={v.name}
+                onClick={() => setExpandedVertical(isExpanded ? null : v.name)}
+                className="rounded-xl border p-3 text-left transition-all hover:shadow-sm"
                 style={{
-                  borderColor: ACCENT,
-                  borderTopColor: "transparent",
+                  borderColor: isExpanded ? ACCENT : "var(--border)",
+                  backgroundColor: isExpanded ? `${ACCENT}08` : "var(--background)",
                 }}
-              />
-              <p className="text-sm" style={{ color: "var(--muted)" }}>
-                Loading product data...
-              </p>
-            </div>
-          ) : (
-            <>
-              {activeTab === "verticals" && (
-                <VerticalsGrid
-                  verticals={data.verticals}
-                  onSelectVertical={handleSelectVertical}
-                />
-              )}
-              {activeTab === "connections" && (
-                <CrossVerticalMap
-                  verticals={data.verticals}
-                  connections={data.connections}
-                  features={data.features}
-                />
-              )}
-            </>
-          )}
-        </>
-      )}
+              >
+                <p className="text-xs font-medium truncate" style={{ color: "var(--foreground)" }}>
+                  {v.name}
+                </p>
+                <div className="flex items-center justify-between mt-1">
+                  <span
+                    className="text-lg font-bold"
+                    style={{ color: v.score > 0 ? ACCENT : "var(--muted)" }}
+                  >
+                    {v.score}
+                  </span>
+                  <span
+                    className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                    style={{ backgroundColor: `${statusColor}14`, color: statusColor }}
+                  >
+                    {STATUS_LABELS[v.status]}
+                  </span>
+                </div>
+                {/* Mini progress bar */}
+                <div className="mt-2 h-1 rounded-full" style={{ backgroundColor: `${ACCENT}15` }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${v.score}%`, backgroundColor: v.score > 0 ? ACCENT : "transparent" }}
+                  />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Cross-Department Connection */}
+      <div
+        className="rounded-2xl border p-5"
+        style={{
+          borderColor: "var(--border)",
+          backgroundColor: "var(--surface)",
+        }}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <Beaker size={16} style={{ color: "#9686B9" }} />
+          <h3
+            className="text-xs font-bold uppercase tracking-wider"
+            style={{ color: "var(--foreground)" }}
+          >
+            Cross-Department Connection
+          </h3>
+          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#9686B914", color: "#9686B9" }}>
+            10x
+          </span>
+        </div>
+        <div
+          className="rounded-xl p-4 flex items-center gap-3"
+          style={{ backgroundColor: "#9686B908", border: "1px solid #9686B915" }}
+        >
+          <div className="flex-1">
+            <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+              Clinical research feeding product features
+            </p>
+            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+              8 research papers from the Clinical department directly inform 4 core features: Ovulation Detection, Glucose Variability Module, Stress Insights, and AI Coaching. Every clinical finding maps to a product capability.
+            </p>
+          </div>
+          <ArrowRight size={16} style={{ color: "#9686B9" }} />
+        </div>
+      </div>
     </div>
   );
 }

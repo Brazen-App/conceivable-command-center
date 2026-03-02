@@ -4,16 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Mail,
-  PenTool,
+  Megaphone,
+  Boxes,
+  Code2,
+  FlaskConical,
   Shield,
   DollarSign,
   Rocket,
-  Brain,
-  FlaskConical,
   Heart,
-  Code2,
-  Boxes,
+  Brain,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -25,80 +24,73 @@ import { useState } from "react";
 const DEPARTMENTS = [
   {
     label: "Operations",
-    href: "/",
+    href: "/departments/operations",
     icon: LayoutDashboard,
     description: "The Spine",
-    accent: "#5A6FFF",  // brand primary
+    accent: "#5A6FFF",
   },
   {
-    label: "Email Strategy",
-    href: "/departments/email",
-    icon: Mail,
-    description: "Launch Sequence",
-    accent: "#ACB7FF",  // baby blue
+    label: "Marketing",
+    href: "/departments/marketing",
+    icon: Megaphone,
+    description: "The Voice",
+    accent: "#5A6FFF",
   },
   {
-    label: "Content Engine",
-    href: "/departments/content",
-    icon: PenTool,
-    description: "The Mouth",
-    accent: "#E37FB1",  // pink
-  },
-  {
-    label: "Community",
-    href: "/departments/community",
-    icon: Heart,
-    description: "The Heartbeat",
-    accent: "#1EAA55",  // green
-  },
-  {
-    label: "Legal / IP / Compliance",
-    href: "/departments/legal",
-    icon: Shield,
-    description: "The Immune System",
-    accent: "#E24D47",  // red
-  },
-  {
-    label: "Finance",
-    href: "/departments/finance",
-    icon: DollarSign,
-    description: "Integration Layer",
-    accent: "#F1C028",  // yellow
-  },
-  {
-    label: "Clinical / Research",
-    href: "/departments/clinical",
-    icon: FlaskConical,
-    description: "The Evidence Engine",
-    accent: "#78C3BF",  // pale blue
-  },
-  {
-    label: "Fundraising",
-    href: "/departments/fundraising",
-    icon: Rocket,
-    description: "The Growth Engine",
-    accent: "#356FB6",  // navy blue
-  },
-  {
-    label: "Strategy / Coaching",
-    href: "/departments/strategy",
-    icon: Brain,
-    description: "The Brain",
-    accent: "#9686B9",  // purple
-  },
-  {
-    label: "Product Development",
+    label: "Product",
     href: "/departments/product",
     icon: Boxes,
-    description: "The Product Brain",
-    accent: "#E37FB1",  // pink
+    description: "The Product",
+    accent: "#ACB7FF",
   },
   {
     label: "Engineering",
     href: "/departments/engineering",
     icon: Code2,
     description: "The Builder",
-    accent: "#6B7280",  // slate gray (placeholder)
+    accent: "#2A2828",
+  },
+  {
+    label: "Clinical",
+    href: "/departments/clinical",
+    icon: FlaskConical,
+    description: "The Evidence",
+    accent: "#78C3BF",
+  },
+  {
+    label: "Legal",
+    href: "/departments/legal",
+    icon: Shield,
+    description: "The Shield",
+    accent: "#E24D47",
+  },
+  {
+    label: "Finance",
+    href: "/departments/finance",
+    icon: DollarSign,
+    description: "The Fuel",
+    accent: "#1EAA55",
+  },
+  {
+    label: "Fundraising",
+    href: "/departments/fundraising",
+    icon: Rocket,
+    description: "The Engine",
+    accent: "#356FB6",
+  },
+  {
+    label: "Community",
+    href: "/departments/community",
+    icon: Heart,
+    description: "The Heartbeat",
+    accent: "#1EAA55",
+  },
+  {
+    label: "Strategy",
+    href: "/departments/strategy",
+    icon: Brain,
+    description: "The Brain",
+    accent: "#9686B9",
   },
 ];
 
@@ -108,7 +100,7 @@ export default function DepartmentNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (href: string) =>
-    pathname === href || (href !== "/" && pathname.startsWith(href));
+    pathname === href || pathname.startsWith(href + "/");
 
   const navContent = (
     <>
@@ -178,6 +170,8 @@ export default function DepartmentNav() {
         {DEPARTMENTS.map((dept) => {
           const active = isActive(dept.href);
           const Icon = dept.icon;
+          // For Engineering's #2A2828 accent which is same as sidebar bg, use white in sidebar context
+          const dotColor = dept.accent === "#2A2828" ? "#9CA3AF" : dept.accent;
 
           return (
             <Link
@@ -213,23 +207,29 @@ export default function DepartmentNav() {
               >
                 <Icon
                   size={15}
-                  style={{ color: active ? "#FFFFFF" : dept.accent }}
+                  style={{ color: active ? "#FFFFFF" : dept.accent === "#2A2828" ? "#9CA3AF" : dept.accent }}
                   strokeWidth={active ? 2.2 : 1.8}
                 />
               </div>
 
-              {/* Label + description */}
+              {/* Label + colored dot + description */}
               {!collapsed && (
                 <div className="flex-1 min-w-0">
-                  <span
-                    className={`
-                      block text-[13px] leading-tight truncate
-                      ${active ? "text-white font-semibold" : "font-medium"}
-                    `}
-                    style={active ? undefined : { color: "var(--sidebar-text)" }}
-                  >
-                    {dept.label}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`
+                        block text-[13px] leading-tight truncate
+                        ${active ? "text-white font-semibold" : "font-medium"}
+                      `}
+                      style={active ? undefined : { color: "var(--sidebar-text)" }}
+                    >
+                      {dept.label}
+                    </span>
+                    <div
+                      className="w-[6px] h-[6px] rounded-full shrink-0"
+                      style={{ backgroundColor: dotColor }}
+                    />
+                  </div>
                   {active && (
                     <span
                       className="block text-[9px] mt-0.5 tracking-[0.08em] uppercase text-white/50"
@@ -318,7 +318,7 @@ export default function DepartmentNav() {
               className="text-[11px]"
               style={{ color: "var(--sidebar-text-muted)" }}
             >
-              11 departments connected
+              10 departments connected
             </span>
           </div>
         </div>

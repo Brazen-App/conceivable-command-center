@@ -10,6 +10,7 @@ import {
   DollarSign,
   Rocket,
   Brain,
+  FlaskConical,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -53,6 +54,13 @@ const DEPARTMENTS = [
     icon: DollarSign,
     description: "Integration Layer",
     accent: "#F1C028",  // yellow
+  },
+  {
+    label: "Clinical / Research",
+    href: "/departments/clinical",
+    icon: FlaskConical,
+    description: "The Evidence Engine",
+    accent: "#78C3BF",  // pale blue
   },
   {
     label: "Fundraising",
@@ -286,7 +294,7 @@ export default function DepartmentNav() {
               className="text-[11px]"
               style={{ color: "var(--sidebar-text-muted)" }}
             >
-              7 departments connected
+              8 departments connected
             </span>
           </div>
         </div>

@@ -70,11 +70,6 @@ export default function ContentDepartmentPage() {
     );
   };
 
-  const handleSchedule = (sourceId: string, platform: string) => {
-    // In production: add to calendar via API
-    setActiveTab("calendar");
-  };
-
   const povCount = newsItems.filter((n) => n.povTranscript).length +
     researchItems.filter((r) => r.povTranscript).length;
 
@@ -194,7 +189,7 @@ export default function ContentDepartmentPage() {
         />
       )}
       {activeTab === "pipeline" && (
-        <ContentPipeline queue={pipelineQueue} onSchedule={handleSchedule} />
+        <ContentPipeline queue={pipelineQueue} />
       )}
       {activeTab === "calendar" && <ContentCalendar entries={calendarEntries} />}
     </div>

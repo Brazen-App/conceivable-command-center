@@ -13,8 +13,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-// Mock current performance data (from Mailchimp warming phase)
-const CURRENT_METRICS = {
+// Default mock data (fallback when no props provided)
+const DEFAULT_METRICS = {
   openRate: 34.2,
   clickRate: 4.1,
   unsubscribeRate: 0.3,
@@ -88,15 +88,56 @@ const AI_RECOMMENDATIONS = [
   },
 ];
 
-const FUNNEL_STEPS = [
-  { label: "Delivered", value: 29000, pct: 100 },
-  { label: "Opened", value: 9918, pct: 34.2 },
-  { label: "Clicked", value: 1189, pct: 4.1 },
-  { label: "Landed", value: 832, pct: 2.9 },
-  { label: "Signed Up", value: 0, pct: 0 },
-];
+export interface MonitoringDashboardProps {
+  listStats?: { totalSubscribers: number };
+  campaignStats?: {
+    openRate: number;
+    clickRate: number;
+    unsubscribeRate: number;
+    deliverability: number;
+  };
+  isMock?: boolean;
+}
 
-export default function MonitoringDashboard() {
+function DataBadge({ isMock }: { isMock: boolean }) {
+  return (
+    <span
+      className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ml-2"
+      style={{
+        backgroundColor: isMock ? "#F1C02818" : "#1EAA5518",
+        color: isMock ? "#B8930A" : "#1EAA55",
+      }}
+    >
+      {isMock ? "MOCK" : "LIVE"}
+    </span>
+  );
+}
+
+export default function MonitoringDashboard({
+  listStats,
+  campaignStats,
+  isMock,
+}: MonitoringDashboardProps) {
+  // If props are provided, merge with defaults; otherwise use defaults
+  const isUsingMock = isMock ?? !campaignStats;
+  const metrics = {
+    openRate: campaignStats?.openRate ?? DEFAULT_METRICS.openRate,
+    clickRate: campaignStats?.clickRate ?? DEFAULT_METRICS.clickRate,
+    unsubscribeRate: campaignStats?.unsubscribeRate ?? DEFAULT_METRICS.unsubscribeRate,
+    deliverability: campaignStats?.deliverability ?? DEFAULT_METRICS.deliverability,
+    signups: DEFAULT_METRICS.signups,
+    listSize: listStats?.totalSubscribers ?? DEFAULT_METRICS.listSize,
+    signupTarget: DEFAULT_METRICS.signupTarget,
+  };
+
+  const funnelSteps = [
+    { label: "Delivered", value: metrics.listSize, pct: 100 },
+    { label: "Opened", value: Math.round(metrics.listSize * (metrics.openRate / 100)), pct: metrics.openRate },
+    { label: "Clicked", value: Math.round(metrics.listSize * (metrics.clickRate / 100)), pct: metrics.clickRate },
+    { label: "Landed", value: Math.round(metrics.listSize * (metrics.clickRate / 100) * 0.7), pct: Math.round(metrics.clickRate * 0.7 * 10) / 10 },
+    { label: "Signed Up", value: metrics.signups, pct: 0 },
+  ];
+
   const alertStyles = {
     success: { bg: "#1EAA5510", border: "#1EAA5530", icon: "text-green-600" },
     warning: { bg: "#F1C02810", border: "#F1C02830", icon: "text-yellow-600" },
@@ -123,10 +164,10 @@ export default function MonitoringDashboard() {
         </p>
         <div className="flex items-baseline justify-center gap-2">
           <span className="text-5xl font-bold" style={{ color: "var(--foreground)" }}>
-            {CURRENT_METRICS.signups}
+            {metrics.signups}
           </span>
           <span className="text-lg" style={{ color: "var(--muted-light)" }}>
-            / {CURRENT_METRICS.signupTarget.toLocaleString()}
+            / {metrics.signupTarget.toLocaleString()}
           </span>
         </div>
         <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
@@ -139,16 +180,16 @@ export default function MonitoringDashboard() {
               className="h-2 rounded-full transition-all"
               style={{
                 backgroundColor: "#E37FB1",
-                width: `${Math.max(1, (CURRENT_METRICS.signups / CURRENT_METRICS.signupTarget) * 100)}%`,
+                width: `${Math.max(1, (metrics.signups / metrics.signupTarget) * 100)}%`,
               }}
             />
           </div>
           <div className="flex justify-between mt-1">
             <span className="text-[9px]" style={{ color: "var(--muted-light)" }}>
-              Gain: {CURRENT_METRICS.signups} signups from 0
+              Gain: {metrics.signups} signups from 0
             </span>
             <span className="text-[9px]" style={{ color: "var(--muted-light)" }}>
-              Target: {CURRENT_METRICS.signupTarget.toLocaleString()}
+              Target: {metrics.signupTarget.toLocaleString()}
             </span>
           </div>
         </div>
@@ -159,15 +200,15 @@ export default function MonitoringDashboard() {
         {[
           {
             label: "Open Rate",
-            value: `${CURRENT_METRICS.openRate}%`,
+            value: `${metrics.openRate}%`,
             trend: "up",
             threshold: "20%",
-            ok: CURRENT_METRICS.openRate >= 20,
+            ok: metrics.openRate >= 20,
             icon: Eye,
           },
           {
             label: "Click Rate",
-            value: `${CURRENT_METRICS.clickRate}%`,
+            value: `${metrics.clickRate}%`,
             trend: "up",
             threshold: null,
             ok: true,
@@ -175,23 +216,23 @@ export default function MonitoringDashboard() {
           },
           {
             label: "Unsubscribe",
-            value: `${CURRENT_METRICS.unsubscribeRate}%`,
+            value: `${metrics.unsubscribeRate}%`,
             trend: "down",
             threshold: "< 1%",
-            ok: CURRENT_METRICS.unsubscribeRate < 1,
+            ok: metrics.unsubscribeRate < 1,
             icon: UserMinus,
           },
           {
             label: "Deliverability",
-            value: `${CURRENT_METRICS.deliverability}%`,
+            value: `${metrics.deliverability}%`,
             trend: "flat",
             threshold: "> 95%",
-            ok: CURRENT_METRICS.deliverability > 95,
+            ok: metrics.deliverability > 95,
             icon: ShieldCheck,
           },
           {
             label: "List Size",
-            value: CURRENT_METRICS.listSize.toLocaleString(),
+            value: metrics.listSize.toLocaleString(),
             trend: "flat",
             threshold: null,
             ok: true,
@@ -216,6 +257,7 @@ export default function MonitoringDashboard() {
                 >
                   {kpi.label}
                 </span>
+                <DataBadge isMock={isUsingMock} />
               </div>
               <p className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
                 {kpi.value}
@@ -306,13 +348,16 @@ export default function MonitoringDashboard() {
         className="rounded-xl border p-4 mb-6"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
       >
-        <h3 className="text-xs font-semibold mb-4" style={{ color: "var(--foreground)" }}>
-          Conversion Funnel
-        </h3>
+        <div className="flex items-center mb-4">
+          <h3 className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
+            Conversion Funnel
+          </h3>
+          <DataBadge isMock={isUsingMock} />
+        </div>
         <div className="space-y-2">
-          {FUNNEL_STEPS.map((step, i) => {
+          {funnelSteps.map((step, i) => {
             const widthPct = Math.max(8, step.pct);
-            const isLast = i === FUNNEL_STEPS.length - 1;
+            const isLast = i === funnelSteps.length - 1;
             return (
               <div key={step.label}>
                 <div className="flex items-center justify-between mb-1">
@@ -337,12 +382,12 @@ export default function MonitoringDashboard() {
                     )}
                   </div>
                 </div>
-                {i < FUNNEL_STEPS.length - 1 && (
+                {i < funnelSteps.length - 1 && (
                   <div className="flex items-center justify-center my-0.5">
                     <ArrowRight size={10} style={{ color: "var(--muted-light)", transform: "rotate(90deg)" }} />
                     <span className="text-[8px] ml-1" style={{ color: "var(--muted-light)" }}>
-                      {FUNNEL_STEPS[i + 1].value > 0
-                        ? `${((FUNNEL_STEPS[i + 1].value / step.value) * 100).toFixed(1)}% conversion`
+                      {funnelSteps[i + 1].value > 0
+                        ? `${((funnelSteps[i + 1].value / step.value) * 100).toFixed(1)}% conversion`
                         : "—"}
                     </span>
                   </div>

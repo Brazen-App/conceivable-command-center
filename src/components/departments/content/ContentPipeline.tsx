@@ -9,14 +9,16 @@ import {
   Copy,
   Check,
   Sparkles,
-  Edit3,
   ChevronDown,
   ChevronRight,
   Image,
   Hash,
   Send,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
-import type { Platform, GeneratedContent, NewsItem, ResearchItem } from "@/lib/data/content-engine";
+import type { Platform, GeneratedContent } from "@/lib/data/content-engine";
 
 interface ContentPieceProps {
   sourceId: string;
@@ -27,7 +29,6 @@ interface ContentPieceProps {
 
 interface Props {
   queue: ContentPieceProps[];
-  onSchedule: (sourceId: string, platform: Platform) => void;
 }
 
 const PLATFORM_CONFIG: Record<
@@ -91,23 +92,56 @@ function generateMockContent(transcript: string, sourceTitle: string): Record<Pl
   };
 }
 
+type PublishState = "idle" | "publishing" | "success" | "error";
+
+async function publishPieces(pieces: Array<{ platform: string; copy: string; hashtags: string[] }>) {
+  const res = await fetch("/api/content/publish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pieces }),
+  });
+  return res.json();
+}
+
 function PlatformCard({
   content,
   config,
-  onSchedule,
 }: {
   content: GeneratedContent;
   config: (typeof PLATFORM_CONFIG)[Platform];
-  onSchedule: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [publishState, setPublishState] = useState<PublishState>("idle");
+  const [publishError, setPublishError] = useState<string | null>(null);
   const Icon = config.icon;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content.copy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handlePublish = async () => {
+    setPublishState("publishing");
+    setPublishError(null);
+    try {
+      const result = await publishPieces([
+        { platform: content.platform, copy: content.copy, hashtags: content.hashtags },
+      ]);
+      if (result.error) {
+        setPublishState("error");
+        setPublishError(result.error);
+      } else if (result.results?.[0]?.ok === false) {
+        setPublishState("error");
+        setPublishError(result.results[0].error || "Publishing failed");
+      } else {
+        setPublishState("success");
+      }
+    } catch (err) {
+      setPublishState("error");
+      setPublishError(err instanceof Error ? err.message : "Network error");
+    }
   };
 
   return (
@@ -133,25 +167,31 @@ function PlatformCard({
             {content.copy.length} / {config.maxChars} chars
           </p>
         </div>
-        <span
-          className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full capitalize"
-          style={{
-            backgroundColor:
-              content.status === "draft"
-                ? "#F1C02814"
-                : content.status === "approved"
-                ? "#1EAA5514"
-                : "#5A6FFF14",
-            color:
-              content.status === "draft"
-                ? "#F1C028"
-                : content.status === "approved"
-                ? "#1EAA55"
-                : "#5A6FFF",
-          }}
-        >
-          {content.status}
-        </span>
+        {publishState === "success" ? (
+          <CheckCircle2 size={14} className="text-green-500 shrink-0" />
+        ) : publishState === "error" ? (
+          <AlertCircle size={14} className="text-red-500 shrink-0" />
+        ) : (
+          <span
+            className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full capitalize"
+            style={{
+              backgroundColor:
+                content.status === "draft"
+                  ? "#F1C02814"
+                  : content.status === "approved"
+                  ? "#1EAA5514"
+                  : "#5A6FFF14",
+              color:
+                content.status === "draft"
+                  ? "#F1C028"
+                  : content.status === "approved"
+                  ? "#1EAA55"
+                  : "#5A6FFF",
+            }}
+          >
+            {content.status}
+          </span>
+        )}
         {expanded ? (
           <ChevronDown size={14} style={{ color: "var(--muted)" }} />
         ) : (
@@ -191,6 +231,17 @@ function PlatformCard({
             </p>
           </div>
 
+          {/* Publish error */}
+          {publishState === "error" && publishError && (
+            <div
+              className="mt-2 flex items-start gap-2 p-2 rounded-lg text-xs"
+              style={{ backgroundColor: "#E24D4710", color: "#E24D47" }}
+            >
+              <AlertCircle size={12} className="mt-0.5 shrink-0" />
+              {publishError}
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex items-center gap-2 mt-3">
             <button
@@ -202,11 +253,23 @@ function PlatformCard({
               {copied ? "Copied" : "Copy"}
             </button>
             <button
-              onClick={onSchedule}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+              onClick={handlePublish}
+              disabled={publishState === "publishing" || publishState === "success"}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white disabled:opacity-50"
               style={{ backgroundColor: config.color }}
             >
-              <Send size={12} /> Schedule
+              {publishState === "publishing" ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : publishState === "success" ? (
+                <CheckCircle2 size={12} />
+              ) : (
+                <Send size={12} />
+              )}
+              {publishState === "publishing"
+                ? "Publishing..."
+                : publishState === "success"
+                ? "Published"
+                : "Approve & Publish"}
             </button>
           </div>
         </div>
@@ -215,15 +278,34 @@ function PlatformCard({
   );
 }
 
-function QueueItem({
-  item,
-  onSchedule,
-}: {
-  item: ContentPieceProps;
-  onSchedule: (sourceId: string, platform: Platform) => void;
-}) {
+function QueueItem({ item }: { item: ContentPieceProps }) {
   const [expanded, setExpanded] = useState(true);
+  const [publishingAll, setPublishingAll] = useState(false);
+  const [publishAllResult, setPublishAllResult] = useState<"idle" | "success" | "error">("idle");
   const generated = generateMockContent(item.transcript, item.sourceTitle);
+
+  const handlePublishAll = async () => {
+    setPublishingAll(true);
+    setPublishAllResult("idle");
+    try {
+      const pieces = (Object.keys(PLATFORM_CONFIG) as Platform[]).map((platform) => ({
+        platform,
+        copy: generated[platform].copy,
+        hashtags: generated[platform].hashtags,
+      }));
+      const result = await publishPieces(pieces);
+      if (result.error) {
+        setPublishAllResult("error");
+      } else {
+        const allOk = result.results?.every((r: { ok: boolean }) => r.ok) ?? false;
+        setPublishAllResult(allOk ? "success" : "error");
+      }
+    } catch {
+      setPublishAllResult("error");
+    } finally {
+      setPublishingAll(false);
+    }
+  };
 
   return (
     <div
@@ -262,22 +344,54 @@ function QueueItem({
       </div>
 
       {expanded && (
-        <div className="mt-4 space-y-2">
-          {(Object.keys(PLATFORM_CONFIG) as Platform[]).map((platform) => (
-            <PlatformCard
-              key={platform}
-              content={generated[platform]}
-              config={PLATFORM_CONFIG[platform]}
-              onSchedule={() => onSchedule(item.sourceId, platform)}
-            />
-          ))}
+        <div className="mt-4">
+          {/* Publish All button */}
+          <button
+            onClick={handlePublishAll}
+            disabled={publishingAll || publishAllResult === "success"}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white mb-3 disabled:opacity-50"
+            style={{
+              background: publishAllResult === "success"
+                ? "#1EAA55"
+                : publishAllResult === "error"
+                ? "#E24D47"
+                : "linear-gradient(135deg, #F1C028 0%, #E37FB1 100%)",
+            }}
+          >
+            {publishingAll ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : publishAllResult === "success" ? (
+              <CheckCircle2 size={14} />
+            ) : publishAllResult === "error" ? (
+              <AlertCircle size={14} />
+            ) : (
+              <Send size={14} />
+            )}
+            {publishingAll
+              ? "Publishing All Platforms..."
+              : publishAllResult === "success"
+              ? "All Platforms Published"
+              : publishAllResult === "error"
+              ? "Some Platforms Failed — Retry Individual Below"
+              : "Publish All Platforms"}
+          </button>
+
+          <div className="space-y-2">
+            {(Object.keys(PLATFORM_CONFIG) as Platform[]).map((platform) => (
+              <PlatformCard
+                key={platform}
+                content={generated[platform]}
+                config={PLATFORM_CONFIG[platform]}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-export default function ContentPipeline({ queue, onSchedule }: Props) {
+export default function ContentPipeline({ queue }: Props) {
   if (queue.length === 0) {
     return (
       <div
@@ -321,7 +435,7 @@ export default function ContentPipeline({ queue, onSchedule }: Props) {
 
       <div className="space-y-4">
         {queue.map((item) => (
-          <QueueItem key={item.sourceId} item={item} onSchedule={onSchedule} />
+          <QueueItem key={item.sourceId} item={item} />
         ))}
       </div>
     </div>

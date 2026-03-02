@@ -5,6 +5,7 @@ import { Mail, FileText, Calendar, BarChart3, Target } from "lucide-react";
 import EmailContentManager from "@/components/departments/email/EmailContentManager";
 import SendStrategyCalendar from "@/components/departments/email/SendStrategyCalendar";
 import MonitoringDashboard from "@/components/departments/email/MonitoringDashboard";
+import type { MonitoringDashboardProps } from "@/components/departments/email/MonitoringDashboard";
 import type { LaunchEmail } from "@/lib/data/launch-emails";
 
 const TABS = [
@@ -19,6 +20,7 @@ export default function EmailDepartmentPage() {
   const [activeTab, setActiveTab] = useState<TabId>("content");
   const [emails, setEmails] = useState<LaunchEmail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [monitoringData, setMonitoringData] = useState<MonitoringDashboardProps>({});
 
   useEffect(() => {
     fetch("/api/emails")
@@ -28,6 +30,23 @@ export default function EmailDepartmentPage() {
         setLoading(false);
       });
   }, []);
+
+  // Fetch Mailchimp stats when monitoring tab is selected
+  useEffect(() => {
+    if (activeTab !== "monitoring") return;
+    fetch("/api/email/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        setMonitoringData({
+          listStats: data.listStats,
+          campaignStats: data.campaignStats,
+          isMock: data.isMock,
+        });
+      })
+      .catch(() => {
+        // Silently fall back to defaults in the dashboard
+      });
+  }, [activeTab]);
 
   const handleUpdate = async (id: string, updates: Partial<LaunchEmail>) => {
     const res = await fetch("/api/emails", {
@@ -174,7 +193,7 @@ export default function EmailDepartmentPage() {
             />
           )}
           {activeTab === "strategy" && <SendStrategyCalendar emails={emails} />}
-          {activeTab === "monitoring" && <MonitoringDashboard />}
+          {activeTab === "monitoring" && <MonitoringDashboard {...monitoringData} />}
         </>
       )}
     </div>

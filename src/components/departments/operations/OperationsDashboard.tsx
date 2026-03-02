@@ -14,6 +14,7 @@ import {
   FileCheck,
 } from "lucide-react";
 import Link from "next/link";
+import QuickCapture from "@/components/departments/operations/QuickCapture";
 
 const KPI_CARDS = [
   { label: "Email List Size", value: "—", target: "10,000", icon: Mail },
@@ -129,6 +130,9 @@ export default function OperationsDashboard() {
           CEO Brief <ArrowRight size={12} />
         </Link>
       </div>
+
+      {/* Quick Capture */}
+      <QuickCapture />
 
       {/* KPI Grid */}
       <section className="mb-10">

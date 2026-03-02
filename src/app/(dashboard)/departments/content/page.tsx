@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PenTool, Newspaper, Sparkles, Calendar } from "lucide-react";
 import DailyBrief from "@/components/departments/content/DailyBrief";
 import ContentPipeline from "@/components/departments/content/ContentPipeline";
 import ContentCalendar from "@/components/departments/content/ContentCalendar";
+import KirstenBrain from "@/components/departments/content/KirstenBrain";
 import {
   NEWS_ITEMS,
   RESEARCH_ITEMS,
@@ -36,6 +37,24 @@ export default function ContentDepartmentPage() {
   const [calendarEntries] = useState<CalendarEntry[]>(CALENDAR_ENTRIES);
   const [pipelineQueue, setPipelineQueue] = useState<PipelineItem[]>([]);
 
+  // POV Knowledge Base stats
+  const [povStats, setPovStats] = useState({ total: 0, topicCount: 0, topics: [] as string[] });
+
+  useEffect(() => {
+    fetch("/api/pov")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.stats) {
+          setPovStats({
+            total: data.stats.total,
+            topicCount: data.stats.topicCount,
+            topics: data.stats.topics,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const handleContentCreate = (sourceId: string, transcript: string) => {
     // Find the source item to get its title
     const newsItem = newsItems.find((n) => n.id === sourceId);
@@ -59,6 +78,18 @@ export default function ContentDepartmentPage() {
       ...prev,
       { sourceId, sourceTitle, sourceType: sourceType as "news" | "research", transcript },
     ]);
+
+    // Fire-and-forget: save POV to knowledge base
+    fetch("/api/pov", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        topic: sourceTitle,
+        transcript,
+        sourceType: "voice",
+        sourceId,
+      }),
+    }).catch(() => {});
 
     // Auto-switch to pipeline tab
     setActiveTab("pipeline");
@@ -110,6 +141,13 @@ export default function ContentDepartmentPage() {
           </div>
         </div>
       </header>
+
+      {/* Kirsten Brain — POV Knowledge Base stats */}
+      <KirstenBrain
+        totalPOVs={povStats.total}
+        topicCount={povStats.topicCount}
+        topTopics={povStats.topics}
+      />
 
       {/* Quick stats banner */}
       <div

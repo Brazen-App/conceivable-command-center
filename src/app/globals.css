@@ -40,20 +40,22 @@
   --brand-purple: #9686B9;        /* Pantone 2094 C */
 
   /* Semantic Tokens */
-  --background: #F9F7F0;
+  --background: #F9F7F0;          /* Off White everywhere */
   --foreground: #2A2828;
-  --surface: #FFFFFF;
-  --surface-hover: #F3F1EA;
-  --border: #E5E2D9;
-  --border-light: #EEEBE3;
+  --surface: #FFFEFA;             /* Warm white for cards — not pure white */
+  --surface-hover: #F5F3EC;
+  --border: #E8E5DC;
+  --border-light: #F0EDE5;
   --muted: #6B7280;
   --muted-light: #9CA3AF;
 
   /* Sidebar */
   --sidebar-bg: #2A2828;
-  --sidebar-text: #E5E7EB;
-  --sidebar-hover: #3D3B3B;
+  --sidebar-text: #F9F7F0;        /* Off-white text */
+  --sidebar-text-muted: #A8A5A0;
+  --sidebar-hover: #3A3838;
   --sidebar-active: #5A6FFF;
+  --sidebar-active-glow: rgba(90, 111, 255, 0.15);
 
   /* Status Colors */
   --status-success: #1EAA55;
@@ -103,18 +105,29 @@ body {
   font-family: var(--font-body);
 }
 
-/* Display headings — Youth Bold, UPPERCASE */
+/* Display headings — Youth Bold (Montserrat fallback), UPPERCASE */
 h1, h2, h3, .font-display {
   font-family: var(--font-display);
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
 }
 
-/* Captions/Subtitles — Rauschen A, UPPERCASE */
+/* Body text elements should NOT inherit display font */
+h1 span, h2 span, h3 span,
+p, li, td, th, label, input, textarea, select, button {
+  font-family: var(--font-body);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Caption / subtitle style — Rauschen A fallback to Inter uppercase */
 .font-caption {
   font-family: var(--font-caption);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+  font-weight: 500;
 }
 
 /* Scrollbar styling */

@@ -21,57 +21,53 @@ import { useState } from "react";
 const DEPARTMENTS = [
   {
     label: "Operations",
-    shortLabel: "Ops",
     href: "/",
     icon: LayoutDashboard,
     description: "The Spine",
+    accent: "#5A6FFF",  // brand primary
   },
   {
     label: "Email Strategy",
-    shortLabel: "Email",
     href: "/departments/email",
     icon: Mail,
     description: "Launch Sequence",
+    accent: "#ACB7FF",  // baby blue
   },
   {
     label: "Content Engine",
-    shortLabel: "Content",
     href: "/departments/content",
     icon: PenTool,
     description: "The Mouth",
+    accent: "#1EAA55",  // green
   },
   {
     label: "Legal / IP / Compliance",
-    shortLabel: "Legal",
     href: "/departments/legal",
     icon: Shield,
     description: "The Immune System",
+    accent: "#356FB6",  // navy
   },
   {
     label: "Finance",
-    shortLabel: "Finance",
     href: "/departments/finance",
     icon: DollarSign,
     description: "Integration Layer",
+    accent: "#F1C028",  // yellow
   },
   {
     label: "Fundraising",
-    shortLabel: "Raise",
     href: "/departments/fundraising",
     icon: Rocket,
     description: "The Growth Engine",
+    accent: "#E24D47",  // red
   },
   {
     label: "Strategy / Coaching",
-    shortLabel: "Strategy",
     href: "/departments/strategy",
     icon: Brain,
     description: "The Brain",
+    accent: "#9686B9",  // purple
   },
-];
-
-const SYSTEM_NAV = [
-  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function DepartmentNav() {
@@ -84,137 +80,214 @@ export default function DepartmentNav() {
 
   const navContent = (
     <>
-      {/* Logo */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
-        {!collapsed && (
-          <div>
-            <h1
-              className="text-lg font-bold tracking-wider text-white"
-              style={{ fontFamily: "var(--font-display)" }}
+      {/* Logo area */}
+      <div className="px-5 py-5 border-b border-white/[0.06]">
+        {!collapsed ? (
+          <div className="flex items-center justify-between">
+            <div>
+              <h1
+                className="text-[15px] font-bold tracking-[0.18em] text-white leading-none"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                CONCEIVABLE
+              </h1>
+              <p
+                className="mt-1.5 text-[9px] tracking-[0.2em] uppercase"
+                style={{ color: "var(--sidebar-text-muted)" }}
+              >
+                Command Center
+              </p>
+            </div>
+            <button
+              onClick={() => setCollapsed(true)}
+              className="hidden md:flex p-1 rounded hover:bg-white/[0.06] transition-colors"
+              aria-label="Collapse sidebar"
             >
-              CONCEIVABLE
-            </h1>
-            <p className="text-[10px] uppercase tracking-[0.2em] opacity-50 mt-0.5"
-               style={{ fontFamily: "var(--font-caption)" }}>
-              Command Center
-            </p>
+              <ChevronLeft size={14} style={{ color: "var(--sidebar-text-muted)" }} />
+            </button>
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="md:hidden p-1 rounded hover:bg-white/[0.06]"
+              aria-label="Close menu"
+            >
+              <X size={14} style={{ color: "var(--sidebar-text-muted)" }} />
+            </button>
           </div>
+        ) : (
+          <button
+            onClick={() => setCollapsed(false)}
+            className="hidden md:flex w-full justify-center p-1 rounded hover:bg-white/[0.06] transition-colors"
+            aria-label="Expand sidebar"
+          >
+            <ChevronRight size={14} style={{ color: "var(--sidebar-text-muted)" }} />
+          </button>
         )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="hidden md:flex p-1.5 rounded-md hover:bg-white/10"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="md:hidden p-1.5 rounded-md hover:bg-white/10"
-          aria-label="Close menu"
-        >
-          <X size={16} />
-        </button>
       </div>
 
-      {/* Department Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4">
-        <div className="mb-6">
-          {!collapsed && (
-            <h2
-              className="px-4 mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-40"
-              style={{ fontFamily: "var(--font-caption)" }}
-            >
-              Departments
-            </h2>
-          )}
-          {DEPARTMENTS.map((dept) => {
-            const active = isActive(dept.href);
-            const Icon = dept.icon;
+      {/* Department nav */}
+      <nav className="flex-1 overflow-y-auto py-3 px-2">
+        {/* Section label */}
+        {!collapsed && (
+          <p
+            className="px-3 mb-2 font-caption"
+            style={{
+              fontFamily: "var(--font-caption)",
+              fontSize: "9px",
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--sidebar-text-muted)",
+              opacity: 0.6,
+            }}
+          >
+            Departments
+          </p>
+        )}
 
-            return (
-              <Link
-                key={dept.href}
-                href={dept.href}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  active
-                    ? "text-white font-medium"
-                    : "hover:bg-white/5 text-gray-400"
-                }`}
+        {DEPARTMENTS.map((dept) => {
+          const active = isActive(dept.href);
+          const Icon = dept.icon;
+
+          return (
+            <Link
+              key={dept.href}
+              href={dept.href}
+              onClick={() => setMobileOpen(false)}
+              className={`
+                group flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5
+                transition-all duration-150
+                ${active ? "shadow-sm" : "hover:bg-white/[0.04]"}
+              `}
+              style={
+                active
+                  ? {
+                      backgroundColor: "var(--sidebar-active)",
+                      boxShadow: `0 0 20px ${dept.accent}25`,
+                    }
+                  : undefined
+              }
+              title={collapsed ? dept.label : undefined}
+            >
+              {/* Icon with accent color */}
+              <div
+                className={`
+                  w-7 h-7 rounded-md flex items-center justify-center shrink-0
+                  transition-colors duration-150
+                `}
                 style={
                   active
-                    ? { backgroundColor: "var(--sidebar-active)" }
-                    : undefined
+                    ? { backgroundColor: "rgba(255,255,255,0.15)" }
+                    : { backgroundColor: `${dept.accent}12` }
                 }
-                title={collapsed ? dept.label : undefined}
               >
                 <Icon
-                  size={18}
-                  className={active ? "text-white" : "opacity-60"}
+                  size={15}
+                  style={{ color: active ? "#FFFFFF" : dept.accent }}
+                  strokeWidth={active ? 2.2 : 1.8}
                 />
-                {!collapsed && (
-                  <div className="flex-1 min-w-0">
-                    <span className="block truncate">{dept.label}</span>
-                    {active && (
-                      <span className="block text-[10px] opacity-60 mt-0.5">
-                        {dept.description}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </Link>
-            );
-          })}
-        </div>
+              </div>
 
-        {/* System */}
-        <div>
+              {/* Label + description */}
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <span
+                    className={`
+                      block text-[13px] leading-tight truncate
+                      ${active ? "text-white font-semibold" : "font-medium"}
+                    `}
+                    style={active ? undefined : { color: "var(--sidebar-text)" }}
+                  >
+                    {dept.label}
+                  </span>
+                  {active && (
+                    <span
+                      className="block text-[9px] mt-0.5 tracking-[0.08em] uppercase text-white/50"
+                    >
+                      {dept.description}
+                    </span>
+                  )}
+                </div>
+              )}
+            </Link>
+          );
+        })}
+
+        {/* Divider */}
+        <div className="my-3 mx-3 border-t border-white/[0.06]" />
+
+        {/* Settings */}
+        {!collapsed && (
+          <p
+            className="px-3 mb-2"
+            style={{
+              fontFamily: "var(--font-caption)",
+              fontSize: "9px",
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--sidebar-text-muted)",
+              opacity: 0.6,
+            }}
+          >
+            System
+          </p>
+        )}
+        <Link
+          href="/settings"
+          onClick={() => setMobileOpen(false)}
+          className={`
+            group flex items-center gap-3 px-3 py-2 rounded-lg
+            transition-all duration-150
+            ${isActive("/settings") ? "" : "hover:bg-white/[0.04]"}
+          `}
+          style={
+            isActive("/settings")
+              ? { backgroundColor: "var(--sidebar-active)" }
+              : undefined
+          }
+          title={collapsed ? "Settings" : undefined}
+        >
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+            style={
+              isActive("/settings")
+                ? { backgroundColor: "rgba(255,255,255,0.15)" }
+                : { backgroundColor: "rgba(255,255,255,0.04)" }
+            }
+          >
+            <Settings
+              size={15}
+              style={{
+                color: isActive("/settings") ? "#FFFFFF" : "var(--sidebar-text-muted)",
+              }}
+              strokeWidth={1.8}
+            />
+          </div>
           {!collapsed && (
-            <h2
-              className="px-4 mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-40"
-              style={{ fontFamily: "var(--font-caption)" }}
+            <span
+              className={`text-[13px] ${
+                isActive("/settings") ? "text-white font-semibold" : "font-medium"
+              }`}
+              style={isActive("/settings") ? undefined : { color: "var(--sidebar-text)" }}
             >
-              System
-            </h2>
+              Settings
+            </span>
           )}
-          {SYSTEM_NAV.map((item) => {
-            const active = isActive(item.href);
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  active
-                    ? "text-white font-medium"
-                    : "hover:bg-white/5 text-gray-400"
-                }`}
-                style={
-                  active
-                    ? { backgroundColor: "var(--sidebar-active)" }
-                    : undefined
-                }
-                title={collapsed ? item.label : undefined}
-              >
-                <Icon
-                  size={18}
-                  className={active ? "text-white" : "opacity-60"}
-                />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            );
-          })}
-        </div>
+        </Link>
       </nav>
 
-      {/* Status Footer */}
+      {/* Footer */}
       {!collapsed && (
-        <div className="p-4 border-t border-white/10">
+        <div className="px-5 py-4 border-t border-white/[0.06]">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "var(--status-success)" }} />
-            <span className="text-xs opacity-60">7 departments connected</span>
+            <div
+              className="w-[6px] h-[6px] rounded-full animate-pulse"
+              style={{ backgroundColor: "var(--status-success)" }}
+            />
+            <span
+              className="text-[11px]"
+              style={{ color: "var(--sidebar-text-muted)" }}
+            >
+              7 departments connected
+            </span>
           </div>
         </div>
       )}
@@ -223,20 +296,23 @@ export default function DepartmentNav() {
 
   return (
     <>
-      {/* Mobile menu button */}
+      {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg"
-        style={{ backgroundColor: "var(--sidebar-bg)", color: "var(--sidebar-text)" }}
+        className="md:hidden fixed top-4 left-4 z-50 p-2.5 rounded-lg shadow-lg"
+        style={{
+          backgroundColor: "var(--sidebar-bg)",
+          color: "var(--sidebar-text)",
+        }}
         aria-label="Open menu"
       >
-        <Menu size={20} />
+        <Menu size={18} />
       </button>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          className="md:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -244,11 +320,16 @@ export default function DepartmentNav() {
       {/* Sidebar */}
       <aside
         className={`
-          fixed left-0 top-0 h-screen flex flex-col z-50 transition-all duration-200
-          ${collapsed ? "w-16" : "w-64"}
+          fixed left-0 top-0 h-screen flex flex-col z-50
+          transition-all duration-200 ease-out
+          ${collapsed ? "w-[60px]" : "w-[252px]"}
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
-        style={{ backgroundColor: "var(--sidebar-bg)", color: "var(--sidebar-text)" }}
+        style={{
+          backgroundColor: "var(--sidebar-bg)",
+          color: "var(--sidebar-text)",
+          borderRight: "1px solid rgba(255,255,255,0.04)",
+        }}
       >
         {navContent}
       </aside>

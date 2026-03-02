@@ -9,7 +9,6 @@ import {
   Brain,
   ArrowRight,
   Activity,
-  TrendingUp,
   AlertCircle,
   Users,
   FileCheck,
@@ -17,48 +16,12 @@ import {
 import Link from "next/link";
 
 const KPI_CARDS = [
-  {
-    label: "Email List Size",
-    value: "—",
-    target: "10,000",
-    trend: "flat" as const,
-    icon: Mail,
-  },
-  {
-    label: "Content / Day",
-    value: "—",
-    target: "100",
-    trend: "flat" as const,
-    icon: PenTool,
-  },
-  {
-    label: "Compliance Incidents",
-    value: "0",
-    target: "0",
-    trend: "flat" as const,
-    icon: Shield,
-  },
-  {
-    label: "Runway (Months)",
-    value: "—",
-    target: null,
-    trend: "flat" as const,
-    icon: DollarSign,
-  },
-  {
-    label: "Active Signups",
-    value: "—",
-    target: null,
-    trend: "flat" as const,
-    icon: Users,
-  },
-  {
-    label: "Patent Applications",
-    value: "—",
-    target: null,
-    trend: "flat" as const,
-    icon: FileCheck,
-  },
+  { label: "Email List Size", value: "—", target: "10,000", icon: Mail },
+  { label: "Content / Day", value: "—", target: "100", icon: PenTool },
+  { label: "Compliance", value: "0", target: "0", icon: Shield },
+  { label: "Runway (Mo)", value: "—", target: null, icon: DollarSign },
+  { label: "Active Signups", value: "—", target: null, icon: Users },
+  { label: "Patents", value: "—", target: null, icon: FileCheck },
 ];
 
 const DEPARTMENT_STATUS = [
@@ -68,7 +31,7 @@ const DEPARTMENT_STATUS = [
     summary: "23 launch emails ready. Mailchimp integration pending.",
     href: "/departments/email",
     icon: Mail,
-    color: "#5A6FFF",
+    accent: "#ACB7FF",
   },
   {
     name: "Content Engine",
@@ -76,7 +39,7 @@ const DEPARTMENT_STATUS = [
     summary: "Pipeline setup in progress. Source library needs population.",
     href: "/departments/content",
     icon: PenTool,
-    color: "#1EAA55",
+    accent: "#1EAA55",
   },
   {
     name: "Legal / IP / Compliance",
@@ -84,7 +47,7 @@ const DEPARTMENT_STATUS = [
     summary: "Critical patent filing needed before fundraise.",
     href: "/departments/legal",
     icon: Shield,
-    color: "#356FB6",
+    accent: "#356FB6",
   },
   {
     name: "Finance",
@@ -92,7 +55,7 @@ const DEPARTMENT_STATUS = [
     summary: "Pending integration with COO finance tool.",
     href: "/departments/finance",
     icon: DollarSign,
-    color: "#F1C028",
+    accent: "#F1C028",
   },
   {
     name: "Fundraising",
@@ -100,7 +63,7 @@ const DEPARTMENT_STATUS = [
     summary: "Data room and pitch materials in preparation.",
     href: "/departments/fundraising",
     icon: Rocket,
-    color: "#E24D47",
+    accent: "#E24D47",
   },
   {
     name: "Strategy / Coaching",
@@ -108,71 +71,80 @@ const DEPARTMENT_STATUS = [
     summary: "CEO weekly brief system being built.",
     href: "/departments/strategy",
     icon: Brain,
-    color: "#9686B9",
+    accent: "#9686B9",
   },
 ];
 
-const STATUS_COLORS = {
+const STATUS_DOT: Record<string, string> = {
   green: "var(--status-success)",
   yellow: "var(--status-warning)",
   red: "var(--status-error)",
 };
 
 export default function OperationsDashboard() {
-  const currentHour = new Date().getHours();
+  const hour = new Date().getHours();
   const greeting =
-    currentHour < 12
-      ? "Good morning"
-      : currentHour < 17
-      ? "Good afternoon"
-      : "Good evening";
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl">
-      {/* Header */}
-      <div className="mb-8">
+    <div className="p-6 md:p-8 lg:p-10 max-w-7xl">
+      {/* Page header */}
+      <header className="mb-8">
         <h1
-          className="text-2xl font-bold tracking-wide"
-          style={{ color: "var(--foreground)" }}
+          className="text-2xl font-bold"
+          style={{
+            fontFamily: "var(--font-display)",
+            letterSpacing: "0.06em",
+            color: "var(--foreground)",
+          }}
         >
           Operations
         </h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
+        <p
+          className="mt-1 text-sm font-normal"
+          style={{ color: "var(--muted)", fontFamily: "var(--font-body)" }}
+        >
           {greeting} — here&apos;s the state of Conceivable.
         </p>
-      </div>
+      </header>
 
-      {/* Status Banner */}
+      {/* Status banner — brand gradient */}
       <div
-        className="rounded-xl p-5 mb-8 flex items-center gap-4"
+        className="rounded-2xl p-5 mb-8 flex items-center gap-4"
         style={{
-          background: "linear-gradient(135deg, #5A6FFF 0%, #ACB7FF 100%)",
+          background: "linear-gradient(135deg, #5A6FFF 0%, #ACB7FF 60%, #78C3BF 100%)",
         }}
       >
-        <Activity className="text-white shrink-0" size={24} />
+        <Activity className="text-white shrink-0" size={22} strokeWidth={2} />
         <div className="flex-1">
-          <p className="text-white font-medium">Command Center Active</p>
-          <p className="text-white/70 text-sm">
+          <p className="text-white font-semibold text-sm">Command Center Active</p>
+          <p className="text-white/60 text-xs mt-0.5">
             7 departments connected. Weekly briefing system initializing.
           </p>
         </div>
         <Link
           href="/departments/strategy"
-          className="hidden sm:flex px-4 py-2 bg-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/30 items-center gap-2 whitespace-nowrap"
+          className="hidden sm:flex px-4 py-2 bg-white/20 text-white rounded-lg text-xs font-medium hover:bg-white/30 transition-colors items-center gap-1.5 whitespace-nowrap"
         >
-          CEO Brief <ArrowRight size={14} />
+          CEO Brief <ArrowRight size={12} />
         </Link>
       </div>
 
       {/* KPI Grid */}
       <section className="mb-10">
         <h2
-          className="text-xs font-semibold uppercase tracking-[0.15em] mb-4"
-          style={{ color: "var(--muted)", fontFamily: "var(--font-caption)" }}
+          className="font-caption mb-4"
+          style={{
+            fontFamily: "var(--font-caption)",
+            fontSize: "10px",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--muted)",
+          }}
         >
           Company KPIs
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {KPI_CARDS.map((kpi) => {
             const Icon = kpi.icon;
             return (
@@ -184,28 +156,34 @@ export default function OperationsDashboard() {
                   backgroundColor: "var(--surface)",
                 }}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <Icon size={14} style={{ color: "var(--brand-primary)" }} />
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Icon size={12} style={{ color: "var(--brand-primary)" }} strokeWidth={2} />
                   <span
-                    className="text-[10px] uppercase tracking-wider"
-                    style={{ color: "var(--muted)" }}
+                    className="font-caption"
+                    style={{
+                      fontFamily: "var(--font-caption)",
+                      fontSize: "9px",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                    }}
                   >
                     {kpi.label}
                   </span>
                 </div>
-                <div
+                <p
                   className="text-xl font-bold"
-                  style={{ color: "var(--foreground)" }}
+                  style={{ color: "var(--foreground)", fontFamily: "var(--font-body)" }}
                 >
                   {kpi.value}
-                </div>
+                </p>
                 {kpi.target && (
-                  <div
+                  <p
                     className="text-[10px] mt-1"
-                    style={{ color: "var(--muted-light)" }}
+                    style={{ color: "var(--muted-light)", fontFamily: "var(--font-body)" }}
                   >
                     Target: {kpi.target}
-                  </div>
+                  </p>
                 )}
               </div>
             );
@@ -216,19 +194,25 @@ export default function OperationsDashboard() {
       {/* Department Status */}
       <section className="mb-10">
         <h2
-          className="text-xs font-semibold uppercase tracking-[0.15em] mb-4"
-          style={{ color: "var(--muted)", fontFamily: "var(--font-caption)" }}
+          className="font-caption mb-4"
+          style={{
+            fontFamily: "var(--font-caption)",
+            fontSize: "10px",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--muted)",
+          }}
         >
           Department Status
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {DEPARTMENT_STATUS.map((dept) => {
             const Icon = dept.icon;
             return (
               <Link
                 key={dept.href}
                 href={dept.href}
-                className="group rounded-xl border p-5 hover:shadow-md transition-shadow"
+                className="group rounded-xl border p-5 hover:shadow-md transition-all duration-150"
                 style={{
                   borderColor: "var(--border)",
                   backgroundColor: "var(--surface)",
@@ -237,32 +221,26 @@ export default function OperationsDashboard() {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: `${dept.color}12` }}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: `${dept.accent}14` }}
                     >
-                      <Icon size={18} style={{ color: dept.color }} />
+                      <Icon size={16} style={{ color: dept.accent }} strokeWidth={1.8} />
                     </div>
-                    <div>
-                      <h3
-                        className="font-medium text-sm"
-                        style={{ color: "var(--foreground)" }}
-                      >
-                        {dept.name}
-                      </h3>
-                    </div>
+                    <h3
+                      className="font-semibold text-sm"
+                      style={{ color: "var(--foreground)", fontFamily: "var(--font-body)" }}
+                    >
+                      {dept.name}
+                    </h3>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 mt-1">
                     <div
-                      className="w-2 h-2 rounded-full"
-                      style={{
-                        backgroundColor: STATUS_COLORS[dept.status],
-                      }}
+                      className="w-[6px] h-[6px] rounded-full"
+                      style={{ backgroundColor: STATUS_DOT[dept.status] }}
                     />
                     <span
-                      className="text-[10px] capitalize"
-                      style={{
-                        color: STATUS_COLORS[dept.status],
-                      }}
+                      className="text-[10px] capitalize font-medium"
+                      style={{ color: STATUS_DOT[dept.status], fontFamily: "var(--font-body)" }}
                     >
                       {dept.status}
                     </span>
@@ -270,18 +248,18 @@ export default function OperationsDashboard() {
                 </div>
                 <p
                   className="text-xs leading-relaxed"
-                  style={{ color: "var(--muted)" }}
+                  style={{ color: "var(--muted)", fontFamily: "var(--font-body)" }}
                 >
                   {dept.summary}
                 </p>
                 <div className="mt-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <span
-                    className="text-xs font-medium"
-                    style={{ color: "var(--brand-primary)" }}
+                    className="text-[11px] font-medium"
+                    style={{ color: "var(--brand-primary)", fontFamily: "var(--font-body)" }}
                   >
                     View department
                   </span>
-                  <ArrowRight size={12} style={{ color: "var(--brand-primary)" }} />
+                  <ArrowRight size={11} style={{ color: "var(--brand-primary)" }} />
                 </div>
               </Link>
             );
@@ -289,31 +267,38 @@ export default function OperationsDashboard() {
         </div>
       </section>
 
-      {/* Alerts Section (placeholder) */}
+      {/* Alerts */}
       <section>
         <h2
-          className="text-xs font-semibold uppercase tracking-[0.15em] mb-4"
-          style={{ color: "var(--muted)", fontFamily: "var(--font-caption)" }}
+          className="font-caption mb-4"
+          style={{
+            fontFamily: "var(--font-caption)",
+            fontSize: "10px",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--muted)",
+          }}
         >
           Active Alerts
         </h2>
         <div
-          className="rounded-xl border p-6 text-center"
+          className="rounded-xl border p-8 text-center"
           style={{
             borderColor: "var(--border)",
             backgroundColor: "var(--surface)",
           }}
         >
           <AlertCircle
-            size={24}
+            size={22}
             className="mx-auto mb-2"
             style={{ color: "var(--muted-light)" }}
+            strokeWidth={1.5}
           />
           <p className="text-sm" style={{ color: "var(--muted)" }}>
             No active cross-department alerts
           </p>
           <p className="text-xs mt-1" style={{ color: "var(--muted-light)" }}>
-            Alerts will appear here when departments flag issues for each other.
+            Alerts appear here when departments flag issues for each other.
           </p>
         </div>
       </section>

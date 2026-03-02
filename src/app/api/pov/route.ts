@@ -1,11 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllPOVs, addPOV, getPOVStats } from "@/lib/stores/pov-store";
-import type { POVEntry, EmotionalTone } from "@/lib/data/pov-data";
+import { prisma } from "@/lib/prisma";
+import type { EmotionalTone } from "@/lib/data/pov-data";
 import { invokeAgent } from "@/lib/agents/invoke";
 
 export async function GET() {
-  const povs = getAllPOVs();
-  const stats = getPOVStats();
+  const povs = await prisma.pOV.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Compute stats
+  const allTopics = new Set<string>();
+  const toneDistribution: Record<string, number> = {};
+  const topicFreq: Record<string, number> = {};
+
+  for (const pov of povs) {
+    const related = pov.relatedTopics as string[];
+    for (const t of related) {
+      const key = t.toLowerCase();
+      allTopics.add(key);
+      topicFreq[key] = (topicFreq[key] || 0) + 1;
+    }
+    if (pov.emotionalTone) {
+      toneDistribution[pov.emotionalTone] =
+        (toneDistribution[pov.emotionalTone] || 0) + 1;
+    }
+  }
+
+  const sortedTopics = Object.entries(topicFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([topic]) => topic);
+
+  const stats = {
+    total: povs.length,
+    topics: sortedTopics,
+    topicCount: allTopics.size,
+    toneDistribution,
+  };
+
   return NextResponse.json({ povs, stats });
 }
 
@@ -21,19 +53,11 @@ export async function POST(req: NextRequest) {
   }
 
   const id = `pov-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-  const entry: POVEntry = {
-    id,
-    topic: topic || "Untitled POV",
-    transcript,
-    sourceType: sourceType || "voice",
-    sourceId: sourceId || undefined,
-    createdAt: new Date().toISOString(),
-    durationSeconds: durationSeconds || undefined,
-    keyPositions: [],
-    analogies: [],
-    emotionalTone: "",
-    relatedTopics: [],
-  };
+  let finalTopic = topic || "Untitled POV";
+  let keyPositions: string[] = [];
+  let analogies: string[] = [];
+  let emotionalTone = "";
+  let relatedTopics: string[] = [];
 
   // Attempt AI extraction — graceful fallback if agent fails
   try {
@@ -57,19 +81,29 @@ Return this exact JSON structure:
     });
 
     const parsed = JSON.parse(result.response);
-    if (parsed.topic) entry.topic = topic || parsed.topic;
-    if (Array.isArray(parsed.keyPositions))
-      entry.keyPositions = parsed.keyPositions;
-    if (Array.isArray(parsed.analogies)) entry.analogies = parsed.analogies;
-    if (parsed.emotionalTone)
-      entry.emotionalTone = parsed.emotionalTone as EmotionalTone;
-    if (Array.isArray(parsed.relatedTopics))
-      entry.relatedTopics = parsed.relatedTopics;
+    if (parsed.topic) finalTopic = topic || parsed.topic;
+    if (Array.isArray(parsed.keyPositions)) keyPositions = parsed.keyPositions;
+    if (Array.isArray(parsed.analogies)) analogies = parsed.analogies;
+    if (parsed.emotionalTone) emotionalTone = parsed.emotionalTone as EmotionalTone;
+    if (Array.isArray(parsed.relatedTopics)) relatedTopics = parsed.relatedTopics;
   } catch {
     // AI extraction failed — save with empty fields
-    if (!topic) entry.topic = "Untitled POV";
   }
 
-  const saved = addPOV(entry);
+  const saved = await prisma.pOV.create({
+    data: {
+      id,
+      topic: finalTopic,
+      transcript,
+      sourceType: sourceType || "voice",
+      sourceId: sourceId || null,
+      durationSeconds: durationSeconds || null,
+      keyPositions,
+      analogies,
+      emotionalTone: emotionalTone || null,
+      relatedTopics,
+    },
+  });
+
   return NextResponse.json(saved, { status: 201 });
 }

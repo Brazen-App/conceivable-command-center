@@ -12,6 +12,8 @@ import {
   Brain,
   FlaskConical,
   Heart,
+  Code2,
+  Boxes,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -83,6 +85,20 @@ const DEPARTMENTS = [
     icon: Brain,
     description: "The Brain",
     accent: "#9686B9",  // purple
+  },
+  {
+    label: "Product Development",
+    href: "/departments/product",
+    icon: Boxes,
+    description: "The Product Brain",
+    accent: "#E37FB1",  // pink
+  },
+  {
+    label: "Engineering",
+    href: "/departments/engineering",
+    icon: Code2,
+    description: "The Builder",
+    accent: "#6B7280",  // slate gray (placeholder)
   },
 ];
 
@@ -302,7 +318,7 @@ export default function DepartmentNav() {
               className="text-[11px]"
               style={{ color: "var(--sidebar-text-muted)" }}
             >
-              9 departments connected
+              11 departments connected
             </span>
           </div>
         </div>

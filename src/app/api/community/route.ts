@@ -1,52 +1,15 @@
 import { NextResponse } from "next/server";
-import {
-  POSTING_CALENDAR,
-  DISCUSSION_PROMPTS,
-  MEMBER_SPOTLIGHTS,
-  RESPONSE_QUEUE,
-  CONTENT_SOURCE_METRICS,
-  MEMBER_METRICS,
-  ENGAGEMENT_SCORES,
-  REENGAGEMENT_CAMPAIGNS,
-  ONBOARDING_FUNNEL,
-  COMMUNITY_CHALLENGES,
-  CONVERSION_FUNNEL,
-  WEEKLY_RECOMMENDATION,
-  AFFILIATES,
-  AFFILIATE_METRICS,
-  LEADERBOARD,
-  AFFILIATE_OUTREACH,
-  EXPERTS,
-  OUTREACH_DRAFTS,
-  INTERVIEW_SCHEDULES,
-  PREP_PACKETS,
-  POST_INTERVIEW_TASKS,
-  CROSS_DEPT_CONNECTIONS,
-} from "@/lib/data/community-data";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  return NextResponse.json({
-    postingCalendar: POSTING_CALENDAR,
-    discussionPrompts: DISCUSSION_PROMPTS,
-    memberSpotlights: MEMBER_SPOTLIGHTS,
-    responseQueue: RESPONSE_QUEUE,
-    contentSourceMetrics: CONTENT_SOURCE_METRICS,
-    memberMetrics: MEMBER_METRICS,
-    engagementScores: ENGAGEMENT_SCORES,
-    reengagementCampaigns: REENGAGEMENT_CAMPAIGNS,
-    onboardingFunnel: ONBOARDING_FUNNEL,
-    communityChallenges: COMMUNITY_CHALLENGES,
-    conversionFunnel: CONVERSION_FUNNEL,
-    weeklyRecommendation: WEEKLY_RECOMMENDATION,
-    affiliates: AFFILIATES,
-    affiliateMetrics: AFFILIATE_METRICS,
-    leaderboard: LEADERBOARD,
-    affiliateOutreach: AFFILIATE_OUTREACH,
-    experts: EXPERTS,
-    outreachDrafts: OUTREACH_DRAFTS,
-    interviewSchedules: INTERVIEW_SCHEDULES,
-    prepPackets: PREP_PACKETS,
-    postInterviewTasks: POST_INTERVIEW_TASKS,
-    crossDeptConnections: CROSS_DEPT_CONNECTIONS,
+  const rows = await prisma.departmentData.findMany({
+    where: { department: "community" },
   });
+
+  const data: Record<string, unknown> = {};
+  for (const row of rows) {
+    data[row.key] = row.value;
+  }
+
+  return NextResponse.json(data);
 }

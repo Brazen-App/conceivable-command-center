@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const rows = await prisma.departmentData.findMany({
-    where: { department: "clinical" },
+    where: { department: "finance" },
   });
 
   const data: Record<string, unknown> = {};

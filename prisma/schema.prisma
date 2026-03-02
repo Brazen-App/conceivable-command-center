@@ -78,19 +78,22 @@ model Alert {
 // ============================================================
 
 model Email {
-  id          String    @id @default(cuid())
-  week        Int
-  sequence    Int
-  subject     String
-  preview     String
-  body        String    @db.Text
-  status      String    @default("pending") // pending, approved, published
-  mailchimpId String?
-  approvedAt  DateTime?
-  publishedAt DateTime?
-  metrics     Json?     // open rate, click rate, etc.
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id               String   @id @default(cuid())
+  week             Int
+  sequence         Int
+  phase            String   // re-engagement, education, launch, final-push, post-close
+  subject          String
+  preview          String
+  body             String   @db.Text
+  status           String   @default("pending") // pending, approved, published
+  segment          String?
+  complianceStatus String   @default("not_reviewed") // not_reviewed, in_review, approved, flagged
+  mailchimpId      String?
+  approvedAt       String?  // ISO string
+  publishedAt      String?  // ISO string
+  metrics          Json?    // open rate, click rate, etc.
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 // ============================================================
@@ -113,34 +116,137 @@ model Content {
   updatedAt    DateTime  @updatedAt
 }
 
+model NewsItem {
+  id                  String   @id @default(cuid())
+  title               String
+  source              String
+  sourceUrl           String?
+  brief               String
+  tag                 String   // competitor, science, industry, viral, regulatory
+  isViral             Boolean  @default(false)
+  viralReason         String?
+  summary             String   @db.Text
+  fullArticle         String   @db.Text
+  agentRecommendation String   @db.Text
+  coverageAngle       String   @db.Text
+  timestamp           String   // ISO string
+  povRecording        String?
+  povTranscript       String?  @db.Text
+  generatedContent    Json?    // array of generated content pieces
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model ResearchArticle {
+  id              String   @id @default(cuid())
+  title           String
+  journal         String
+  authors         String
+  doi             String?
+  brief           String
+  relevanceScore  Float
+  fillsGap        Boolean  @default(false)
+  gapDescription  String?
+  summary         Json     // {design, keyFindings, sampleSize, limitations, conceivableRelevance}
+  fullAbstract    String   @db.Text
+  timestamp       String   // ISO string
+  povRecording    String?
+  povTranscript   String?  @db.Text
+  generatedContent Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model RedditPost {
+  id                  String   @id @default(cuid())
+  subreddit           String
+  title               String
+  body                String   @db.Text
+  upvotes             Int      @default(0)
+  comments            Int      @default(0)
+  url                 String?
+  engagementPotential String   // low, medium, high
+  relevanceScore      Float
+  riskLevel           String   // low, medium, high
+  draftResponse       String   @db.Text
+  status              String   @default("pending") // pending, approved, skipped, posted
+  timestamp           String   // ISO string
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model CalendarEntry {
+  id             String   @id @default(cuid())
+  date           String   // ISO date string
+  platform       String
+  title          String
+  excerpt        String   @db.Text
+  status         String   @default("draft") // draft, scheduled, published
+  sourceType     String
+  engagement     Json?    // {likes, comments, shares, reach}
+  isMultiplier   Boolean  @default(false)
+  multiplierNote String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
 // ============================================================
 // Legal / IP / Compliance
 // ============================================================
 
 model Patent {
-  id             String    @id @default(cuid())
-  title          String
-  type           String    // utility, provisional, continuation
-  status         String    // filed, pending, granted, expired
-  filingDate     DateTime?
-  expirationDate DateTime?
-  patentNumber   String?
-  claims         Json?     // key claims summary
-  notes          String?   @db.Text
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                   String   @id @default(cuid())
+  title                String
+  shortTitle           String?
+  patentNumber         String?
+  type                 String   // utility, provisional, continuation, design
+  status               String   // granted, pending, provisional, planned, urgent
+  filingDate           String?  // ISO string
+  grantDate            String?
+  expirationDate       String?
+  description          String   @db.Text
+  keyClaims            Json?    // string[]
+  assignedAttorney     String?
+  priorArtNotes        String?  @db.Text
+  competitiveThreatLevel String? // high, medium, low
+  filingPriority       String?  // critical, high, medium, low
+  filingDeadline       String?  // ISO string
+  deadlineReason       String?  @db.Text
+  crossDeptConnections Json?    // string[]
+  notes                String?  @db.Text
+  claims               Json?    // legacy field
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }
 
 model ComplianceClaim {
-  id         String   @id @default(cuid())
-  claim      String   // the specific claim text
-  category   String   // efficacy, safety, testimonial, comparison
-  status     String   // approved, restricted, prohibited
-  citation   String?  // supporting evidence
-  disclaimer String?  // required disclaimer text
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                String   @id @default(cuid())
+  claim             String   @db.Text
+  category          String   // efficacy, safety, testimonial, comparison, mechanism, general
+  status            String   // approved, restricted, prohibited
+  citation          String?  @db.Text
+  studyDetails      String?  @db.Text
+  disclaimer        String?  @db.Text
+  restrictionReason String?  @db.Text
+  lastReviewed      String?  // ISO string
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model PendingReview {
+  id           String   @id @default(cuid())
+  source       String   // content, email, social, website
+  title        String
+  flagReason   String
+  flagType     String   // health_claim, testimonial, comparison, outcome, pregnancy_rate, missing_disclaimer
+  severity     String   // critical, warning, info
+  content      String   @db.Text
+  submittedAt  String   // ISO string
+  status       String   @default("pending") // pending, approved, rejected, needs_revision
+  reviewerNotes String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // ============================================================
@@ -148,15 +254,67 @@ model ComplianceClaim {
 // ============================================================
 
 model Investor {
-  id             String    @id @default(cuid())
+  id             String   @id @default(cuid())
   name           String
   firm           String?
-  type           String    // angel, seed, series_a, strategic
-  status         String    @default("prospect") // prospect, contacted, meeting, due_diligence, term_sheet, closed, passed
-  notes          String?   @db.Text
+  tier           String   // movement, venture, strategic
+  type           String   // angel, seed, series_a, strategic
+  status         String   @default("prospect") // prospect, contacted, meeting_scheduled, etc.
+  checkSize      String?
+  thesisAlignment String? @db.Text
+  notes          String?  @db.Text
   lastContact    DateTime?
   nextAction     String?
   nextActionDate DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  extras         Json?    // tier-specific fields (portfolio, partnerName, partnershipType, etc.)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// ============================================================
+// POV Knowledge Base
+// ============================================================
+
+model POV {
+  id              String   @id @default(cuid())
+  topic           String
+  transcript      String   @db.Text
+  sourceType      String   // voice, text, quick-capture
+  sourceId        String?
+  durationSeconds Int?
+  keyPositions    Json     @default("[]") // string[]
+  analogies       Json     @default("[]") // string[]
+  emotionalTone   String?
+  relatedTopics   Json     @default("[]") // string[]
+  createdAt       DateTime @default(now())
+}
+
+// ============================================================
+// Quick Capture
+// ============================================================
+
+model Capture {
+  id         String   @id @default(cuid())
+  type       String   // voice, text, file, link
+  content    String   @db.Text
+  summary    String?
+  department String   // content-engine, research, ideas-parking-lot, etc.
+  fileName   String?
+  fileSize   Int?
+  createdAt  DateTime @default(now())
+}
+
+// ============================================================
+// Generic Department Data (Tier 2 — read-only JSON blobs)
+// ============================================================
+
+model DepartmentData {
+  id         String   @id @default(cuid())
+  department String   // clinical, community, strategy, product, finance, fundraising, legal
+  key        String   // e.g. "factors", "postingCalendar", "currentBrief"
+  value      Json     // the actual data blob
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([department, key])
 }

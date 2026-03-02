@@ -19,6 +19,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import type { Platform, GeneratedContent } from "@/lib/data/content-engine";
+import TemplateSelector from "./TemplateSelector";
 
 interface ContentPieceProps {
   sourceId: string;
@@ -106,9 +107,11 @@ async function publishPieces(pieces: Array<{ platform: string; copy: string; has
 function PlatformCard({
   content,
   config,
+  sourceTitle,
 }: {
   content: GeneratedContent;
   config: (typeof PLATFORM_CONFIG)[Platform];
+  sourceTitle: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -241,6 +244,13 @@ function PlatformCard({
               {publishError}
             </div>
           )}
+
+          {/* Template image generator */}
+          <TemplateSelector
+            platform={content.platform}
+            sourceTitle={sourceTitle}
+            copy={content.copy}
+          />
 
           {/* Actions */}
           <div className="flex items-center gap-2 mt-3">
@@ -382,6 +392,7 @@ function QueueItem({ item }: { item: ContentPieceProps }) {
                 key={platform}
                 content={generated[platform]}
                 config={PLATFORM_CONFIG[platform]}
+                sourceTitle={item.sourceTitle}
               />
             ))}
           </div>

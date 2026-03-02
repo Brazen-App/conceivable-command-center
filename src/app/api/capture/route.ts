@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  addCapture,
-  getAllCaptures,
-  type CaptureEntry,
-  type CaptureType,
-  type CaptureDepartment,
-} from "@/lib/stores/capture-store";
-import { addPOV } from "@/lib/stores/pov-store";
-import type { POVEntry } from "@/lib/data/pov-data";
+import { prisma } from "@/lib/prisma";
 
-const VALID_DEPARTMENTS: CaptureDepartment[] = [
+const VALID_DEPARTMENTS = [
   "content-engine",
   "research",
   "ideas-parking-lot",
@@ -19,7 +11,10 @@ const VALID_DEPARTMENTS: CaptureDepartment[] = [
 ];
 
 export async function GET() {
-  return NextResponse.json(getAllCaptures());
+  const captures = await prisma.capture.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+  return NextResponse.json(captures);
 }
 
 export async function POST(req: NextRequest) {
@@ -41,36 +36,36 @@ export async function POST(req: NextRequest) {
   }
 
   const id = `cap-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-  const entry: CaptureEntry = {
-    id,
-    type: (type as CaptureType) || "text",
-    content,
-    summary: summary || undefined,
-    department: department as CaptureDepartment,
-    createdAt: new Date().toISOString(),
-    fileName: fileName || undefined,
-    fileSize: fileSize || undefined,
-  };
 
-  const saved = addCapture(entry);
+  const saved = await prisma.capture.create({
+    data: {
+      id,
+      type: type || "text",
+      content,
+      summary: summary || null,
+      department,
+      fileName: fileName || null,
+      fileSize: fileSize || null,
+    },
+  });
 
   // If routed to content-engine and is voice/text, also save as POV
   if (
     department === "content-engine" &&
     (type === "voice" || type === "text")
   ) {
-    const povEntry: POVEntry = {
-      id: `pov-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      topic: "Quick Capture POV",
-      transcript: content,
-      sourceType: "quick-capture",
-      createdAt: new Date().toISOString(),
-      keyPositions: [],
-      analogies: [],
-      emotionalTone: "",
-      relatedTopics: [],
-    };
-    addPOV(povEntry);
+    await prisma.pOV.create({
+      data: {
+        id: `pov-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        topic: "Quick Capture POV",
+        transcript: content,
+        sourceType: "quick-capture",
+        keyPositions: [],
+        analogies: [],
+        emotionalTone: null,
+        relatedTopics: [],
+      },
+    });
   }
 
   return NextResponse.json(

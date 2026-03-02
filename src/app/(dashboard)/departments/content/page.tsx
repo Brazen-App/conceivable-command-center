@@ -6,12 +6,6 @@ import DailyBrief from "@/components/departments/content/DailyBrief";
 import ContentPipeline from "@/components/departments/content/ContentPipeline";
 import ContentCalendar from "@/components/departments/content/ContentCalendar";
 import KirstenBrain from "@/components/departments/content/KirstenBrain";
-import {
-  NEWS_ITEMS,
-  RESEARCH_ITEMS,
-  REDDIT_POSTS,
-  CALENDAR_ENTRIES,
-} from "@/lib/data/content-engine";
 import type { NewsItem, ResearchItem, RedditPost, CalendarEntry } from "@/lib/data/content-engine";
 
 const TABS = [
@@ -31,28 +25,36 @@ interface PipelineItem {
 
 export default function ContentDepartmentPage() {
   const [activeTab, setActiveTab] = useState<TabId>("brief");
-  const [newsItems, setNewsItems] = useState<NewsItem[]>(NEWS_ITEMS);
-  const [researchItems, setResearchItems] = useState<ResearchItem[]>(RESEARCH_ITEMS);
-  const [redditPosts, setRedditPosts] = useState<RedditPost[]>(REDDIT_POSTS);
-  const [calendarEntries] = useState<CalendarEntry[]>(CALENDAR_ENTRIES);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [researchItems, setResearchItems] = useState<ResearchItem[]>([]);
+  const [redditPosts, setRedditPosts] = useState<RedditPost[]>([]);
+  const [calendarEntries, setCalendarEntries] = useState<CalendarEntry[]>([]);
   const [pipelineQueue, setPipelineQueue] = useState<PipelineItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // POV Knowledge Base stats
   const [povStats, setPovStats] = useState({ total: 0, topicCount: 0, topics: [] as string[] });
 
   useEffect(() => {
-    fetch("/api/pov")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.stats) {
+    Promise.all([
+      fetch("/api/content-engine").then((r) => r.json()),
+      fetch("/api/pov").then((r) => r.json()),
+    ])
+      .then(([contentData, povData]) => {
+        setNewsItems(contentData.newsItems ?? []);
+        setResearchItems(contentData.researchItems ?? []);
+        setRedditPosts(contentData.redditPosts ?? []);
+        setCalendarEntries(contentData.calendarEntries ?? []);
+        if (povData.stats) {
           setPovStats({
-            total: data.stats.total,
-            topicCount: data.stats.topicCount,
-            topics: data.stats.topics,
+            total: povData.stats.total,
+            topicCount: povData.stats.topicCount,
+            topics: povData.stats.topics,
           });
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const handleContentCreate = (sourceId: string, transcript: string) => {
@@ -103,6 +105,18 @@ export default function ContentDepartmentPage() {
 
   const povCount = newsItems.filter((n) => n.povTranscript).length +
     researchItems.filter((r) => r.povTranscript).length;
+
+  const totalItems = newsItems.length + researchItems.length + redditPosts.length;
+
+  if (loading) {
+    return (
+      <div className="p-6 md:p-8 lg:p-10 max-w-7xl">
+        <div className="flex items-center justify-center h-64">
+          <p className="text-sm" style={{ color: "var(--muted)" }}>Loading Content Engine...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 md:p-8 lg:p-10 max-w-7xl">
@@ -161,7 +175,7 @@ export default function ContentDepartmentPage() {
           <PenTool size={20} style={{ color: "#F1C028" }} strokeWidth={2} />
           <div>
             <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-              {NEWS_ITEMS.length + RESEARCH_ITEMS.length + REDDIT_POSTS.length} items to review
+              {totalItems} items to review
             </p>
             <p className="text-xs" style={{ color: "var(--muted)" }}>
               {povCount} POVs recorded &middot; {pipelineQueue.length * 5} pieces in pipeline

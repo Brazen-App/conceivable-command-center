@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchPOVs } from "@/lib/stores/pov-store";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q");
@@ -11,6 +11,18 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const results = searchPOVs(q.trim());
-  return NextResponse.json({ query: q.trim(), results, count: results.length });
+  const query = q.trim();
+
+  // Search across topic and transcript using Prisma OR conditions
+  const results = await prisma.pOV.findMany({
+    where: {
+      OR: [
+        { topic: { contains: query, mode: "insensitive" } },
+        { transcript: { contains: query, mode: "insensitive" } },
+      ],
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json({ query, results, count: results.length });
 }

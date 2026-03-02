@@ -7,6 +7,27 @@ interface PublishPiece {
   hashtags: string[];
 }
 
+// Map our platform names to Late platform names
+const PLATFORM_MAP: Record<string, string> = {
+  linkedin: "linkedin",
+  x: "twitter",
+  facebook: "facebook",
+  instagram: "instagram",
+  pinterest: "pinterest",
+  tiktok: "tiktok",
+  youtube: "youtube",
+};
+
+// Cache accounts list per request lifecycle
+let accountsCache: Array<{ _id: string; platform: string; isActive: boolean }> | null = null;
+
+async function getAccounts() {
+  if (accountsCache) return accountsCache;
+  const res = await late.accounts.listAccounts();
+  accountsCache = (res.data as { accounts?: Array<{ _id: string; platform: string; isActive: boolean }> })?.accounts ?? [];
+  return accountsCache;
+}
+
 export async function POST(request: Request) {
   if (!process.env.LATE_API_KEY) {
     return NextResponse.json(
@@ -25,8 +46,21 @@ export async function POST(request: Request) {
     );
   }
 
+  // Reset cache for each request
+  accountsCache = null;
+
   const results = await Promise.allSettled(
     pieces.map(async (piece) => {
+      const latePlatform = PLATFORM_MAP[piece.platform] ?? piece.platform;
+
+      // Resolve the accountId for this platform
+      const accounts = await getAccounts();
+      const account = accounts.find((a) => a.platform === latePlatform && a.isActive);
+
+      if (!account) {
+        throw new Error(`No active ${latePlatform} account connected in Late`);
+      }
+
       const fullContent = piece.hashtags.length > 0
         ? `${piece.copy}\n\n${piece.hashtags.map((t) => `#${t}`).join(" ")}`
         : piece.copy;
@@ -34,7 +68,7 @@ export async function POST(request: Request) {
       const res = await late.posts.createPost({
         body: {
           content: fullContent,
-          platforms: [{ platform: piece.platform }],
+          platforms: [{ platform: latePlatform, accountId: account._id }],
           publishNow: true,
         },
       });

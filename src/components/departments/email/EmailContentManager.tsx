@@ -313,6 +313,30 @@ export default function EmailContentManager({ emails, onUpdate, onAction }: Prop
                           >
                             {email.body}
                           </pre>
+                          <div className="flex items-center gap-2 mt-3">
+                            {email.status !== "approved" && email.status !== "published" && (
+                              <button
+                                onClick={() => onAction(email.id, "approve")}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90"
+                                style={{ backgroundColor: "#1EAA55" }}
+                              >
+                                <Check size={14} /> Approve
+                              </button>
+                            )}
+                            {email.complianceStatus !== "flagged" && (
+                              <button
+                                onClick={() => onAction(email.id, "compliance_flag")}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all hover:opacity-90"
+                                style={{
+                                  backgroundColor: "#E24D4714",
+                                  color: "#E24D47",
+                                  border: "1px solid #E24D4730",
+                                }}
+                              >
+                                <AlertTriangle size={14} /> Flag for Compliance Review
+                              </button>
+                            )}
+                          </div>
                         </details>
                       )}
 

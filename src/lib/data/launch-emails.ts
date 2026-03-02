@@ -79,8 +79,8 @@ Over the next few weeks, we're going to share what we've built. And we're going 
 
 If you're still on this journey, stay tuned. The next email will explain exactly what's coming.
 
-Warmly,
-The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Full list — all 29K subscribers",
     approvedAt: null,
@@ -109,7 +109,8 @@ Conceivable's system analyzes the signals your body is already sending and maps 
 
 More on that in our next email. For now, we just wanted you to know: you're not imagining it. The system IS broken. And we're building the fix.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Full list",
     approvedAt: null,
@@ -138,7 +139,8 @@ Next week, we'll show you how the CON Score works — a single number that captu
 
 Stay with us.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Full list — segment by engagement (high open rate priority)",
     approvedAt: null,
@@ -169,7 +171,8 @@ We're not replacing your doctor. We're giving both of you better information to 
 
 Coming this week: how the CON Score synthesizes all of this into one actionable number.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Full list",
     approvedAt: null,
@@ -198,7 +201,8 @@ Conceivable's AI doesn't replace clinical expertise — it scales it. It takes t
 
 The next email will introduce you to Kai, the AI coach at the heart of this system. You're going to want to meet her.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Full list — priority to 2x+ openers",
     approvedAt: null,
@@ -232,7 +236,8 @@ No pressure. No gimmicks. Just a system we believe in, built for the people who 
 
 More coming soon.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Full list — tease with forward-to-friend CTA",
     approvedAt: null,
@@ -269,7 +274,8 @@ When early access opens, the first thing you'll see is your initial CON Score an
 
 Next: the 7 drivers behind the score.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Engaged subscribers (opened 1+ of re-engagement)",
     approvedAt: null,
@@ -302,7 +308,8 @@ Conceivable's AI analyzes your temperature data against these clinical patterns 
 
 This is just one of the 7 drivers. Coming next: the full framework.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Engaged subscribers",
     approvedAt: null,
@@ -338,7 +345,8 @@ This approach is so novel, we're filing patents on it. It represents a fundament
 
 Early access: 2 weeks away.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Engaged subscribers — tech/science-forward segment",
     approvedAt: null,
@@ -376,7 +384,8 @@ Think of Kai as the most knowledgeable, most patient, most data-literate fertili
 
 You'll meet her when early access opens. Soon.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Engaged subscribers",
     approvedAt: null,
@@ -411,7 +420,8 @@ These 7 drivers don't exist in isolation. They interact. Conceivable's system ma
 
 One week until early access.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Engaged subscribers — educational segment",
     approvedAt: null,
@@ -440,7 +450,8 @@ When you join early access, you'll start seeing your own patterns within weeks.
 
 Early access opens next week. 5,000 spots. You'll hear from us first.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Engaged subscribers — high-intent (clicked previous emails)",
     approvedAt: null,
@@ -482,7 +493,8 @@ Join early access →
 
 5,000 spots. When they're gone, the next cohort won't open for months.
 
-— Kirsten & The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Full list — launch announcement",
     approvedAt: null,
@@ -517,7 +529,8 @@ No guesswork. No "try this and see." A systematic approach to something that des
 
 Join early access →
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Full list — launched but not yet signed up",
     approvedAt: null,
@@ -554,7 +567,8 @@ Early access is open. Limited to 5,000 founding members.
 
 Join now →
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Openers who haven't converted — science-forward messaging",
     approvedAt: null,
@@ -586,7 +600,8 @@ This is the most important thing we've ever built. We built it for people like y
 
 Join the remaining 2,500 spots →
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Full list minus already-signed-up — social proof emphasis",
     approvedAt: null,
@@ -623,7 +638,8 @@ Early access: 2,500 spots remain.
 
 Join now →
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Engaged but unconverted — emotional/transformation messaging",
     approvedAt: null,
@@ -659,7 +675,8 @@ Still have questions? Reply to this email. We read every response.
 
 Early access: spots are filling. Join now →
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Engaged but unconverted — objection handling",
     approvedAt: null,
@@ -692,7 +709,8 @@ We're not trying to pressure you. We're trying to be honest: if you've been thin
 
 Join early access before Friday →
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Engaged non-converters only — urgency",
     approvedAt: null,
@@ -723,7 +741,7 @@ I built it for you. And I'd love for you to try it.
 
 Early access closes tomorrow.
 
-With gratitude,
+Sending you big love,
 Kirsten`,
     status: "pending",
     segment: "Full remaining list — founder story",
@@ -763,7 +781,8 @@ Join early access before midnight →
 
 Thank you for being on this journey with us, regardless of what you decide. We're here when you're ready.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Final push — all non-converters — last chance",
     approvedAt: null,
@@ -803,7 +822,8 @@ A few things to know:
 
 Welcome to the journey.
 
-— Kirsten & The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Converted members only — onboarding",
     approvedAt: null,
@@ -844,7 +864,8 @@ And if you know someone who should be on the waitlist for the next cohort — fo
 
 Here for you, always.
 
-— The Conceivable Team`,
+Sending you big love,
+Kirsten`,
     status: "pending",
     segment: "Converted members — future roadmap + referral",
     approvedAt: null,

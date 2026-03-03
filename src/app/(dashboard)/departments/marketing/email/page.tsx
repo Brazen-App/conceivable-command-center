@@ -7,12 +7,30 @@ export const dynamic = "force-dynamic";
 export default async function MarketingEmailPage() {
   let emails: LaunchEmail[] = [];
   let dbError: string | null = null;
+  let debugInfo = "";
 
   try {
+    // Raw SQL to bypass Prisma model layer
+    const rawCount = await prisma.$queryRawUnsafe(
+      'SELECT COUNT(*) as c FROM "Email"'
+    ) as Array<{ c: bigint }>;
+    debugInfo += `rawSQL=${String(rawCount[0]?.c)}; `;
+
+    // Also list all tables
+    const tables = await prisma.$queryRawUnsafe(
+      "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+    ) as Array<{ tablename: string }>;
+    debugInfo += `tables=[${tables.map((t) => t.tablename).join(",")}]; `;
+
+    // Prisma model count
+    const count = await prisma.email.count();
+    debugInfo += `prismaCount=${count}; `;
+
     const dbEmails = await prisma.email.findMany({
       orderBy: [{ week: "asc" }, { sequence: "asc" }],
     });
-    // Map Prisma result to LaunchEmail shape
+    debugInfo += `fetched=${dbEmails.length}; `;
+
     emails = dbEmails.map((e) => ({
       id: e.id,
       week: e.week,
@@ -30,9 +48,15 @@ export default async function MarketingEmailPage() {
     }));
   } catch (err) {
     dbError =
-      err instanceof Error ? err.message : "Unknown database error";
+      err instanceof Error
+        ? `${err.message} | ${err.constructor.name}`
+        : `Unknown error: ${String(err)}`;
     console.error("Failed to fetch emails from database:", err);
   }
+
+  const dbUrlPrefix = process.env.DATABASE_URL
+    ? process.env.DATABASE_URL.substring(0, 30) + "..."
+    : "NOT SET";
 
   if (dbError) {
     return (
@@ -41,10 +65,10 @@ export default async function MarketingEmailPage() {
           Database Connection Error
         </h2>
         <p className="text-sm text-red-600 mb-4">{dbError}</p>
-        <p className="text-xs text-red-500">
-          Check that DATABASE_URL is set correctly in Vercel environment
-          variables and that the database is accessible.
+        <p className="text-xs text-red-500 mb-2">
+          DATABASE_URL: {dbUrlPrefix}
         </p>
+        <p className="text-xs text-red-500">Debug: {debugInfo}</p>
       </div>
     );
   }
@@ -55,10 +79,13 @@ export default async function MarketingEmailPage() {
         <h2 className="text-lg font-semibold text-yellow-700 mb-2">
           No Emails Found
         </h2>
-        <p className="text-sm text-yellow-600">
-          The database query succeeded but returned 0 emails. Run the seed
-          script to populate the email table.
+        <p className="text-sm text-yellow-600 mb-2">
+          The database query succeeded but returned 0 emails.
         </p>
+        <p className="text-xs text-yellow-500 mb-1">
+          DATABASE_URL: {dbUrlPrefix}
+        </p>
+        <p className="text-xs text-yellow-500">Debug: {debugInfo}</p>
       </div>
     );
   }

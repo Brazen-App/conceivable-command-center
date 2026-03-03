@@ -37,6 +37,27 @@ export async function PATCH(req: NextRequest) {
     data = { complianceStatus: "approved" };
   } else if (action === "compliance_flag") {
     data = { complianceStatus: "flagged" };
+  } else if (action === "schedule") {
+    data = { status: "published", publishedAt: new Date().toISOString() };
+  } else if (action === "bulk_approve") {
+    // Bulk approve: expects `ids` array in body
+    const { ids } = body;
+    if (Array.isArray(ids)) {
+      const results = await prisma.email.updateMany({
+        where: { id: { in: ids } },
+        data: { status: "approved", approvedAt: new Date().toISOString() },
+      });
+      return NextResponse.json({ updated: results.count });
+    }
+  } else if (action === "bulk_compliance_approve") {
+    const { ids } = body;
+    if (Array.isArray(ids)) {
+      const results = await prisma.email.updateMany({
+        where: { id: { in: ids } },
+        data: { complianceStatus: "approved" },
+      });
+      return NextResponse.json({ updated: results.count });
+    }
   }
 
   try {

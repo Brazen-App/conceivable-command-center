@@ -1,397 +1,377 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Mail,
-  Send,
-  Users,
+  Shield,
+  Calendar,
+  Rocket,
   BarChart3,
   CheckCircle2,
   Clock,
-  MousePointerClick,
-  Eye,
-  ShieldCheck,
-  ArrowUpRight,
-  Calendar,
-  Zap,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
+import type { LaunchEmail } from "@/lib/data/launch-emails";
+import EmailContentManager from "@/components/departments/email/EmailContentManager";
+import ComplianceScanner from "@/components/departments/email/ComplianceScanner";
+import SendStrategyCalendar from "@/components/departments/email/SendStrategyCalendar";
+import DeploymentControls from "@/components/departments/email/DeploymentControls";
+import MonitoringDashboard from "@/components/departments/email/MonitoringDashboard";
 
-const ACCENT = "#5A6FFF";
 const EMAIL_ACCENT = "#E37FB1";
 
-// --- Types ---
+const TABS = [
+  { id: "review", label: "Review Queue", icon: Mail, color: EMAIL_ACCENT },
+  { id: "compliance", label: "Compliance", icon: Shield, color: "#E24D47" },
+  { id: "calendar", label: "Calendar", icon: Calendar, color: "#5A6FFF" },
+  { id: "deploy", label: "Deploy", icon: Rocket, color: "#1EAA55" },
+  { id: "monitor", label: "Monitor", icon: BarChart3, color: "#9686B9" },
+] as const;
 
-interface CampaignSummary {
-  id: string;
-  name: string;
-  sentDate: string;
-  openRate: number;
-  clickRate: number;
-  unsubscribeRate: number;
-  status: "sent" | "scheduled" | "draft";
-}
-
-// --- Mock Data ---
-
-const LAUNCH_SEQUENCE = {
-  totalEmails: 28,
-  phases: [
-    { name: "Re-engagement", weeks: "Week 1-2", count: 6, color: "#78C3BF" },
-    { name: "Education", weeks: "Week 3-4", count: 8, color: "#5A6FFF" },
-    { name: "Launch", weeks: "Week 5-6", count: 8, color: "#E37FB1" },
-    { name: "Final Push", weeks: "Week 7", count: 4, color: "#E24D47" },
-    { name: "Post-Close", weeks: "Week 8", count: 2, color: "#9686B9" },
-  ],
-  cadence: "8-week sequence",
-};
-
-const SUBSCRIBER_COUNT = 28905;
-
-const MAILCHIMP_STATUS = {
-  connected: true,
-  lastSync: "2026-03-02 09:15 AM",
-  listId: "abc123",
-};
-
-const CAMPAIGN_AVERAGES = {
-  openRate: 32.4,
-  clickRate: 4.8,
-  unsubscribeRate: 0.12,
-};
-
-const RECENT_CAMPAIGNS: CampaignSummary[] = [
-  {
-    id: "c-01",
-    name: "Re-engagement #1: We've Missed You",
-    sentDate: "2026-02-28",
-    openRate: 38.2,
-    clickRate: 5.1,
-    unsubscribeRate: 0.08,
-    status: "sent",
-  },
-  {
-    id: "c-02",
-    name: "Re-engagement #2: What's Changed at Conceivable",
-    sentDate: "2026-03-01",
-    openRate: 34.7,
-    clickRate: 4.6,
-    unsubscribeRate: 0.11,
-    status: "sent",
-  },
-  {
-    id: "c-03",
-    name: "Re-engagement #3: Your Fertility Data, Reimagined",
-    sentDate: "",
-    openRate: 0,
-    clickRate: 0,
-    unsubscribeRate: 0,
-    status: "scheduled",
-  },
-  {
-    id: "c-04",
-    name: "Education #1: The BBT Breakthrough",
-    sentDate: "",
-    openRate: 0,
-    clickRate: 0,
-    unsubscribeRate: 0,
-    status: "draft",
-  },
-  {
-    id: "c-05",
-    name: "Education #2: Why Fertility Is a Systems Problem",
-    sentDate: "",
-    openRate: 0,
-    clickRate: 0,
-    unsubscribeRate: 0,
-    status: "draft",
-  },
-];
-
-function StatCard({
-  icon,
-  label,
-  value,
-  subtext,
-  color,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  subtext?: string;
-  color: string;
-}) {
-  return (
-    <div
-      className="rounded-xl p-4"
-      style={{
-        backgroundColor: "var(--surface)",
-        border: "1px solid var(--border)",
-      }}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        {icon}
-        <span
-          className="text-xs font-medium uppercase tracking-wider"
-          style={{ color: "var(--muted)" }}
-        >
-          {label}
-        </span>
-      </div>
-      <span className="text-2xl font-bold" style={{ color }}>
-        {value}
-      </span>
-      {subtext && (
-        <span className="text-xs ml-1" style={{ color: "var(--muted)" }}>
-          {subtext}
-        </span>
-      )}
-    </div>
-  );
-}
+type TabId = (typeof TABS)[number]["id"];
 
 export default function MarketingEmailPage() {
+  const [activeTab, setActiveTab] = useState<TabId>("review");
+  const [emails, setEmails] = useState<LaunchEmail[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [mailchimpStats, setMailchimpStats] = useState<{
+    isMock: boolean;
+    listStats?: { totalSubscribers: number };
+    campaignStats?: {
+      openRate: number;
+      clickRate: number;
+      unsubscribeRate: number;
+      deliverability: number;
+    };
+  } | null>(null);
+
+  // Fetch emails from API
+  const fetchEmails = useCallback(async () => {
+    try {
+      const res = await fetch("/api/emails");
+      if (res.ok) {
+        const data = await res.json();
+        setEmails(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch emails:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch Mailchimp stats
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await fetch("/api/email/stats");
+      if (res.ok) {
+        const data = await res.json();
+        setMailchimpStats(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch Mailchimp stats:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEmails();
+    fetchStats();
+  }, [fetchEmails, fetchStats]);
+
+  // Handle email content updates (inline editing)
+  const handleUpdate = async (id: string, updates: Partial<LaunchEmail>) => {
+    try {
+      const res = await fetch("/api/emails", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...updates }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setEmails((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+      }
+    } catch (err) {
+      console.error("Failed to update email:", err);
+    }
+  };
+
+  // Handle actions (approve, reject, compliance_approve, compliance_flag)
+  const handleAction = async (id: string, action: string) => {
+    try {
+      const res = await fetch("/api/emails", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setEmails((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+      }
+    } catch (err) {
+      console.error("Failed to perform action:", err);
+    }
+  };
+
+  // Handle scheduling
+  const handleSchedule = async (
+    emailIds: string[],
+    options: {
+      sendTime: string;
+      customTime?: string;
+      segment: string;
+      abTest?: { enabled: boolean; variantSubject?: string; splitPercent: number };
+    }
+  ) => {
+    try {
+      const res = await fetch("/api/emails/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailIds, ...options }),
+      });
+      if (res.ok) {
+        // Refresh emails to get updated statuses
+        await fetchEmails();
+      }
+    } catch (err) {
+      console.error("Failed to schedule emails:", err);
+    }
+  };
+
+  // Summary stats
+  const approved = emails.filter((e) => e.status === "approved" || e.status === "published").length;
+  const complianceCleared = emails.filter((e) => e.complianceStatus === "approved").length;
+  const flagged = emails.filter((e) => e.complianceStatus === "flagged").length;
+  const published = emails.filter((e) => e.status === "published").length;
+  const pending = emails.filter((e) => e.status === "pending").length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 size={24} className="animate-spin" style={{ color: EMAIL_ACCENT }} />
+        <span className="ml-3 text-sm" style={{ color: "var(--muted)" }}>
+          Loading email deployment system...
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Launch Sequence Overview */}
+      {/* Status Bar */}
       <div
-        className="rounded-2xl p-6"
+        className="rounded-2xl p-5"
         style={{
-          backgroundColor: `${EMAIL_ACCENT}08`,
+          background: `linear-gradient(135deg, ${EMAIL_ACCENT}08 0%, #E24D4708 100%)`,
           border: `1px solid ${EMAIL_ACCENT}20`,
         }}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
             <p
-              className="text-xs font-medium uppercase tracking-widest mb-1"
+              className="text-xs font-medium uppercase tracking-widest"
               style={{ color: EMAIL_ACCENT }}
             >
-              Launch Sequence
+              Email Deployment System
             </p>
-            <p className="text-sm" style={{ color: "var(--foreground)" }}>
-              {LAUNCH_SEQUENCE.totalEmails} emails across {LAUNCH_SEQUENCE.cadence}
+            <p className="text-sm mt-0.5" style={{ color: "var(--foreground)" }}>
+              {emails.length} launch emails &middot;{" "}
+              {mailchimpStats?.listStats?.totalSubscribers?.toLocaleString() ?? "28,905"} subscribers
             </p>
           </div>
-          <a
-            href="/departments/email"
-            className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
-            style={{
-              backgroundColor: `${EMAIL_ACCENT}14`,
-              color: EMAIL_ACCENT,
-            }}
-          >
-            Full Email Department
-            <ArrowUpRight size={12} />
-          </a>
-        </div>
-
-        {/* Phase Bars */}
-        <div className="flex gap-1 h-8 rounded-lg overflow-hidden">
-          {LAUNCH_SEQUENCE.phases.map((phase) => {
-            const widthPct = (phase.count / LAUNCH_SEQUENCE.totalEmails) * 100;
-            return (
-              <div
-                key={phase.name}
-                className="flex items-center justify-center text-[10px] font-bold text-white"
-                style={{
-                  width: `${widthPct}%`,
-                  backgroundColor: phase.color,
-                  minWidth: "40px",
-                }}
-                title={`${phase.name}: ${phase.count} emails (${phase.weeks})`}
-              >
-                {phase.count}
-              </div>
-            );
-          })}
-        </div>
-        <div className="flex gap-1 mt-1">
-          {LAUNCH_SEQUENCE.phases.map((phase) => {
-            const widthPct = (phase.count / LAUNCH_SEQUENCE.totalEmails) * 100;
-            return (
-              <div
-                key={phase.name}
-                className="text-[9px] text-center"
-                style={{ width: `${widthPct}%`, color: "var(--muted)", minWidth: "40px" }}
-              >
-                {phase.name}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={<Users size={16} style={{ color: EMAIL_ACCENT }} />}
-          label="Subscribers"
-          value={SUBSCRIBER_COUNT.toLocaleString()}
-          color="var(--foreground)"
-        />
-        <StatCard
-          icon={<Eye size={16} style={{ color: "#1EAA55" }} />}
-          label="Avg Open Rate"
-          value={`${CAMPAIGN_AVERAGES.openRate}%`}
-          color="#1EAA55"
-        />
-        <StatCard
-          icon={<MousePointerClick size={16} style={{ color: ACCENT }} />}
-          label="Avg Click Rate"
-          value={`${CAMPAIGN_AVERAGES.clickRate}%`}
-          color={ACCENT}
-        />
-        <StatCard
-          icon={<Zap size={16} style={{ color: "#F1C028" }} />}
-          label="Unsub Rate"
-          value={`${CAMPAIGN_AVERAGES.unsubscribeRate}%`}
-          subtext="industry avg 0.26%"
-          color="#F1C028"
-        />
-      </div>
-
-      {/* Mailchimp Integration */}
-      <div
-        className="rounded-xl p-4 flex items-center gap-3"
-        style={{
-          backgroundColor: "var(--surface)",
-          border: "1px solid var(--border)",
-        }}
-      >
-        <div
-          className="w-3 h-3 rounded-full"
-          style={{
-            backgroundColor: MAILCHIMP_STATUS.connected ? "#1EAA55" : "#E24D47",
-          }}
-        />
-        <div className="flex-1">
-          <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-            Mailchimp Integration
-          </p>
-          <p className="text-xs" style={{ color: "var(--muted)" }}>
-            {MAILCHIMP_STATUS.connected
-              ? `Connected &middot; Last synced ${MAILCHIMP_STATUS.lastSync}`
-              : "Not connected"}
-          </p>
-        </div>
-        <span
-          className="text-[10px] font-bold px-2 py-1 rounded-full"
-          style={{
-            backgroundColor: MAILCHIMP_STATUS.connected ? "#1EAA5514" : "#E24D4714",
-            color: MAILCHIMP_STATUS.connected ? "#1EAA55" : "#E24D47",
-          }}
-        >
-          {MAILCHIMP_STATUS.connected ? "CONNECTED" : "DISCONNECTED"}
-        </span>
-      </div>
-
-      {/* Recent Campaigns */}
-      <div>
-        <p
-          className="text-xs font-medium uppercase tracking-widest mb-3"
-          style={{ color: "var(--muted)" }}
-        >
-          Recent Campaigns
-        </p>
-        <div
-          className="rounded-xl overflow-hidden"
-          style={{ border: "1px solid var(--border)" }}
-        >
-          {RECENT_CAMPAIGNS.map((campaign, i) => (
+          <div className="flex items-center gap-2">
             <div
-              key={campaign.id}
-              className="px-5 py-3 flex items-center gap-3"
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: mailchimpStats && !mailchimpStats.isMock ? "#1EAA55" : "#F1C028" }}
+            />
+            <span className="text-[10px] font-medium" style={{ color: "var(--muted)" }}>
+              Mailchimp {mailchimpStats && !mailchimpStats.isMock ? "Connected" : "Mock Mode"}
+            </span>
+          </div>
+        </div>
+
+        {/* Quick stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="text-center">
+            <p className="text-lg font-bold" style={{ color: "var(--foreground)" }}>
+              {emails.length}
+            </p>
+            <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Total
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold" style={{ color: pending > 0 ? "#F1C028" : "#1EAA55" }}>
+              {pending}
+            </p>
+            <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Pending Review
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold" style={{ color: "#1EAA55" }}>
+              {approved}
+            </p>
+            <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Approved
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold" style={{ color: flagged > 0 ? "#E24D47" : "#1EAA55" }}>
+              {flagged}
+            </p>
+            <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Flagged
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold" style={{ color: "#5A6FFF" }}>
+              {published}
+            </p>
+            <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Deployed
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex gap-1 overflow-x-auto pb-1">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+
+          // Badge counts
+          let badge: number | null = null;
+          if (tab.id === "review") badge = pending;
+          if (tab.id === "compliance") badge = flagged;
+          if (tab.id === "deploy")
+            badge = emails.filter(
+              (e) => e.status === "approved" && e.complianceStatus === "approved"
+            ).length;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all"
               style={{
-                backgroundColor: i % 2 === 0 ? "var(--surface)" : "var(--background)",
-                borderBottom: i < RECENT_CAMPAIGNS.length - 1 ? "1px solid var(--border)" : undefined,
+                backgroundColor: isActive ? `${tab.color}12` : "transparent",
+                color: isActive ? tab.color : "var(--muted)",
+                border: isActive ? `1px solid ${tab.color}25` : "1px solid transparent",
               }}
             >
-              {/* Status Icon */}
-              {campaign.status === "sent" && (
-                <CheckCircle2 size={16} style={{ color: "#1EAA55" }} />
-              )}
-              {campaign.status === "scheduled" && (
-                <Clock size={16} style={{ color: "#F1C028" }} />
-              )}
-              {campaign.status === "draft" && (
-                <Mail size={16} style={{ color: "var(--muted)" }} />
-              )}
-
-              {/* Name */}
-              <div className="flex-1 min-w-0">
-                <p
-                  className="text-sm font-medium truncate"
-                  style={{ color: "var(--foreground)" }}
+              <Icon size={14} />
+              <span>{tab.label}</span>
+              {badge !== null && badge > 0 && (
+                <span
+                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: `${tab.color}20`,
+                    color: tab.color,
+                  }}
                 >
-                  {campaign.name}
-                </p>
-                {campaign.sentDate && (
-                  <p className="text-xs" style={{ color: "var(--muted)" }}>
-                    Sent {campaign.sentDate}
-                  </p>
-                )}
-              </div>
+                  {badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-              {/* Metrics */}
-              {campaign.status === "sent" && (
-                <div className="hidden sm:flex items-center gap-4 text-xs">
-                  <span style={{ color: "#1EAA55" }}>
-                    {campaign.openRate}% open
-                  </span>
-                  <span style={{ color: ACCENT }}>
-                    {campaign.clickRate}% click
+      {/* Tab Content */}
+      <div>
+        {activeTab === "review" && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Mail size={16} style={{ color: EMAIL_ACCENT }} />
+                <h2 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                  Email Review Queue
+                </h2>
+              </div>
+              {pending > 0 && (
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={14} style={{ color: "#F1C028" }} />
+                  <span className="text-xs" style={{ color: "#F1C028" }}>
+                    {pending} emails awaiting CEO approval
                   </span>
                 </div>
               )}
+              {pending === 0 && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={14} style={{ color: "#1EAA55" }} />
+                  <span className="text-xs" style={{ color: "#1EAA55" }}>
+                    All emails reviewed
+                  </span>
+                </div>
+              )}
+            </div>
+            <EmailContentManager
+              emails={emails}
+              onUpdate={handleUpdate}
+              onAction={handleAction}
+            />
+          </div>
+        )}
 
-              {/* Status Badge */}
+        {activeTab === "compliance" && (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Shield size={16} style={{ color: "#E24D47" }} />
+              <h2 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                Compliance Auto-Scan
+              </h2>
               <span
-                className="text-[10px] font-bold px-2 py-1 rounded-full shrink-0"
-                style={{
-                  backgroundColor:
-                    campaign.status === "sent"
-                      ? "#1EAA5514"
-                      : campaign.status === "scheduled"
-                      ? "#F1C02814"
-                      : "var(--border)",
-                  color:
-                    campaign.status === "sent"
-                      ? "#1EAA55"
-                      : campaign.status === "scheduled"
-                      ? "#F1C028"
-                      : "var(--muted)",
-                }}
+                className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: "#E24D4710", color: "#E24D47" }}
               >
-                {campaign.status.toUpperCase()}
+                FDA / FTC / HIPAA
               </span>
             </div>
-          ))}
-        </div>
-      </div>
+            <ComplianceScanner emails={emails} onAction={handleAction} />
+          </div>
+        )}
 
-      {/* Compliance Badge */}
-      <div
-        className="rounded-xl p-4 flex items-center gap-3"
-        style={{
-          backgroundColor: "#1EAA5508",
-          border: "1px solid #1EAA5520",
-        }}
-      >
-        <ShieldCheck size={20} style={{ color: "#1EAA55" }} />
-        <div>
-          <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-            Compliance: All Emails Scanned
-          </p>
-          <p className="text-xs" style={{ color: "var(--muted)" }}>
-            Every email passes automated compliance review before send. No health claims without citations. CAN-SPAM compliant.
-          </p>
-        </div>
-        <span
-          className="text-[10px] font-bold px-3 py-1.5 rounded-full shrink-0"
-          style={{ backgroundColor: "#1EAA5514", color: "#1EAA55" }}
-        >
-          ALL CLEAR
-        </span>
+        {activeTab === "calendar" && (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar size={16} style={{ color: "#5A6FFF" }} />
+              <h2 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                Send Strategy Calendar
+              </h2>
+            </div>
+            <SendStrategyCalendar emails={emails} />
+          </div>
+        )}
+
+        {activeTab === "deploy" && (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Rocket size={16} style={{ color: "#1EAA55" }} />
+              <h2 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                Deployment Controls
+              </h2>
+            </div>
+            <DeploymentControls emails={emails} onSchedule={handleSchedule} />
+          </div>
+        )}
+
+        {activeTab === "monitor" && (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 size={16} style={{ color: "#9686B9" }} />
+              <h2 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                Live Monitoring
+              </h2>
+            </div>
+            <MonitoringDashboard
+              listStats={mailchimpStats?.listStats}
+              campaignStats={mailchimpStats?.campaignStats}
+              isMock={mailchimpStats?.isMock}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -5,11 +5,12 @@ import {
   DollarSign,
   CheckCircle2,
   Circle,
-  Megaphone,
   Target,
   Palette,
   ShieldCheck,
+  Link2,
 } from "lucide-react";
+import CompanyGoalsBanner from "@/components/layout/CompanyGoalsBanner";
 
 const ACCENT = "#5A6FFF";
 
@@ -49,6 +50,54 @@ const PREREQUISITES = [
 export default function MarketingPaidPage() {
   return (
     <div className="space-y-6">
+      <CompanyGoalsBanner departmentFocus="PPC launches after organic validation — focus on email + content first" />
+
+      {/* Connect Ad Platforms */}
+      <div
+        className="rounded-xl p-5"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <Link2 size={16} style={{ color: ACCENT }} />
+          <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+            Connect Ad Platforms
+          </p>
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F1C02814", color: "#F1C028" }}>
+            PRE-LAUNCH
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { name: "Facebook Ads", desc: "Meta Business Suite API — audiences, campaigns, ROAS", color: "#356FB6" },
+            { name: "Google Analytics 4", desc: "GA4 Measurement Protocol — traffic, conversions", color: "#1EAA55" },
+            { name: "Shopify", desc: "Shopify Admin API — orders, revenue, attribution", color: "#78C3BF" },
+          ].map((platform) => (
+            <div
+              key={platform.name}
+              className="rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-sm transition-shadow"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+            >
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0"
+                style={{ backgroundColor: platform.color }}
+              >
+                {platform.name[0]}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{platform.name}</p>
+                <p className="text-[10px]" style={{ color: "var(--muted)" }}>{platform.desc}</p>
+              </div>
+              <button
+                className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
+                style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
+              >
+                Connect
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Coming Soon Hero */}
       <div
         className="rounded-2xl p-10 text-center"

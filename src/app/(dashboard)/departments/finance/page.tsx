@@ -2,265 +2,193 @@
 
 import {
   Wallet,
-  TrendingDown,
   Clock,
   DollarSign,
-  ArrowRight,
   Flame,
+  ArrowRight,
+  AlertTriangle,
+  Link2,
+  Sparkles,
 } from "lucide-react";
+import Link from "next/link";
+import CompanyGoalsBanner from "@/components/layout/CompanyGoalsBanner";
 
 const ACCENT = "#1EAA55";
 
-/* ── Finance Data (from finance-data.ts mock values) ── */
-const CASH_POSITION = 127_450;
-const MONTHLY_BURN = 18_400;
-const DAILY_BURN = 613;
-const RUNWAY_MONTHS = 6.9;
-const RUNWAY_DAYS = 208;
-const RUNWAY_EXTENDED_DAYS = 14;
-const PREV_MONTHLY_BURN = 19_200;
-const REVENUE = 3_300;
-
-const COST_BREAKDOWN = [
-  { category: "AI & API Costs", amount: 9_200, color: "#5A6FFF" },
-  { category: "People & Contractors", amount: 7_500, color: "#E37FB1" },
-  { category: "Infrastructure", amount: 2_600, color: "#F1C028" },
-  { category: "SaaS & Tools", amount: 2_400, color: "#9686B9" },
+/* Real known costs */
+const KNOWN_COSTS = [
+  { name: "Claude Max (Anthropic)", amount: 200, color: "#5A6FFF", note: "AI agent runtime" },
+  { name: "Vercel Pro", amount: 20, color: "#2A2828", note: "Hosting & deployment" },
+  { name: "Prisma Postgres", amount: 0, color: "#78C3BF", note: "Free tier — database" },
+  { name: "Mailchimp", amount: 0, color: "#F1C028", note: "Free tier — email (up to 500 contacts)" },
+  { name: "Late.com", amount: 0, color: "#356FB6", note: "Accounting — pending setup" },
+  { name: "Circle.so", amount: 39, color: "#E37FB1", note: "Community platform — 220 members" },
+  { name: "Domain + DNS", amount: 15, color: "#9686B9", note: "conceivable.com" },
 ];
 
-const BURN_REDUCTION = PREV_MONTHLY_BURN - MONTHLY_BURN;
-const BURN_REDUCTION_PCT = ((BURN_REDUCTION / PREV_MONTHLY_BURN) * 100).toFixed(1);
+const TOTAL_KNOWN = KNOWN_COSTS.reduce((sum, c) => sum + c.amount, 0);
 
-function getRunwayColor(months: number) {
-  if (months > 6) return ACCENT;
-  if (months > 3) return "#F1C028";
-  return "#E24D47";
-}
+/* Estimated monthly burn (CEO-provided) */
+const ESTIMATED_BURN = 28_000;
+const RUNWAY_MONTHS = 2;
 
 export default function FinanceDashboardPage() {
-  const runwayColor = getRunwayColor(RUNWAY_MONTHS);
-
   return (
     <div>
-      {/* Hero: Cash Position */}
+      <CompanyGoalsBanner departmentFocus="Close $150K bridge round to extend runway to 7 months" />
+
+      {/* Runway Alert */}
       <div
         className="rounded-2xl p-6 mb-6"
         style={{
-          background: `linear-gradient(135deg, ${ACCENT}18, ${ACCENT}08)`,
-          border: `1px solid ${ACCENT}25`,
+          background: "linear-gradient(135deg, #E24D4708 0%, #E24D4712 100%)",
+          border: "2px solid #E24D4730",
         }}
       >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle size={18} style={{ color: "#E24D47" }} />
+          <span className="text-sm font-bold" style={{ color: "#E24D47" }}>
+            Runway Critical
+          </span>
+        </div>
+        <div className="flex items-end gap-4">
           <div>
-            <p
-              className="text-[10px] font-bold uppercase tracking-wider mb-1"
-              style={{ color: ACCENT }}
-            >
-              Cash Position
+            <p className="text-5xl font-bold" style={{ color: "#E24D47", fontFamily: "var(--font-display)" }}>
+              {RUNWAY_MONTHS} months
             </p>
-            <h2
-              className="text-4xl md:text-5xl font-bold"
-              style={{ color: "var(--foreground)" }}
-            >
-              ${CASH_POSITION.toLocaleString()}
-            </h2>
-            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-              Mercury Checking + Savings + Stripe &middot; As of March 1, 2026
+            <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
+              ~${ESTIMATED_BURN.toLocaleString()}/mo estimated burn
             </p>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold" style={{ color: ACCENT }}>
-              +{RUNWAY_EXTENDED_DAYS}
-            </span>
-            <span className="text-sm" style={{ color: "var(--muted)" }}>
-              days of runway gained
-            </span>
-          </div>
+          <Link
+            href="/departments/fundraising"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-white mb-2"
+            style={{ backgroundColor: "#E24D47" }}
+          >
+            Open Fundraising <ArrowRight size={13} />
+          </Link>
         </div>
       </div>
 
-      {/* Mock data notice */}
+      {/* Known Costs — Real Data */}
       <div
-        className="rounded-lg px-3 py-2 mb-6 flex items-center gap-2"
-        style={{ backgroundColor: "#F1C02810", border: "1px solid #F1C02820" }}
+        className="rounded-2xl border p-5 mb-6"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
       >
-        <span
-          className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-          style={{ backgroundColor: "#F1C02818", color: "#B8930A" }}
-        >
-          MOCK
-        </span>
-        <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-          Displaying mock data. Will connect to COO&apos;s Convex finance tool for live Plaid/Stripe data.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Burn Rate Card */}
-        <div
-          className="rounded-2xl border p-5"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Flame size={16} style={{ color: "#E24D47" }} />
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-              Burn Rate
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Wallet size={16} style={{ color: ACCENT }} />
+            <h3 className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
+              Known Monthly Costs
             </h3>
           </div>
-          <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
-            ${MONTHLY_BURN.toLocaleString()}<span className="text-xs font-normal" style={{ color: "var(--muted)" }}>/mo</span>
-          </p>
-          <p className="text-xs mt-1" style={{ color: ACCENT }}>
-            Down {BURN_REDUCTION_PCT}% (${BURN_REDUCTION.toLocaleString()} saved)
-          </p>
-          <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>
-            ${DAILY_BURN}/day
-          </p>
+          <span className="text-lg font-bold" style={{ color: "var(--foreground)" }}>
+            ${TOTAL_KNOWN.toLocaleString()}/mo
+          </span>
         </div>
-
-        {/* Runway Indicator */}
-        <div
-          className="rounded-2xl border p-5"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Clock size={16} style={{ color: runwayColor }} />
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-              Runway
-            </h3>
-          </div>
-          <p className="text-2xl font-bold" style={{ color: runwayColor }}>
-            {RUNWAY_MONTHS.toFixed(1)} months
-          </p>
-          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-            {RUNWAY_DAYS} days at current burn
-          </p>
-          <div className="mt-2 h-2 rounded-full" style={{ backgroundColor: `${runwayColor}20` }}>
+        <div className="space-y-2">
+          {KNOWN_COSTS.map((cost) => (
             <div
-              className="h-full rounded-full"
-              style={{
-                width: `${Math.min((RUNWAY_MONTHS / 12) * 100, 100)}%`,
-                backgroundColor: runwayColor,
-              }}
-            />
-          </div>
+              key={cost.name}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
+              style={{ backgroundColor: "var(--background)" }}
+            >
+              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cost.color }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                  {cost.name}
+                </p>
+                <p className="text-[10px]" style={{ color: "var(--muted)" }}>{cost.note}</p>
+              </div>
+              <span className="text-sm font-semibold" style={{ color: cost.amount > 0 ? "var(--foreground)" : "var(--muted)" }}>
+                {cost.amount > 0 ? `$${cost.amount}` : "Free"}
+              </span>
+            </div>
+          ))}
         </div>
-
-        {/* Revenue Card */}
-        <div
-          className="rounded-2xl border p-5"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <DollarSign size={16} style={{ color: ACCENT }} />
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-              Revenue
-            </h3>
-          </div>
-          <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
-            ${REVENUE.toLocaleString()}<span className="text-xs font-normal" style={{ color: "var(--muted)" }}>/mo</span>
-          </p>
-          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-            Advisory + Affiliate
-          </p>
-          <p className="text-[10px] mt-0.5" style={{ color: ACCENT }}>
-            Pre-launch; subscriptions not yet active
-          </p>
-        </div>
-
-        {/* Net Burn Card */}
-        <div
-          className="rounded-2xl border p-5"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingDown size={16} style={{ color: "#F1C028" }} />
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-              Net Burn
-            </h3>
-          </div>
-          <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
-            -${(MONTHLY_BURN - REVENUE).toLocaleString()}<span className="text-xs font-normal" style={{ color: "var(--muted)" }}>/mo</span>
-          </p>
-          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-            After revenue offset
+        <div className="mt-4 pt-3 border-t flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+          <p className="text-xs" style={{ color: "var(--muted)" }}>
+            Remaining burn (~${(ESTIMATED_BURN - TOTAL_KNOWN).toLocaleString()}/mo) includes contractors, content, and operational costs.
           </p>
         </div>
       </div>
 
-      {/* Cost Breakdown Mini Chart */}
+      {/* Connect Finance Tools */}
       <div
         className="rounded-2xl border p-5 mb-6"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
       >
         <div className="flex items-center gap-2 mb-4">
-          <Wallet size={16} style={{ color: ACCENT }} />
-          <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-            Cost Breakdown
+          <Link2 size={16} style={{ color: "#5A6FFF" }} />
+          <h3 className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
+            Connect Finance Tools
           </h3>
         </div>
-        {/* Stacked bar */}
-        <div className="flex h-4 rounded-full overflow-hidden mb-4">
-          {COST_BREAKDOWN.map((item) => (
+        <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
+          Connect your finance tools to see real-time data. Once connected, Joy will track expenses, revenue,
+          and runway automatically.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[
+            { name: "Mercury", desc: "Bank account — cash position & transactions", connected: false },
+            { name: "Stripe", desc: "Payment processing — subscription revenue", connected: false },
+            { name: "Late.com / QuickBooks", desc: "Accounting — P&L, invoices, expenses", connected: false },
+            { name: "Plaid", desc: "Bank aggregation — all accounts in one view", connected: false },
+            { name: "Shopify", desc: "E-commerce — product sales & ROAS", connected: false },
+            { name: "Gusto / Deel", desc: "Payroll — contractor & employee costs", connected: false },
+          ].map((tool) => (
             <div
-              key={item.category}
-              className="h-full"
-              style={{
-                width: `${(item.amount / COST_BREAKDOWN.reduce((a, b) => a + b.amount, 0)) * 100}%`,
-                backgroundColor: item.color,
-              }}
-              title={`${item.category}: $${item.amount.toLocaleString()}`}
-            />
-          ))}
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {COST_BREAKDOWN.map((item) => (
-            <div key={item.category} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: item.color }} />
-              <div>
-                <p className="text-xs font-medium" style={{ color: "var(--foreground)" }}>
-                  ${item.amount.toLocaleString()}
-                </p>
-                <p className="text-[10px]" style={{ color: "var(--muted)" }}>
-                  {item.category}
-                </p>
+              key={tool.name}
+              className="rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-sm transition-shadow"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+            >
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0"
+                style={{ backgroundColor: tool.connected ? "#1EAA55" : "var(--muted)" }}
+              >
+                {tool.name[0]}
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{tool.name}</p>
+                <p className="text-[10px]" style={{ color: "var(--muted)" }}>{tool.desc}</p>
+              </div>
+              <button
+                className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
+                style={{
+                  backgroundColor: tool.connected ? "#1EAA5514" : "#5A6FFF14",
+                  color: tool.connected ? "#1EAA55" : "#5A6FFF",
+                }}
+              >
+                {tool.connected ? "Connected" : "Connect"}
+              </button>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Cross-Department Connection */}
+      {/* Joy's Insight */}
       <div
-        className="rounded-2xl border p-5"
-        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        className="rounded-2xl p-5"
+        style={{
+          background: "linear-gradient(135deg, #F1C02808 0%, #9686B908 100%)",
+          border: "1px solid rgba(241, 192, 40, 0.15)",
+        }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <Wallet size={16} style={{ color: "#E37FB1" }} />
-          <h3
-            className="text-xs font-bold uppercase tracking-wider"
-            style={{ color: "var(--foreground)" }}
-          >
-            Cross-Department Connection
-          </h3>
-          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#E37FB114", color: "#E37FB1" }}>
-            10x
+          <Sparkles size={14} style={{ color: "#F1C028" }} />
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#F1C028" }}>
+            Joy&apos;s 10x Recommendation
           </span>
         </div>
-        <div
-          className="rounded-xl p-4 flex items-center gap-3"
-          style={{ backgroundColor: "#E37FB108", border: "1px solid #E37FB115" }}
-        >
-          <div className="flex-1">
-            <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-              Runway feeds Fundraising urgency
-            </p>
-            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-              At 6.9 months runway, fundraising conversations should begin now. Every month of declining burn rate strengthens the investor narrative. Show 5 consecutive months of disciplined spend reduction to de-risk the raise.
-            </p>
-          </div>
-          <ArrowRight size={16} style={{ color: "#E37FB1" }} />
-        </div>
+        <p className="text-sm font-medium mb-2" style={{ color: "var(--foreground)" }}>
+          Connect Mercury and Stripe first.
+        </p>
+        <p className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
+          Real-time cash position is the #1 metric for a pre-launch company with 2 months runway.
+          Mercury API gives you instant visibility into every dollar. Stripe will track early subscription revenue
+          once the app launches. Together they replace the spreadsheet guessing game with real data.
+          This is a 10x move — one integration that de-risks the entire fundraising conversation.
+        </p>
       </div>
     </div>
   );

@@ -73,13 +73,8 @@ export default function MarketingPartnershipsPage() {
       ["in_conversation", "scheduled", "completed"].includes(e.status)
     ).length + PODCAST_HOST_COUNT;
 
-  // Cross-promotion calendar mock
-  const UPCOMING_COLLABS = [
-    { date: "Mar 12", event: "Lily Nichols Interview", type: "Expert Interview", status: "confirmed" },
-    { date: "Mar 18", event: "Instagram Live w/ Maya Johnson", type: "Affiliate Collab", status: "planning" },
-    { date: "Mar 25", event: "Dr. Lara Briden Interview", type: "Expert Interview", status: "tentative" },
-    { date: "Apr 2", event: "Robb Wolf Podcast Pitch", type: "Podcast", status: "outreach" },
-  ];
+  // No confirmed upcoming collaborations yet
+  const UPCOMING_COLLABS: { date: string; event: string; type: string; status: string }[] = [];
 
   return (
     <div className="space-y-6">

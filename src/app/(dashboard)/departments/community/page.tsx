@@ -5,27 +5,27 @@ import { Users, TrendingUp, Heart, MessageSquare, ArrowRight, Star, Activity } f
 const ACCENT = "#1EAA55";
 
 const MEMBER_STATS = {
-  total: 847,
-  active: 523,
-  nps: 72,
-  thisWeekPosts: 34,
-  thisWeekReplies: 128,
-  thisWeekNewMembers: 18,
+  total: 220,
+  active: 0, // Connect Circle API to track
+  nps: 0, // Not yet measured
+  thisWeekPosts: 0,
+  thisWeekReplies: 0,
+  thisWeekNewMembers: 0,
 };
 
 const CONVERSION_FUNNEL = [
-  { tier: "Free", count: 847, color: "#78C3BF" },
-  { tier: "Paid", count: 312, color: "#356FB6" },
-  { tier: "Early Access", count: 89, color: "#1EAA55" },
+  { tier: "Circle Members", count: 220, color: "#78C3BF" },
+  { tier: "Engaged", count: 0, color: "#356FB6" },
+  { tier: "Early Access", count: 0, color: "#1EAA55" },
 ];
 
 const WEEKLY_SUMMARY = [
-  { metric: "New posts", value: 34, trend: "+12% vs last week" },
-  { metric: "Replies", value: 128, trend: "+8% vs last week" },
-  { metric: "Active members", value: 523, trend: "+3% vs last week" },
-  { metric: "New members", value: 18, trend: "-2 vs last week" },
-  { metric: "Member spotlights", value: 2, trend: "On schedule" },
-  { metric: "Response time (CEO)", value: "2.4h avg", trend: "-30min vs last week" },
+  { metric: "Total members", value: 220, trend: "Circle.so" },
+  { metric: "New posts", value: "—", trend: "Connect Circle API" },
+  { metric: "Replies", value: "—", trend: "Connect Circle API" },
+  { metric: "Active members", value: "—", trend: "Connect Circle API" },
+  { metric: "New members", value: "—", trend: "Connect Circle API" },
+  { metric: "Response time", value: "—", trend: "Connect Circle API" },
 ];
 
 function NPSGauge({ score }: { score: number }) {

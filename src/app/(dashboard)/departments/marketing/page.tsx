@@ -14,6 +14,7 @@ import {
   TrendingUp,
   BarChart3,
   Star,
+  Target,
 } from "lucide-react";
 
 const ACCENT = "#5A6FFF";
@@ -23,20 +24,20 @@ const ACCENT = "#5A6FFF";
 const HEALTH_SCORE = 74;
 
 const KPI_DATA = {
-  totalAudienceReach: 28905,
-  weeklyContentOutput: 37,
+  totalAudienceReach: 28905 + 220 + 400000, // 30K email + 220 Circle + 400K TikTok
+  weeklyContentOutput: 0,
   weeklyContentTarget: 100,
   emailListSize: 28905,
   emailListGrowthTrend: [27800, 28100, 28300, 28500, 28650, 28750, 28905],
   geoScore: 4,
   geoTarget: 10,
   topContent: {
-    title: "Why BBT Is the Most Underused Fertility Biomarker",
-    platform: "LinkedIn",
-    engagement: 2340,
+    title: "TikTok viral video — 3.4M views this week",
+    platform: "TikTok",
+    engagement: 3400000,
   },
-  activeAffiliates: 5,
-  activePartnerships: 12,
+  activeAffiliates: 0,
+  activePartnerships: 0,
   paidSpend: 0,
   complianceStatus: "All Clear" as const,
 };
@@ -185,6 +186,34 @@ function KPICard({ icon, label, value, subtext, children }: KPICardProps) {
 export default function MarketingDashboard() {
   return (
     <div className="space-y-6">
+      {/* Path to 5,000 Signups */}
+      <div
+        className="rounded-2xl p-5"
+        style={{
+          background: "linear-gradient(135deg, #5A6FFF08 0%, #ACB7FF08 100%)",
+          border: "1px solid rgba(90, 111, 255, 0.15)",
+        }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Target size={16} style={{ color: "#5A6FFF" }} />
+            <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
+              Path to 5,000 Signups
+            </span>
+          </div>
+          <span className="text-sm font-bold" style={{ color: "#5A6FFF" }}>
+            0 / 5,000
+          </span>
+        </div>
+        <div className="w-full h-3 rounded-full mb-2" style={{ backgroundColor: "var(--border)" }}>
+          <div className="h-3 rounded-full transition-all" style={{ width: "1%", backgroundColor: "#5A6FFF" }} />
+        </div>
+        <div className="flex items-center justify-between text-[10px]" style={{ color: "var(--muted)" }}>
+          <span>Total reach: {KPI_DATA.totalAudienceReach.toLocaleString()} (30K email + 220 Circle + 400K TikTok)</span>
+          <span>7 weeks to launch</span>
+        </div>
+      </div>
+
       {/* Hero: Marketing Health Score */}
       <div
         className="rounded-2xl p-6 text-center"

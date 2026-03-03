@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Handshake, ExternalLink, Star, ArrowRight } from "lucide-react";
+import { Handshake, ExternalLink, Star, ArrowRight, Sparkles, MessageSquare, RefreshCw } from "lucide-react";
 
 const ACCENT = "#356FB6";
 
@@ -60,7 +60,7 @@ const STRATEGIC_PARTNERS: StrategicPartner[] = [
     status: "prospect",
     contact: "Digital health partnerships team",
     strategicValue: "Automated lab data import eliminates manual entry. Custom fertility panel drives lab orders. Revenue share opportunity.",
-    pitchAngle: "We have 847 members who need regular lab work. Custom Conceivable Fertility Panel = new revenue stream for labs. We drive the orders, they get the volume.",
+    pitchAngle: "We have 220 members who need regular lab work. Custom Conceivable Fertility Panel = new revenue stream for labs. We drive the orders, they get the volume.",
     integrationDetails: "API integration for lab results import. Custom fertility panel design. Patient ordering workflow.",
     lastUpdate: "2026-02-10",
   },
@@ -182,6 +182,30 @@ export default function StrategicPage() {
                   <p className="text-xs leading-relaxed" style={{ color: "var(--foreground)" }}>
                     {partner.integrationDetails}
                   </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                    style={{ backgroundColor: "#5A6FFF" }}
+                  >
+                    <Sparkles size={11} />
+                    Joy: Draft Partnership Proposal
+                  </button>
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
+                  >
+                    <MessageSquare size={11} />
+                    Joy: Draft Outreach
+                  </button>
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
+                  >
+                    <RefreshCw size={11} />
+                    Map Warm Intros
+                  </button>
                 </div>
               </div>
             )}

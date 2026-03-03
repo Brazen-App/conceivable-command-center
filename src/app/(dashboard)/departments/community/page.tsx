@@ -121,7 +121,7 @@ export default function CommunityDashboardPage() {
         <div className="flex items-center justify-center gap-2 mt-3">
           <TrendingUp size={14} style={{ color: "#1EAA55" }} />
           <span className="text-xs font-medium" style={{ color: "#1EAA55" }}>
-            The Gain: From 0 to 847 members in 6 months -- {engagementScore}% engagement rate
+            The Gain: From 0 to 220 members -- building the foundation
           </span>
         </div>
       </div>
@@ -258,7 +258,7 @@ export default function CommunityDashboardPage() {
               Multiplier: Community as Clinical Research Pipeline
             </p>
             <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-              847 community members = potential research participants. Each paid member (312) is generating
+              220 community members = potential research participants. Each engaged member is generating
               data that feeds the clinical evidence base. Community growth directly strengthens the fundraising
               narrative and clinical validation. One engagement, three department multiplier.
             </p>

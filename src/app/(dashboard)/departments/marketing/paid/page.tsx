@@ -9,7 +9,10 @@ import {
   Palette,
   ShieldCheck,
   Link2,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
 import CompanyGoalsBanner from "@/components/layout/CompanyGoalsBanner";
 
 const ACCENT = "#5A6FFF";
@@ -234,6 +237,45 @@ export default function MarketingPaidPage() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Content Strategy Connection */}
+      <div
+        className="rounded-xl p-5"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles size={16} style={{ color: ACCENT }} />
+          <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+            When PPC Launches: Content-to-Ads Pipeline
+          </p>
+        </div>
+        <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
+          Top-performing organic content becomes paid ad creative. The Content Engine identifies winners, Joy adapts them for paid channels. Zero wasted ad spend on unproven messaging.
+        </p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            href="/departments/marketing/content"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}
+          >
+            Content Engine <ArrowRight size={11} />
+          </Link>
+          <Link
+            href="/departments/marketing/seo-geo"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}
+          >
+            SEO/GEO Strategy <ArrowRight size={11} />
+          </Link>
+          <Link
+            href="/departments/marketing/affiliates"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}
+          >
+            Affiliates <ArrowRight size={11} />
+          </Link>
         </div>
       </div>
 

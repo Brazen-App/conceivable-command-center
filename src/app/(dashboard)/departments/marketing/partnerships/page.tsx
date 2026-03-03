@@ -15,6 +15,7 @@ import {
   MessageSquare,
   XCircle,
   Star,
+  Sparkles,
 } from "lucide-react";
 import {
   EXPERTS,
@@ -252,6 +253,22 @@ export default function MarketingPartnershipsPage() {
                         Relevance: {expert.relevanceScore}/10 &middot; Audience:{" "}
                         {expert.audienceSize.toLocaleString()}
                       </p>
+                      <div className="flex items-center gap-2 flex-wrap mt-2 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
+                        <button
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                          style={{ backgroundColor: "#5A6FFF" }}
+                        >
+                          <Sparkles size={11} />
+                          Joy: Draft Outreach
+                        </button>
+                        <button
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                          style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
+                        >
+                          <MessageSquare size={11} />
+                          Joy: Prep Interview Questions
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

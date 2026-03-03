@@ -18,6 +18,8 @@ import {
   ChevronRight,
   ExternalLink,
   Sparkles,
+  Heart,
+  MessageSquare,
 } from "lucide-react";
 
 const ACCENT = "#5A6FFF";
@@ -111,6 +113,37 @@ const PLATFORM_GROUPS = [
     scheduled: 4,
     publishedToday: 2,
     engagementScore: 91,
+  },
+];
+
+const CARE_TEAM_CHARACTERS = [
+  {
+    name: "Joy",
+    role: "AI Operations Chief",
+    color: "#5A6FFF",
+    description: "Powers the Command Center. Manages cross-department coordination, content deployment, and strategic briefs.",
+    voiceTone: "Confident, warm, efficient. Like a brilliant COO who genuinely cares.",
+  },
+  {
+    name: "Kai",
+    role: "AI Fertility Coach",
+    color: "#78C3BF",
+    description: "User-facing AI coach in the Conceivable app. Guides women through their fertility journey with personalized insights.",
+    voiceTone: "Calm, empathetic, scientifically grounded. The most emotionally intelligent doctor you've ever met.",
+  },
+  {
+    name: "Dr. C",
+    role: "Clinical Content Voice",
+    color: "#1EAA55",
+    description: "The clinical authority voice for blog posts, research explainers, and medical content. Translates science into accessible language.",
+    voiceTone: "Authoritative but accessible. Evidence-first, never alarmist. Cites research naturally.",
+  },
+  {
+    name: "The Community Voice",
+    role: "Social & Community",
+    color: "#E37FB1",
+    description: "Voice for Instagram, social media, Circle posts. Relatable, encouraging, and real about the fertility journey.",
+    voiceTone: "Warm, real, validating. Like your most supportive friend who also happens to know the science.",
   },
 ];
 
@@ -269,6 +302,14 @@ export default function MarketingContentPage() {
                     </span>
                   )}
                   <button
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-white"
+                    style={{ backgroundColor: "#5A6FFF" }}
+                    title="Joy: Draft Response"
+                  >
+                    <Sparkles size={10} />
+                    Draft
+                  </button>
+                  <button
                     className="w-8 h-8 rounded-lg flex items-center justify-center hover:scale-105 transition-transform"
                     style={{ backgroundColor: `${ACCENT}14` }}
                     title="Record POV"
@@ -368,6 +409,51 @@ export default function MarketingContentPage() {
           </div>
         </div>
       )}
+
+      {/* Care Team Characters */}
+      <div>
+        <p
+          className="text-xs font-medium uppercase tracking-widest mb-3"
+          style={{ color: "var(--muted)" }}
+        >
+          Content Care Team
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {CARE_TEAM_CHARACTERS.map((character) => (
+            <div
+              key={character.name}
+              className="rounded-xl p-4"
+              style={{
+                backgroundColor: "var(--surface)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                  style={{ backgroundColor: character.color }}
+                >
+                  {character.name[0]}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                    {character.name}
+                  </p>
+                  <p className="text-[10px]" style={{ color: character.color }}>
+                    {character.role}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs leading-relaxed mb-2" style={{ color: "var(--foreground)" }}>
+                {character.description}
+              </p>
+              <p className="text-[10px] italic" style={{ color: "var(--muted)" }}>
+                Voice: {character.voiceTone}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Platform Groups */}
       <div>

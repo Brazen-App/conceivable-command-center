@@ -35,6 +35,7 @@ export default function MarketingEmailPage() {
   const [activeTab, setActiveTab] = useState<TabId>("review");
   const [emails, setEmails] = useState<LaunchEmail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [mailchimpStats, setMailchimpStats] = useState<{
     isMock: boolean;
     listStats?: { totalSubscribers: number };
@@ -53,9 +54,15 @@ export default function MarketingEmailPage() {
       if (res.ok) {
         const data = await res.json();
         setEmails(data);
+        setError(null);
+      } else {
+        const text = await res.text();
+        console.error("Email API returned", res.status, text);
+        setError(`API error ${res.status}: ${text.substring(0, 200)}`);
       }
     } catch (err) {
       console.error("Failed to fetch emails:", err);
+      setError(err instanceof Error ? err.message : "Network error");
     } finally {
       setLoading(false);
     }
@@ -64,7 +71,7 @@ export default function MarketingEmailPage() {
   // Fetch Mailchimp stats
   const fetchStats = useCallback(async () => {
     try {
-      const res = await fetch("/api/email/stats");
+      const res = await fetch("/api/email/stats", { credentials: "same-origin" });
       if (res.ok) {
         const data = await res.json();
         setMailchimpStats(data);
@@ -152,6 +159,25 @@ export default function MarketingEmailPage() {
         <span className="ml-3 text-sm" style={{ color: "var(--muted)" }}>
           Loading email deployment system...
         </span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl p-6 text-center" style={{ backgroundColor: "#E24D4708", border: "1px solid #E24D4720" }}>
+        <AlertTriangle size={24} style={{ color: "#E24D47" }} className="mx-auto mb-2" />
+        <p className="text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>
+          Failed to load emails
+        </p>
+        <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>{error}</p>
+        <button
+          onClick={() => { setLoading(true); setError(null); fetchEmails(); }}
+          className="text-xs font-medium px-4 py-2 rounded-lg"
+          style={{ backgroundColor: "#E24D4714", color: "#E24D47" }}
+        >
+          Retry
+        </button>
       </div>
     );
   }

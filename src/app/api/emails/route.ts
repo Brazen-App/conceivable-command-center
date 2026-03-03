@@ -2,10 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const emails = await prisma.email.findMany({
-    orderBy: [{ week: "asc" }, { sequence: "asc" }],
-  });
-  return NextResponse.json(emails);
+  try {
+    const emails = await prisma.email.findMany({
+      orderBy: [{ week: "asc" }, { sequence: "asc" }],
+    });
+    return NextResponse.json(emails);
+  } catch (err) {
+    console.error("GET /api/emails error:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Database error" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function PUT(req: NextRequest) {

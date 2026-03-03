@@ -15,8 +15,8 @@ import {
   MessageSquare,
   XCircle,
   Star,
-  Sparkles,
 } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 import {
   EXPERT_STATUS_CONFIG,
   type Expert,
@@ -281,20 +281,18 @@ export default function MarketingPartnershipsPage() {
                         {expert.audienceSize.toLocaleString()}
                       </p>
                       <div className="flex items-center gap-2 flex-wrap mt-2 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
-                        <button
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
-                          style={{ backgroundColor: "#5A6FFF" }}
-                        >
-                          <Sparkles size={11} />
-                          Joy: Draft Outreach
-                        </button>
-                        <button
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                          style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
-                        >
-                          <MessageSquare size={11} />
-                          Joy: Prep Interview Questions
-                        </button>
+                        <JoyButton
+                          agent="marketing"
+                          prompt={`Draft a personalized outreach message to ${expert.name} (${expert.title} at ${expert.organization}). Expertise: ${expert.expertise.join(", ")}. Audience: ${expert.audienceSize.toLocaleString()}. Notes: ${expert.notes}`}
+                          label="Joy: Draft Outreach"
+                        />
+                        <JoyButton
+                          agent="marketing"
+                          prompt={`Prepare interview questions for ${expert.name} (${expert.title} at ${expert.organization}). Their expertise: ${expert.expertise.join(", ")}. Focus on topics that would resonate with their ${expert.audienceSize.toLocaleString()} audience and align with Conceivable's fertility optimization message.`}
+                          label="Joy: Prep Interview Questions"
+                          variant="secondary"
+                          icon={<MessageSquare size={11} />}
+                        />
                       </div>
                     </div>
                   )}

@@ -2,7 +2,8 @@
 
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronUp, Beaker, Layers, MessageSquare, Sparkles, Send } from "lucide-react";
+import { ChevronDown, ChevronUp, Beaker, Layers, Sparkles } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#ACB7FF";
 
@@ -136,76 +137,22 @@ const EVIDENCE_CONFIG: Record<string, { label: string; color: string }> = {
   none: { label: "None yet", color: "var(--muted)" },
 };
 
-function VerticalChat({ vertical }: { vertical: VerticalData }) {
-  const [messages, setMessages] = useState<{ role: "user" | "joy"; text: string }[]>([
-    {
-      role: "joy",
-      text: `I'm Joy, your AI product strategist. I have context on the ${vertical.name} vertical — readiness score ${vertical.readinessScore}/100, ${vertical.keyFeaturesCount} features mapped, clinical evidence: ${EVIDENCE_CONFIG[vertical.clinicalEvidenceStrength].label}. What would you like to explore?`,
-    },
-  ]);
-  const [input, setInput] = useState("");
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", text: input },
-      {
-        role: "joy",
-        text: `I'll research "${input}" for the ${vertical.name} vertical. This will connect to the Joy AI engine once the Claude API integration is live. For now, I've logged this as a product question for the team.`,
-      },
-    ]);
-    setInput("");
-  };
-
+function VerticalActions({ vertical }: { vertical: VerticalData }) {
+  const evidenceLabel = EVIDENCE_CONFIG[vertical.clinicalEvidenceStrength].label;
   return (
-    <div className="mt-4 rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
-      <div
-        className="px-4 py-2 flex items-center gap-2"
-        style={{ backgroundColor: `${vertical.color}10`, borderBottom: "1px solid var(--border)" }}
-      >
-        <Sparkles size={14} style={{ color: vertical.color }} />
-        <span className="text-xs font-bold" style={{ color: vertical.color }}>
-          Joy: {vertical.name} Strategist
-        </span>
-      </div>
-      <div className="max-h-48 overflow-y-auto p-3 space-y-2" style={{ backgroundColor: "var(--background)" }}>
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`text-xs p-2 rounded-lg max-w-[85%] ${msg.role === "joy" ? "" : "ml-auto"}`}
-            style={{
-              backgroundColor: msg.role === "joy" ? `${vertical.color}10` : "var(--surface)",
-              color: "var(--foreground)",
-            }}
-          >
-            {msg.role === "joy" && (
-              <span className="text-[10px] font-bold block mb-0.5" style={{ color: vertical.color }}>
-                Joy
-              </span>
-            )}
-            {msg.text}
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center gap-2 p-2" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--surface)" }}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder={`Ask Joy about ${vertical.name}...`}
-          className="flex-1 text-xs px-3 py-2 rounded-lg outline-none"
-          style={{ backgroundColor: "var(--background)", color: "var(--foreground)", border: "1px solid var(--border)" }}
-        />
-        <button
-          onClick={handleSend}
-          className="p-2 rounded-lg transition-colors hover:opacity-80"
-          style={{ backgroundColor: vertical.color, color: "white" }}
-        >
-          <Send size={12} />
-        </button>
-      </div>
+    <div className="mt-4 flex items-center gap-3 flex-wrap">
+      <JoyButton
+        agent="executive-coach"
+        prompt={`I want to discuss product strategy for the "${vertical.name}" vertical. Current state: readiness score ${vertical.readinessScore}/100, ${vertical.keyFeaturesCount} features mapped, clinical evidence strength: ${evidenceLabel}, status: ${vertical.status}. Description: ${vertical.description}. Key insight: ${vertical.keyInsight}. Help me think through what the 10x moves are for this vertical.`}
+        label={`Joy: ${vertical.name} Strategist`}
+        icon={<Sparkles size={13} />}
+      />
+      <JoyButton
+        agent="executive-coach"
+        prompt={`Analyze the competitive landscape for Conceivable's "${vertical.name}" vertical. Description: ${vertical.description}. Current readiness: ${vertical.readinessScore}/100. Who are the key competitors, what's our differentiation, and what would a 10x go-to-market strategy look like?`}
+        label="Competitive Analysis"
+        variant="secondary"
+      />
     </div>
   );
 }
@@ -334,8 +281,8 @@ function VerticalsContent() {
                     </span>
                   </div>
 
-                  {/* Chat Interface */}
-                  <VerticalChat vertical={v} />
+                  {/* Joy Actions */}
+                  <VerticalActions vertical={v} />
                 </div>
               )}
             </div>

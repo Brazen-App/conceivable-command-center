@@ -112,6 +112,7 @@ export default function CEOReviewPage() {
   const [activeCategory, setActiveCategory] = useState<ReviewCategory | "all">("all");
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [approvedItems, setApprovedItems] = useState<Set<string>>(new Set());
+  const [flaggedItems, setFlaggedItems] = useState<Set<string>>(new Set());
 
   const filteredItems = REVIEW_ITEMS.filter(
     (item) => !approvedItems.has(item.id) && (activeCategory === "all" || item.category === activeCategory)
@@ -131,6 +132,12 @@ export default function CEOReviewPage() {
 
   const handleApprove = (id: string) => {
     setApprovedItems((prev) => new Set(prev).add(id));
+    setFlaggedItems((prev) => { const next = new Set(prev); next.delete(id); return next; });
+  };
+
+  const handleFlag = (id: string) => {
+    setFlaggedItems((prev) => new Set(prev).add(id));
+    setApprovedItems((prev) => { const next = new Set(prev); next.delete(id); return next; });
   };
 
   const pendingCounts = CATEGORIES.map((cat) => ({
@@ -277,11 +284,15 @@ export default function CEOReviewPage() {
                         Approve
                       </button>
                       <button
+                        onClick={(e) => { e.stopPropagation(); handleFlag(item.id); }}
                         className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium"
-                        style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
+                        style={{
+                          backgroundColor: flaggedItems.has(item.id) ? "#F1C02818" : "var(--border)",
+                          color: flaggedItems.has(item.id) ? "#F1C028" : "var(--foreground)",
+                        }}
                       >
                         <AlertTriangle size={13} />
-                        Flag for Discussion
+                        {flaggedItems.has(item.id) ? "Flagged" : "Flag for Discussion"}
                       </button>
                     </div>
                   </div>

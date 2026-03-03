@@ -7,10 +7,12 @@ import { notFound } from "next/navigation";
 
 interface AgentPageProps {
   params: Promise<{ division: string }>;
+  searchParams: Promise<{ prompt?: string }>;
 }
 
-export default async function AgentPage({ params }: AgentPageProps) {
+export default async function AgentPage({ params, searchParams }: AgentPageProps) {
   const { division } = await params;
+  const { prompt } = await searchParams;
   const config = AGENT_CONFIGS[division as AgentDivision];
 
   if (!config) {
@@ -29,7 +31,7 @@ export default async function AgentPage({ params }: AgentPageProps) {
   return (
     <>
       <Header title={config.name} subtitle={config.description} />
-      <AgentChat config={config} />
+      <AgentChat config={config} initialPrompt={prompt} />
     </>
   );
 }

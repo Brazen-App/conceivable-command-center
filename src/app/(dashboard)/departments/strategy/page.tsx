@@ -9,9 +9,9 @@ import {
   ClipboardList,
   CheckCircle2,
   Circle,
-  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#9686B9";
 
@@ -416,13 +416,11 @@ export default function StrategyDashboardPage() {
         </div>
 
         <div className="flex items-center gap-3 mt-4 flex-wrap">
-          <button
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white"
-            style={{ backgroundColor: ACCENT }}
-          >
-            <Sparkles size={12} />
-            Joy: Connect Next Data Source
-          </button>
+          <JoyButton
+            agent="executive-coach"
+            prompt={`Help me connect the next data source for the Command Center. Currently connected: ${DATA_COLLECTION_ITEMS.filter((i) => i.complete).map((i) => i.label).join(", ")}. Not yet connected: ${DATA_COLLECTION_ITEMS.filter((i) => !i.complete).map((i) => `${i.label} (${i.department})`).join(", ")}. Which should I prioritize next and how do I set it up?`}
+            label="Joy: Connect Next Data Source"
+          />
           <p className="text-[10px]" style={{ color: "var(--muted)" }}>
             Each connection gives Joy more intelligence to surface 10x insights across departments.
           </p>

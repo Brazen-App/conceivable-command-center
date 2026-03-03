@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import CompanyGoalsBanner from "@/components/layout/CompanyGoalsBanner";
 
 const ACCENT = "#1EAA55";
@@ -33,6 +34,7 @@ const ESTIMATED_BURN = 28_000;
 const RUNWAY_MONTHS = 2;
 
 export default function FinanceDashboardPage() {
+  const router = useRouter();
   return (
     <div>
       <CompanyGoalsBanner departmentFocus="Close $150K bridge round to extend runway to 7 months" />
@@ -153,10 +155,12 @@ export default function FinanceDashboardPage() {
                 <p className="text-[10px]" style={{ color: "var(--muted)" }}>{tool.desc}</p>
               </div>
               <button
+                onClick={() => !tool.connected && router.push(`/agents/executive-coach?prompt=${encodeURIComponent(`Help me connect ${tool.name} to the Conceivable Command Center. ${tool.desc}. Walk me through the API setup, authentication, and what data we should pull into the finance dashboard.`)}`)}
                 className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
                 style={{
                   backgroundColor: tool.connected ? "#1EAA5514" : "#5A6FFF14",
                   color: tool.connected ? "#1EAA55" : "#5A6FFF",
+                  cursor: tool.connected ? "default" : "pointer",
                 }}
               >
                 {tool.connected ? "Connected" : "Connect"}

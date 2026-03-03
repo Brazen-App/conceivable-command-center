@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, Users, DollarSign, Clock, ArrowRight, MessageSquare, AlertTriangle, Target, Sparkles, Search, ExternalLink } from "lucide-react";
+import { TrendingUp, Users, DollarSign, Clock, ArrowRight, MessageSquare, AlertTriangle, Target, Search, ExternalLink, Sparkles } from "lucide-react";
 import Link from "next/link";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#356FB6";
 
@@ -229,14 +230,11 @@ export default function FundraisingDashboardPage() {
                     </p>
                     <PriorityBadge priority={action.priority} />
                   </div>
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white shrink-0"
-                    style={{ backgroundColor: "#5A6FFF" }}
-                    onClick={(e) => { e.stopPropagation(); }}
-                  >
-                    <Sparkles size={11} />
-                    Joy: Start
-                  </button>
+                  <JoyButton
+                    agent="executive-coach"
+                    prompt={`Help me with this fundraising task: "${action.title}". ${action.description}`}
+                    label="Joy: Start"
+                  />
                 </div>
               </div>
               {expandedAction === i && (

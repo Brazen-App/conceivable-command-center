@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#5A6FFF";
 
@@ -352,27 +353,27 @@ export default function SeoGeoPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <button
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
-                      style={{ backgroundColor: "#5A6FFF" }}
-                    >
-                      <Sparkles size={11} />
-                      Joy: Write Content
-                    </button>
-                    <button
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                      style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
-                    >
-                      <RefreshCw size={11} />
-                      Re-check Engines
-                    </button>
-                    <button
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                      style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
-                    >
-                      <Code2 size={11} />
-                      Add Schema Markup
-                    </button>
+                    <JoyButton
+                      agent="content-engine"
+                      prompt={`Write SEO/GEO-optimized content targeting the query "${q.query}". ${q.engines.some((e) => e.status === "cited") ? "We're already cited — create supporting content to maintain position." : "We're not yet cited — create comprehensive, authoritative content with FAQ schema to earn citations."} Focus on making this content the definitive answer for AI engines.`}
+                      label="Joy: Write Content"
+                    />
+                    <JoyButton
+                      agent="content-engine"
+                      prompt={`Re-check AI engine presence for the query "${q.query}". Current status: ${q.engines.map((e) => `${e.engine}: ${e.status}`).join(", ")}. What specific steps should we take to improve our visibility in engines where we're absent or only mentioned?`}
+                      label="Re-check Engines"
+                      variant="secondary"
+                      icon={<RefreshCw size={11} />}
+                      iconSize={11}
+                    />
+                    <JoyButton
+                      agent="content-engine"
+                      prompt={`Generate JSON-LD schema markup for the query "${q.query}" to improve our GEO visibility. Include FAQ schema, HowTo schema, and Article schema. The markup should target AI engine citation for Conceivable's fertility optimization content.`}
+                      label="Add Schema Markup"
+                      variant="secondary"
+                      icon={<Code2 size={11} />}
+                      iconSize={11}
+                    />
                   </div>
                 </div>
               )}
@@ -413,13 +414,13 @@ export default function SeoGeoPage() {
             <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
               Action: Draft &quot;Conceivable (company)&quot; article with published research citations.
             </p>
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white mt-2"
-              style={{ backgroundColor: "#5A6FFF" }}
-            >
-              <Sparkles size={11} />
-              Joy: Draft Wikipedia
-            </button>
+            <div className="mt-2">
+              <JoyButton
+                agent="content-engine"
+                prompt="Draft a Wikipedia article for 'Conceivable (company)'. Include: founding story, the 50-factor fertility optimization approach, published research citations (US20160140314A1 patent, pilot study showing 150-260% improvement), key technology (AI-powered biomarker tracking), and notable press coverage. Use neutral, encyclopedic tone per Wikipedia guidelines."
+                label="Joy: Draft Wikipedia"
+              />
+            </div>
           </div>
 
           {/* Schema.org */}

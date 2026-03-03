@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Calendar, ExternalLink, ChevronDown, Search, Users, Sparkles, RefreshCw, MessageSquare } from "lucide-react";
+import { Star, Calendar, ExternalLink, ChevronDown, Search, Users, RefreshCw, MessageSquare } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#356FB6";
 
@@ -239,27 +240,25 @@ export default function MovementBoardPage() {
 
                 {/* Joy Action Buttons */}
                 <div className="flex items-center gap-2 flex-wrap pt-2 border-t" style={{ borderColor: "var(--border)" }}>
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
-                    style={{ backgroundColor: "#5A6FFF" }}
-                  >
-                    <Sparkles size={11} />
-                    Joy: Research Update
-                  </button>
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                    style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
-                  >
-                    <MessageSquare size={11} />
-                    Joy: Draft Outreach
-                  </button>
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                    style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
-                  >
-                    <RefreshCw size={11} />
-                    Map Warm Paths
-                  </button>
+                  <JoyButton
+                    agent="executive-coach"
+                    prompt={`Research update on ${target.name} (${target.title}). What's the latest news, recent activity, and any new connections we should know about? Current intel: ${target.latestIntel}`}
+                    label="Joy: Research Update"
+                  />
+                  <JoyButton
+                    agent="executive-coach"
+                    prompt={`Draft a personalized outreach message to ${target.name} (${target.title}). Context: ${target.whyTheyFit}. Warmest path: ${target.warmestPath}. Potential ask: ${target.potentialAsk}.`}
+                    label="Joy: Draft Outreach"
+                    variant="secondary"
+                    icon={<MessageSquare size={11} />}
+                  />
+                  <JoyButton
+                    agent="executive-coach"
+                    prompt={`Map all possible warm introduction paths to ${target.name}. Current warmest path: ${target.warmestPath}. Look through our podcast network (69 hosts), investor connections, and advisor relationships.`}
+                    label="Map Warm Paths"
+                    variant="ghost"
+                    icon={<RefreshCw size={11} />}
+                  />
                 </div>
               </div>
             )}

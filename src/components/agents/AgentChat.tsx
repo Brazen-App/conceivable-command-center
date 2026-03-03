@@ -13,25 +13,40 @@ interface Message {
 
 interface AgentChatProps {
   config: AgentConfig;
+  initialPrompt?: string;
 }
 
-export default function AgentChat({ config }: AgentChatProps) {
+export default function AgentChat({ config, initialPrompt }: AgentChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const initialPromptSent = useRef(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
+  // Auto-send initial prompt from Joy button navigation
+  useEffect(() => {
+    if (initialPrompt && !initialPromptSent.current && messages.length === 0) {
+      initialPromptSent.current = true;
+      setInput(initialPrompt);
+      // Small delay to let the UI render first
+      setTimeout(() => {
+        const fakeEvent = { key: "Enter", shiftKey: false } as React.KeyboardEvent;
+        void sendMessage(initialPrompt);
+      }, 100);
+    }
+  }, [initialPrompt]);
+
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || loading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input,
+      content: text,
       timestamp: new Date(),
     };
 
@@ -45,12 +60,13 @@ export default function AgentChat({ config }: AgentChatProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           agentId: config.id,
-          message: input,
+          message: text,
         }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        const data = await res.json();
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
@@ -58,6 +74,14 @@ export default function AgentChat({ config }: AgentChatProps) {
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: data.error || "Something went wrong. Please check that the ANTHROPIC_API_KEY is configured and try again.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
       }
     } catch {
       const errorMessage: Message = {
@@ -72,6 +96,8 @@ export default function AgentChat({ config }: AgentChatProps) {
       setLoading(false);
     }
   };
+
+  const handleSend = () => sendMessage(input);
 
   return (
     <div className="flex flex-col h-[calc(100vh-73px)]">

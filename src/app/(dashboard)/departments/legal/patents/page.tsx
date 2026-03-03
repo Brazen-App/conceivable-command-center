@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, AlertTriangle, Clock, CheckCircle2, Eye, ExternalLink, Shield, MessageSquare, Sparkles } from "lucide-react";
+import { FileText, AlertTriangle, Clock, CheckCircle2, Eye, ExternalLink, Shield, MessageSquare } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#E24D47";
 
@@ -271,27 +272,20 @@ export default function PatentsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 mt-4 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
-                    <button
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-white"
-                      style={{ backgroundColor: "#5A6FFF" }}
-                    >
-                      <MessageSquare size={13} />
-                      Draft with Joy
-                    </button>
-                    <button
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium"
-                      style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
-                    >
-                      <Sparkles size={13} />
-                      Joy: Assess Prior Art
-                    </button>
-                    <button
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium"
-                      style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
-                    >
-                      <ExternalLink size={13} />
-                      View Full Filing
-                    </button>
+                    <JoyButton
+                      agent="legal"
+                      prompt={`Help me draft patent claims for "${patent.title}" (${patent.type}). Current description: ${patent.description}. Key claims count: ${patent.keyClaimsCount}. Notes: ${patent.notes}. Help me strengthen the claims and identify any gaps.`}
+                      label="Draft with Joy"
+                      icon={<MessageSquare size={13} />}
+                      iconSize={13}
+                    />
+                    <JoyButton
+                      agent="legal"
+                      prompt={`Assess prior art for our patent "${patent.title}" (Application: ${patent.applicationNumber || "pending"}). Description: ${patent.description}. Identify potential prior art conflicts, freedom-to-operate risks, and suggest ways to differentiate our claims.`}
+                      label="Joy: Assess Prior Art"
+                      variant="secondary"
+                      iconSize={13}
+                    />
                   </div>
                 </div>
               )}

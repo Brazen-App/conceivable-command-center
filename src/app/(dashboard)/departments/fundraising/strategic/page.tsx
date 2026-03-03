@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Handshake, ExternalLink, Star, ArrowRight, Sparkles, MessageSquare, RefreshCw } from "lucide-react";
+import { Handshake, ExternalLink, Star, ArrowRight, MessageSquare, RefreshCw } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#356FB6";
 
@@ -185,27 +186,25 @@ export default function StrategicPage() {
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
-                    style={{ backgroundColor: "#5A6FFF" }}
-                  >
-                    <Sparkles size={11} />
-                    Joy: Draft Partnership Proposal
-                  </button>
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                    style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
-                  >
-                    <MessageSquare size={11} />
-                    Joy: Draft Outreach
-                  </button>
-                  <button
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                    style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
-                  >
-                    <RefreshCw size={11} />
-                    Map Warm Intros
-                  </button>
+                  <JoyButton
+                    agent="executive-coach"
+                    prompt={`Draft a strategic partnership proposal for ${partner.company}. Opportunity: ${partner.opportunity}. Strategic value: ${partner.strategicValue}. Pitch angle: ${partner.pitchAngle}. Integration details: ${partner.integrationDetails}.`}
+                    label="Joy: Draft Partnership Proposal"
+                  />
+                  <JoyButton
+                    agent="executive-coach"
+                    prompt={`Draft an outreach message to ${partner.contact} at ${partner.company} about: ${partner.opportunity}. Lead with: ${partner.pitchAngle}`}
+                    label="Joy: Draft Outreach"
+                    variant="secondary"
+                    icon={<MessageSquare size={11} />}
+                  />
+                  <JoyButton
+                    agent="executive-coach"
+                    prompt={`Map warm introduction paths to ${partner.company}'s partnerships team (${partner.contact}). Search through our podcast network, advisor relationships, and existing investor connections.`}
+                    label="Map Warm Intros"
+                    variant="ghost"
+                    icon={<RefreshCw size={11} />}
+                  />
                 </div>
               </div>
             )}

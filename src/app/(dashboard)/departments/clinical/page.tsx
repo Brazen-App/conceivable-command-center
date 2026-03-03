@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Target,
 } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#78C3BF";
 
@@ -360,27 +361,28 @@ export default function ClinicalDashboardPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 mt-4 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
-                      <button
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-white"
-                        style={{ backgroundColor: "#5A6FFF" }}
-                      >
-                        <Sparkles size={13} />
-                        Joy: Start Drafting
-                      </button>
-                      <button
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium"
-                        style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
-                      >
-                        <MessageSquare size={13} />
-                        Joy: Analyze Data
-                      </button>
-                      <button
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium"
-                        style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
-                      >
-                        <Target size={13} />
-                        Set Publication Target
-                      </button>
+                      <JoyButton
+                        agent="scientific-research"
+                        prompt={`Help me start drafting a research paper for "${study.title}". Description: ${study.description}. Publication target: ${study.publicationTarget}. Participants: ${study.participants || "Pending"}. Create an outline with abstract, methods, results structure, and key findings to highlight.`}
+                        label="Joy: Start Drafting"
+                        iconSize={13}
+                      />
+                      <JoyButton
+                        agent="scientific-research"
+                        prompt={`Analyze the data for our study "${study.title}". We have ${study.dataPoints ? `${(study.dataPoints / 1000).toFixed(0)}K data points` : "data collection in progress"} from ${study.participants || "pending"} participants. What statistical methods should we use? What are the key findings we should highlight for ${study.publicationTarget}?`}
+                        label="Joy: Analyze Data"
+                        variant="secondary"
+                        icon={<MessageSquare size={13} />}
+                        iconSize={13}
+                      />
+                      <JoyButton
+                        agent="scientific-research"
+                        prompt={`Help me set a publication target and timeline for "${study.title}". Current target: ${study.publicationTarget}. What are the top journals in this space? What's a realistic timeline given our data? What peer review process should we expect?`}
+                        label="Set Publication Target"
+                        variant="ghost"
+                        icon={<Target size={13} />}
+                        iconSize={13}
+                      />
                     </div>
                   </div>
                 )}
@@ -409,13 +411,13 @@ export default function ClinicalDashboardPage() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <StatusBadge status={pub.status} />
-                <button
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
-                  style={{ backgroundColor: "#5A6FFF" }}
-                >
-                  <Sparkles size={11} />
-                  Draft
-                </button>
+                <JoyButton
+                  agent="scientific-research"
+                  prompt={`Help me draft the paper "${pub.title}" targeting ${pub.journal}. Current status: ${pub.status}. Outline the key sections, suggest the methodology framework, and draft the abstract. Focus on making this publication-ready for a top-tier journal.`}
+                  label="Draft"
+                  icon={<Sparkles size={11} />}
+                  iconSize={11}
+                />
               </div>
             </div>
           ))}

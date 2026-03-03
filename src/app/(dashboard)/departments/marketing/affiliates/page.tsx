@@ -10,6 +10,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import CompanyGoalsBanner from "@/components/layout/CompanyGoalsBanner";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#5A6FFF";
 
@@ -48,20 +49,19 @@ export default function MarketingAffiliatesPage() {
           the best fertility practitioners, health coaches, and influencers as affiliates.
         </p>
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <button
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white"
-            style={{ backgroundColor: ACCENT }}
-          >
-            <UserPlus size={15} />
-            Add First Affiliate
-          </button>
-          <button
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium"
-            style={{ backgroundColor: `${ACCENT}12`, color: ACCENT }}
-          >
-            <Sparkles size={15} />
-            Joy: Find Prospects
-          </button>
+          <JoyButton
+            agent="marketing"
+            prompt="Help me set up the affiliate program for Conceivable. I need to: 1) Define the commission structure and terms, 2) Create the affiliate onboarding process, 3) Set up tracking and attribution. Walk me through the best approach for a health/fertility product affiliate program."
+            label="Add First Affiliate"
+            icon={<UserPlus size={15} />}
+            iconSize={15}
+          />
+          <JoyButton
+            agent="marketing"
+            prompt="Find the top 20 affiliate prospects for Conceivable. Focus on functional medicine doctors, fertility nutritionists, and reproductive acupuncturists from Kirsten's podcast network and conference contacts. For each, list their practice, audience size, and why they'd be a good fit."
+            label="Joy: Find Prospects"
+            iconSize={15}
+          />
         </div>
       </div>
 
@@ -111,13 +111,14 @@ export default function MarketingAffiliatesPage() {
             </div>
           ))}
         </div>
-        <button
-          className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-white"
-          style={{ backgroundColor: "#5A6FFF" }}
-        >
-          <Send size={12} />
-          Joy: Draft Outreach Email for Practitioners
-        </button>
+        <div className="mt-4">
+          <JoyButton
+            agent="marketing"
+            prompt="Draft a personalized outreach email template for fertility practitioners (functional medicine MDs, fertility nutritionists, health coaches). The email should introduce Conceivable's affiliate program, highlight how it extends their toolkit for patients, and include our commission structure. Make it warm and professional — these are potential long-term partners."
+            label="Joy: Draft Outreach Email for Practitioners"
+            icon={<Send size={12} />}
+          />
+        </div>
       </div>
 
       {/* Commission Structure */}

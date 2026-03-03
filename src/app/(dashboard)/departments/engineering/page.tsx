@@ -13,8 +13,8 @@ import {
   TrendingUp,
   LayoutList,
   ExternalLink,
-  Sparkles,
 } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#6B7280";
 
@@ -288,20 +288,18 @@ export default function EngineeringDashboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <button
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white"
-            style={{ backgroundColor: "#5A6FFF" }}
-          >
-            <ExternalLink size={12} />
-            Connect Linear API
-          </button>
-          <button
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-            style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
-          >
-            <Sparkles size={12} />
-            Joy: Set Up Integration
-          </button>
+          <JoyButton
+            agent="executive-coach"
+            prompt="Help me set up the Linear API integration for the Command Center. I need to: 1) Get a Linear API key, 2) Configure the webhook for issue/sprint sync, 3) Map Linear projects to our department structure. Walk me through the setup step by step."
+            label="Connect Linear API"
+            icon={<ExternalLink size={12} />}
+          />
+          <JoyButton
+            agent="executive-coach"
+            prompt="Set up the Linear project management integration for the Conceivable Command Center. Create the project structure: map Linear teams to our 10 departments, set up sprint tracking, and configure cross-department dependency alerts. What's the best way to organize this?"
+            label="Joy: Set Up Integration"
+            variant="secondary"
+          />
         </div>
       </div>
 

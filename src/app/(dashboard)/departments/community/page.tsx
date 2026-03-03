@@ -1,12 +1,13 @@
 "use client";
 
 import { Users, TrendingUp, Heart, MessageSquare, ArrowRight, Star, Activity } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#1EAA55";
 
 const MEMBER_STATS = {
   total: 220,
-  active: 0, // Connect Circle API to track
+  active: 0,
   nps: 0, // Not yet measured
   thisWeekPosts: 0,
   thisWeekReplies: 0,
@@ -21,11 +22,11 @@ const CONVERSION_FUNNEL = [
 
 const WEEKLY_SUMMARY = [
   { metric: "Total members", value: 220, trend: "Circle.so" },
-  { metric: "New posts", value: "—", trend: "Connect Circle API" },
-  { metric: "Replies", value: "—", trend: "Connect Circle API" },
-  { metric: "Active members", value: "—", trend: "Connect Circle API" },
-  { metric: "New members", value: "—", trend: "Connect Circle API" },
-  { metric: "Response time", value: "—", trend: "Connect Circle API" },
+  { metric: "New posts", value: "—", trend: "Awaiting data" },
+  { metric: "Replies", value: "—", trend: "Awaiting data" },
+  { metric: "Active members", value: "—", trend: "Awaiting data" },
+  { metric: "New members", value: "—", trend: "Awaiting data" },
+  { metric: "Response time", value: "—", trend: "Awaiting data" },
 ];
 
 function NPSGauge({ score }: { score: number }) {
@@ -242,6 +243,26 @@ export default function CommunityDashboardPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Connect Circle API CTA */}
+      <div
+        className="rounded-xl p-5 flex items-center gap-4 flex-wrap"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+            Connect Circle API for live engagement data
+          </p>
+          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+            Posts, replies, active members, and growth metrics will populate automatically once the Circle API is connected.
+          </p>
+        </div>
+        <JoyButton
+          agent="executive-coach"
+          prompt="Help me connect the Circle.so community API to the Conceivable Command Center. We have 220 members on Circle. I need to: 1) Get a Circle API token, 2) Set up the webhook or polling for member activity data, 3) Track engagement metrics (posts, replies, active members, growth rate). Walk me through the setup."
+          label="Joy: Connect Circle API"
+        />
       </div>
 
       {/* Sullivan Multiplier */}

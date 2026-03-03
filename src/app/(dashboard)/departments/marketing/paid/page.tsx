@@ -13,6 +13,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import CompanyGoalsBanner from "@/components/layout/CompanyGoalsBanner";
 
 const ACCENT = "#5A6FFF";
@@ -51,6 +52,7 @@ const PREREQUISITES = [
 ];
 
 export default function MarketingPaidPage() {
+  const router = useRouter();
   return (
     <div className="space-y-6">
       <CompanyGoalsBanner departmentFocus="PPC launches after organic validation — focus on email + content first" />
@@ -91,7 +93,8 @@ export default function MarketingPaidPage() {
                 <p className="text-[10px]" style={{ color: "var(--muted)" }}>{platform.desc}</p>
               </div>
               <button
-                className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
+                onClick={() => router.push(`/agents/executive-coach?prompt=${encodeURIComponent(`Help me connect ${platform.name} to the Conceivable Command Center. ${platform.desc}. Walk me through the API setup and what metrics we should track for paid advertising.`)}`)}
+                className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 cursor-pointer"
                 style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
               >
                 Connect

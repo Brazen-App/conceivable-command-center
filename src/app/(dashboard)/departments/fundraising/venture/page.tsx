@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, DollarSign, Calendar, ArrowRight, Sparkles, MessageSquare, Search } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, ArrowRight, MessageSquare, Search } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#356FB6";
 
@@ -222,27 +223,25 @@ export default function VenturePage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-                          <button
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
-                            style={{ backgroundColor: "#5A6FFF" }}
-                          >
-                            <Sparkles size={11} />
-                            Joy: Research Firm
-                          </button>
-                          <button
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                            style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
-                          >
-                            <MessageSquare size={11} />
-                            Joy: Draft Outreach
-                          </button>
-                          <button
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
-                            style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
-                          >
-                            <Search size={11} />
-                            Find Warm Intro
-                          </button>
+                          <JoyButton
+                            agent="executive-coach"
+                            prompt={`Research ${vc.firm} and their partner ${vc.partner}. What's their latest investment activity, fund status, and any recent news? Thesis alignment: ${vc.thesisAlignment}. Check size: ${vc.checkSize}.`}
+                            label="Joy: Research Firm"
+                          />
+                          <JoyButton
+                            agent="executive-coach"
+                            prompt={`Draft a personalized outreach email to ${vc.partner} at ${vc.firm}. They invest ${vc.checkSize} checks with ${vc.thesisAlignment} thesis alignment. Notes: ${vc.notes}`}
+                            label="Joy: Draft Outreach"
+                            variant="secondary"
+                            icon={<MessageSquare size={11} />}
+                          />
+                          <JoyButton
+                            agent="executive-coach"
+                            prompt={`Find warm introduction paths to ${vc.partner} at ${vc.firm}. Search through our podcast network (69 hosts), existing investor relationships, and advisor connections. Who in our network is most likely connected?`}
+                            label="Find Warm Intro"
+                            variant="ghost"
+                            icon={<Search size={11} />}
+                          />
                         </div>
                       </td>
                     </tr>

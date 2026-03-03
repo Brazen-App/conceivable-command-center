@@ -21,6 +21,7 @@ import {
   Heart,
   MessageSquare,
 } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#5A6FFF";
 
@@ -301,14 +302,12 @@ export default function MarketingContentPage() {
                       NEEDS REVIEW
                     </span>
                   )}
-                  <button
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-white"
-                    style={{ backgroundColor: "#5A6FFF" }}
-                    title="Joy: Draft Response"
-                  >
-                    <Sparkles size={10} />
-                    Draft
-                  </button>
+                  <JoyButton
+                    agent="content-engine"
+                    prompt={`Draft a Conceivable content response to this ${item.type} item: "${item.title}" (source: ${item.source}, relevance: ${item.relevance}/10). Write it in Conceivable's brand voice — calm, intelligent, empathetic, empowering. Include a social media post, a blog angle, and an email snippet.`}
+                    label="Draft"
+                    iconSize={10}
+                  />
                   <button
                     className="w-8 h-8 rounded-lg flex items-center justify-center hover:scale-105 transition-transform"
                     style={{ backgroundColor: `${ACCENT}14` }}

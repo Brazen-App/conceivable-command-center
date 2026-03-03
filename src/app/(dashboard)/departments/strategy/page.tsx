@@ -6,6 +6,10 @@ import {
   TrendingUp,
   ArrowRight,
   Activity,
+  ClipboardList,
+  CheckCircle2,
+  Circle,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -66,6 +70,70 @@ const STATUS_COLORS = {
   yellow: "#F1C028",
   red: "#E24D47",
 };
+
+/* ─── Data Collection Checklist ─── */
+const DATA_COLLECTION_ITEMS = [
+  {
+    label: "Mercury bank feed connected",
+    description: "Real-time cash balance, burn rate, and runway calculations",
+    department: "Finance",
+    complete: false,
+  },
+  {
+    label: "Stripe revenue tracking live",
+    description: "Subscription MRR, churn rate, and LTV metrics from production",
+    department: "Finance",
+    complete: false,
+  },
+  {
+    label: "Mailchimp API integrated",
+    description: "Open rates, click rates, unsubscribes, and funnel conversion data",
+    department: "Marketing",
+    complete: true,
+  },
+  {
+    label: "Circle community API connected",
+    description: "Member count, engagement metrics, top threads, and growth rate",
+    department: "Community",
+    complete: false,
+  },
+  {
+    label: "Google Analytics 4 tracking",
+    description: "Site traffic, conversion funnels, top pages, and referral sources",
+    department: "Marketing",
+    complete: false,
+  },
+  {
+    label: "Linear project management synced",
+    description: "Sprint velocity, issue burndown, and cross-department dependency tracking",
+    department: "Engineering",
+    complete: false,
+  },
+  {
+    label: "Clinical pilot data entered",
+    description: "150-260% improvement metrics structured for investor pitch deck",
+    department: "Clinical",
+    complete: true,
+  },
+  {
+    label: "Patent portfolio cataloged",
+    description: "5 patents tracked with filing dates, status, and competitive moat analysis",
+    department: "Legal",
+    complete: true,
+  },
+  {
+    label: "Investor CRM populated",
+    description: "50 target investors with tier, thesis alignment, and warm intro paths",
+    department: "Fundraising",
+    complete: true,
+  },
+  {
+    label: "Podcast/media tracker",
+    description: "120+ podcast appearances cataloged with reach and conversion attribution",
+    department: "Marketing",
+    complete: false,
+  },
+];
 
 export default function StrategyDashboardPage() {
   const redCount = DEPT_CONNECTIONS.filter((c) => c.status === "red").length;
@@ -262,6 +330,102 @@ export default function StrategyDashboardPage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Data Collection Dashboard */}
+      <section className="mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <ClipboardList size={14} style={{ color: ACCENT }} />
+          <h2
+            className="font-caption"
+            style={{
+              fontFamily: "var(--font-caption)",
+              fontSize: "10px",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--muted)",
+            }}
+          >
+            Data Collection — What Joy Needs to Run the Command Center
+          </h2>
+          <span className="text-[10px] ml-auto" style={{ color: "var(--muted)" }}>
+            {DATA_COLLECTION_ITEMS.filter((i) => i.complete).length} / {DATA_COLLECTION_ITEMS.length} connected
+          </span>
+        </div>
+
+        {/* Progress bar */}
+        <div className="h-2 rounded-full mb-4" style={{ backgroundColor: "var(--border)" }}>
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width: `${(DATA_COLLECTION_ITEMS.filter((i) => i.complete).length / DATA_COLLECTION_ITEMS.length) * 100}%`,
+              backgroundColor: "#1EAA55",
+            }}
+          />
+        </div>
+
+        <div
+          className="rounded-xl overflow-hidden"
+          style={{ border: "1px solid var(--border)" }}
+        >
+          {DATA_COLLECTION_ITEMS.map((item, i) => (
+            <div
+              key={item.label}
+              className="px-5 py-4 flex items-start gap-3"
+              style={{
+                backgroundColor: i % 2 === 0 ? "var(--surface)" : "var(--background)",
+                borderBottom: i < DATA_COLLECTION_ITEMS.length - 1 ? "1px solid var(--border)" : undefined,
+              }}
+            >
+              {item.complete ? (
+                <CheckCircle2
+                  size={18}
+                  style={{ color: "#1EAA55" }}
+                  className="shrink-0 mt-0.5"
+                />
+              ) : (
+                <Circle
+                  size={18}
+                  style={{ color: "var(--border)" }}
+                  className="shrink-0 mt-0.5"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <p
+                  className="text-sm font-medium"
+                  style={{
+                    color: item.complete ? "var(--muted)" : "var(--foreground)",
+                    textDecoration: item.complete ? "line-through" : "none",
+                  }}
+                >
+                  {item.label}
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
+                  {item.description}
+                </p>
+              </div>
+              <span
+                className="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}
+              >
+                {item.department}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3 mt-4 flex-wrap">
+          <button
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white"
+            style={{ backgroundColor: ACCENT }}
+          >
+            <Sparkles size={12} />
+            Joy: Connect Next Data Source
+          </button>
+          <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+            Each connection gives Joy more intelligence to surface 10x insights across departments.
+          </p>
         </div>
       </section>
     </div>

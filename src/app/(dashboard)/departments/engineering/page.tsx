@@ -11,6 +11,9 @@ import {
   Globe,
   ArrowRight,
   TrendingUp,
+  LayoutList,
+  ExternalLink,
+  Sparkles,
 } from "lucide-react";
 
 const ACCENT = "#6B7280";
@@ -237,6 +240,68 @@ export default function EngineeringDashboardPage() {
           <TrendingUp size={20} className="mx-auto mb-2" style={{ color: "#1EAA55" }} />
           <p className="text-3xl font-bold" style={{ color: "#1EAA55" }}>{BUILD_SUCCESS_RATE}%</p>
           <p className="text-xs" style={{ color: "var(--muted)" }}>Build Success Rate</p>
+        </div>
+      </div>
+
+      {/* Linear Integration */}
+      <div
+        className="rounded-2xl border p-5 mb-6"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <LayoutList size={16} style={{ color: "#5A6FFF" }} />
+          <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+            Linear Project Management
+          </h3>
+          <span
+            className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: "#F1C02814", color: "#F1C028" }}
+          >
+            NOT CONNECTED
+          </span>
+        </div>
+        <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
+          Connect Linear to sync issues, sprints, and roadmap directly into the Command Center.
+          Once connected, Joy will track velocity, flag blockers, and surface cross-department dependencies automatically.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          <div
+            className="rounded-xl p-4 text-center"
+            style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+          >
+            <p className="text-2xl font-bold" style={{ color: "var(--muted)" }}>—</p>
+            <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Active Sprints</p>
+          </div>
+          <div
+            className="rounded-xl p-4 text-center"
+            style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+          >
+            <p className="text-2xl font-bold" style={{ color: "var(--muted)" }}>—</p>
+            <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Open Issues</p>
+          </div>
+          <div
+            className="rounded-xl p-4 text-center"
+            style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+          >
+            <p className="text-2xl font-bold" style={{ color: "var(--muted)" }}>—</p>
+            <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Sprint Velocity</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white"
+            style={{ backgroundColor: "#5A6FFF" }}
+          >
+            <ExternalLink size={12} />
+            Connect Linear API
+          </button>
+          <button
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
+          >
+            <Sparkles size={12} />
+            Joy: Set Up Integration
+          </button>
         </div>
       </div>
 

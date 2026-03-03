@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Calendar, ExternalLink, ChevronDown, Search, Users } from "lucide-react";
+import { Star, Calendar, ExternalLink, ChevronDown, Search, Users, Sparkles, RefreshCw, MessageSquare } from "lucide-react";
 
 const ACCENT = "#356FB6";
 
@@ -235,6 +235,31 @@ export default function MovementBoardPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Joy Action Buttons */}
+                <div className="flex items-center gap-2 flex-wrap pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                    style={{ backgroundColor: "#5A6FFF" }}
+                  >
+                    <Sparkles size={11} />
+                    Joy: Research Update
+                  </button>
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
+                  >
+                    <MessageSquare size={11} />
+                    Joy: Draft Outreach
+                  </button>
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
+                  >
+                    <RefreshCw size={11} />
+                    Map Warm Paths
+                  </button>
                 </div>
               </div>
             )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, DollarSign, Calendar, ArrowRight } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, ArrowRight, Sparkles, MessageSquare, Search } from "lucide-react";
 
 const ACCENT = "#356FB6";
 
@@ -30,6 +30,47 @@ const VC_PIPELINE: VCFirm[] = [
   { id: "vc08", firm: "Female Founders Fund", partner: "Anu Duggal", stage: "contacted", checkSize: "$250K-500K", thesisAlignment: "strong", lastContact: "2026-02-22", nextAction: "Schedule partner meeting", notes: "Perfect alignment on mission. Smaller check but strong signal value." },
   { id: "vc09", firm: "Rock Health", partner: "Health Innovation Lead", stage: "prospect", checkSize: "$500K-1M", thesisAlignment: "strong", lastContact: "2026-01-15", nextAction: "Apply to digital health accelerator program", notes: "Digital health specialists. Could provide both funding and network." },
   { id: "vc10", firm: "Khosla Ventures", partner: "Health Tech Partner", stage: "prospect", checkSize: "$2-5M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Cold outreach via healthcare portfolio founders", notes: "Bold bets thesis. Need strong vision narrative." },
+  // --- Expanded VC List: FemTech / Digital Health / Women's Health focused ---
+  { id: "vc11", firm: "Portfolia FemTech Fund", partner: "Trish Costello", stage: "prospect", checkSize: "$250K-500K", thesisAlignment: "strong", lastContact: "Never", nextAction: "Submit to FemTech fund application", notes: "Dedicated FemTech fund. Perfect thesis alignment." },
+  { id: "vc12", firm: "Coyote Ventures", partner: "Health Partner", stage: "prospect", checkSize: "$500K-1M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Research portfolio for warm intros", notes: "Women's health focused early stage." },
+  { id: "vc13", firm: "Avestria Ventures", partner: "Seema Hingorani", stage: "prospect", checkSize: "$500K-2M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Submit pitch through website", notes: "Invests in women-led companies, health focus." },
+  { id: "vc14", firm: "Goddess Gaia Ventures", partner: "Sara Hinkley", stage: "prospect", checkSize: "$250K-500K", thesisAlignment: "strong", lastContact: "Never", nextAction: "Explore shared network connections", notes: "FemTech + wellness thesis. Early stage focus." },
+  { id: "vc15", firm: "Astia Fund", partner: "Sharon Vosmek", stage: "prospect", checkSize: "$500K-1M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Apply through Astia Angels network", notes: "Women-led venture. Healthcare vertical expertise." },
+  { id: "vc16", firm: "BBG Ventures", partner: "Nisha Dua", stage: "prospect", checkSize: "$500K-2M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Cold outreach via portfolio founders", notes: "Consumer health. Backed Maven Clinic, Kindbody." },
+  { id: "vc17", firm: "Define Ventures", partner: "Kim Kamdar", stage: "prospect", checkSize: "$2-5M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Warm intro through healthcare network", notes: "Healthcare focused. Partner is former pharma exec." },
+  { id: "vc18", firm: "Digitalis Ventures", partner: "Science Partner", stage: "prospect", checkSize: "$1-3M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Prepare clinical-evidence-first pitch", notes: "Life science + digital health convergence. Our data story matters here." },
+  { id: "vc19", firm: "Flare Capital", partner: "Health IT Lead", stage: "prospect", checkSize: "$2-5M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Position as health data platform", notes: "Health IT focus. Need to emphasize data infrastructure angle." },
+  { id: "vc20", firm: "Optum Ventures", partner: "Health Platform", stage: "prospect", checkSize: "$3-10M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Submit through corporate venture portal", notes: "UHG corporate venture. Distribution potential is massive." },
+  { id: "vc21", firm: "7wireVentures", partner: "Digital Health Lead", stage: "prospect", checkSize: "$2-5M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Prepare consumer health pitch", notes: "Consumer digital health thesis. Backed Hims, Livongo." },
+  { id: "vc22", firm: "Olive Tree Ventures", partner: "Partner TBD", stage: "prospect", checkSize: "$500K-2M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Research recent investments for angle", notes: "Women's health and wellness. Early stage." },
+  { id: "vc23", firm: "Gaingels", partner: "Health Vertical", stage: "prospect", checkSize: "$250K-1M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Submit to investment committee", notes: "Diverse founder focused. Syndicate model." },
+  { id: "vc24", firm: "Pear VC", partner: "Health Partner", stage: "prospect", checkSize: "$1-3M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Cold pitch with product demo", notes: "Pre-seed / seed focus. Need to show product-market fit signals." },
+  { id: "vc25", firm: "Initialized Capital", partner: "Consumer Health", stage: "prospect", checkSize: "$1-3M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Apply through website", notes: "Garry Tan era. Community-first thesis could align." },
+  { id: "vc26", firm: "Lightspeed Venture Partners", partner: "Health Lead", stage: "prospect", checkSize: "$5-15M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Warm intro via healthcare portfolio", notes: "Global reach. Later stage but strategic value." },
+  { id: "vc27", firm: "GV (Google Ventures)", partner: "Life Science Partner", stage: "prospect", checkSize: "$5-10M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Position as AI + health data play", notes: "Strong AI thesis. Emphasize AI coaching engine." },
+  { id: "vc28", firm: "Obvious Ventures", partner: "Andrew Beebe", stage: "prospect", checkSize: "$1-3M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Submit via impact thesis angle", notes: "World-positive thesis. Women's health as impact." },
+  { id: "vc29", firm: "Nextgen Venture Partners", partner: "Digital Health", stage: "prospect", checkSize: "$500K-2M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Connect through digital health meetups", notes: "Digital health specialists. Pre-seed to Series A." },
+  { id: "vc30", firm: "HealthX Ventures", partner: "Managing Partner", stage: "prospect", checkSize: "$500K-1M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Submit application", notes: "Health innovation accelerator with investment arm." },
+  { id: "vc31", firm: "ACME Capital", partner: "Healthcare", stage: "prospect", checkSize: "$1-3M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Cold outreach with clinical data", notes: "Consumer-first thesis with healthcare vertical." },
+  { id: "vc32", firm: "Headline (prev e.ventures)", partner: "Health Partner", stage: "prospect", checkSize: "$1-5M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Explore European distribution angle", notes: "Global fund. Could help with international expansion." },
+  { id: "vc33", firm: "Ulu Ventures", partner: "Miriam Rivera", stage: "prospect", checkSize: "$250K-1M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Apply via founder network", notes: "Diverse founder focus. Seed stage." },
+  { id: "vc34", firm: "Sweater Ventures", partner: "Crowd Health", stage: "prospect", checkSize: "$500K-1M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Explore crowdfunding angle", notes: "Community-funded venture. Unique model." },
+  { id: "vc35", firm: "SteelSky Ventures", partner: "Health Lead", stage: "prospect", checkSize: "$500K-2M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Submit pitch via FemTech network", notes: "FemTech and digital health focus." },
+  { id: "vc36", firm: "StartUp Health", partner: "Health Moonshot", stage: "prospect", checkSize: "$500K-1M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Apply to Health Moonshot program", notes: "Health Moonshot accelerator. Strong network value." },
+  { id: "vc37", firm: "Village Global", partner: "Consumer Health", stage: "prospect", checkSize: "$500K-1M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Submit through LP network referral", notes: "Backed by Gates, Bezos, Zuckerberg. Signal value." },
+  { id: "vc38", firm: "Dorm Room Fund", partner: "Health Vertical", stage: "prospect", checkSize: "$100K-250K", thesisAlignment: "low", lastContact: "Never", nextAction: "Skip -- too early stage and small", notes: "Very early stage. Minimal check size." },
+  { id: "vc39", firm: "Correlation Ventures", partner: "Data Partner", stage: "prospect", checkSize: "$1-3M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Submit data-driven pitch", notes: "Data-driven co-investor. Follows other leads." },
+  { id: "vc40", firm: "Titan Capital (India)", partner: "Health Tech", stage: "prospect", checkSize: "$500K-1M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Explore India market expansion angle", notes: "India-focused. Massive fertility market in India." },
+  { id: "vc41", firm: "Mindset Ventures", partner: "Health Innovation", stage: "prospect", checkSize: "$500K-2M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Submit via cross-border health fund", notes: "Israel-US cross-border. Strong health tech network." },
+  { id: "vc42", firm: "Blue Venture Fund", partner: "Managing Director", stage: "prospect", checkSize: "$250K-1M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Apply through university network", notes: "Underrepresented founder focus." },
+  { id: "vc43", firm: "Unshackled Ventures", partner: "Health Partner", stage: "prospect", checkSize: "$500K-1M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Explore via founder community", notes: "Immigrant-founded company support." },
+  { id: "vc44", firm: "Techstars Health", partner: "Managing Director", stage: "prospect", checkSize: "$120K + follow-on", thesisAlignment: "strong", lastContact: "Never", nextAction: "Apply to next cohort", notes: "Accelerator with strong health network and follow-on funding." },
+  { id: "vc45", firm: "Y Combinator", partner: "Healthcare Group", stage: "prospect", checkSize: "$500K + follow-on", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Apply to next batch with clinical data story", notes: "Top accelerator. Biotech/health group expanding." },
+  { id: "vc46", firm: "Plug and Play Health", partner: "Health Platform Lead", stage: "prospect", checkSize: "$250K-500K", thesisAlignment: "strong", lastContact: "Never", nextAction: "Apply to health vertical program", notes: "Corporate partnerships + investment. Strong pharma/payer network." },
+  { id: "vc47", firm: "HAX (SOSV)", partner: "Health Hardware", stage: "prospect", checkSize: "$250K-1M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Position Halo Ring as hardware play", notes: "Hardware accelerator. Halo Ring angle." },
+  { id: "vc48", firm: "IndieBio (SOSV)", partner: "Biology Partner", stage: "prospect", checkSize: "$500K-1M", thesisAlignment: "strong", lastContact: "Never", nextAction: "Apply with biomarker platform thesis", notes: "Biology + tech accelerator. Clinical data is differentiator." },
+  { id: "vc49", firm: "Maverick Ventures", partner: "Consumer Health", stage: "prospect", checkSize: "$1-3M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Cold outreach via portfolio", notes: "Consumer health. Backed several DTC health brands." },
+  { id: "vc50", firm: "CRCM Ventures", partner: "Health Innovation", stage: "prospect", checkSize: "$1-5M", thesisAlignment: "moderate", lastContact: "Never", nextAction: "Submit through digital health network", notes: "Health innovation fund. Strong clinical validation thesis." },
 ];
 
 function StageBadge({ stage }: { stage: VCStage }) {
@@ -179,6 +220,29 @@ export default function VenturePage() {
                             <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: ACCENT }}>Notes</p>
                             <p className="text-xs leading-relaxed" style={{ color: "var(--foreground)" }}>{vc.notes}</p>
                           </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+                          <button
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                            style={{ backgroundColor: "#5A6FFF" }}
+                          >
+                            <Sparkles size={11} />
+                            Joy: Research Firm
+                          </button>
+                          <button
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                            style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
+                          >
+                            <MessageSquare size={11} />
+                            Joy: Draft Outreach
+                          </button>
+                          <button
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                            style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
+                          >
+                            <Search size={11} />
+                            Find Warm Intro
+                          </button>
                         </div>
                       </td>
                     </tr>

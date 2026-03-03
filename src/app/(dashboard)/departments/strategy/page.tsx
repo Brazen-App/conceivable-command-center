@@ -33,10 +33,10 @@ const GAIN_METRICS: GainMetric[] = [
   {
     label: "Community Members",
     startingPoint: "0",
-    current: "847",
-    gain: "+847",
+    current: "220",
+    gain: "+220",
     target: "5,000",
-    percentOfTarget: 17,
+    percentOfTarget: 4,
   },
   {
     label: "Patent Applications",
@@ -56,9 +56,9 @@ const DEPT_CONNECTIONS = [
   { department: "Engineering", status: "green" as const, insight: "Infrastructure stable, 99.9% uptime." },
   { department: "Clinical", status: "green" as const, insight: "Pilot data (150-260% improvement) is the strongest pitch asset." },
   { department: "Legal", status: "yellow" as const, insight: "Strong portfolio but closed-loop provisional is overdue." },
-  { department: "Finance", status: "green" as const, insight: "$18K/mo burn rate. 8 months runway at current rate." },
-  { department: "Fundraising", status: "yellow" as const, insight: "18 investors mapped, 5 active conversations. Pipeline built, calls not made." },
-  { department: "Community", status: "yellow" as const, insight: "847 members, 62% active. Dormant segment needs challenge activation." },
+  { department: "Finance", status: "red" as const, insight: "~$28K/mo burn. 2 months runway. Connect Mercury + Stripe for real-time tracking." },
+  { department: "Fundraising", status: "red" as const, insight: "0 investors contacted. Need to build target 50 list and start outreach." },
+  { department: "Community", status: "yellow" as const, insight: "220 Circle members. Need to connect API for engagement metrics." },
 ];
 
 const STATUS_COLORS = {

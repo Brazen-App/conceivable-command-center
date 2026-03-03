@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp, Beaker, Layers } from "lucide-react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { ChevronDown, ChevronUp, Beaker, Layers, MessageSquare, Sparkles, Send } from "lucide-react";
 
 const ACCENT = "#ACB7FF";
 
@@ -135,8 +136,84 @@ const EVIDENCE_CONFIG: Record<string, { label: string; color: string }> = {
   none: { label: "None yet", color: "var(--muted)" },
 };
 
-export default function VerticalsPage() {
-  const [expandedName, setExpandedName] = useState<string | null>(null);
+function VerticalChat({ vertical }: { vertical: VerticalData }) {
+  const [messages, setMessages] = useState<{ role: "user" | "joy"; text: string }[]>([
+    {
+      role: "joy",
+      text: `I'm Joy, your AI product strategist. I have context on the ${vertical.name} vertical — readiness score ${vertical.readinessScore}/100, ${vertical.keyFeaturesCount} features mapped, clinical evidence: ${EVIDENCE_CONFIG[vertical.clinicalEvidenceStrength].label}. What would you like to explore?`,
+    },
+  ]);
+  const [input, setInput] = useState("");
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", text: input },
+      {
+        role: "joy",
+        text: `I'll research "${input}" for the ${vertical.name} vertical. This will connect to the Joy AI engine once the Claude API integration is live. For now, I've logged this as a product question for the team.`,
+      },
+    ]);
+    setInput("");
+  };
+
+  return (
+    <div className="mt-4 rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+      <div
+        className="px-4 py-2 flex items-center gap-2"
+        style={{ backgroundColor: `${vertical.color}10`, borderBottom: "1px solid var(--border)" }}
+      >
+        <Sparkles size={14} style={{ color: vertical.color }} />
+        <span className="text-xs font-bold" style={{ color: vertical.color }}>
+          Joy: {vertical.name} Strategist
+        </span>
+      </div>
+      <div className="max-h-48 overflow-y-auto p-3 space-y-2" style={{ backgroundColor: "var(--background)" }}>
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`text-xs p-2 rounded-lg max-w-[85%] ${msg.role === "joy" ? "" : "ml-auto"}`}
+            style={{
+              backgroundColor: msg.role === "joy" ? `${vertical.color}10` : "var(--surface)",
+              color: "var(--foreground)",
+            }}
+          >
+            {msg.role === "joy" && (
+              <span className="text-[10px] font-bold block mb-0.5" style={{ color: vertical.color }}>
+                Joy
+              </span>
+            )}
+            {msg.text}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 p-2" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--surface)" }}>
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          placeholder={`Ask Joy about ${vertical.name}...`}
+          className="flex-1 text-xs px-3 py-2 rounded-lg outline-none"
+          style={{ backgroundColor: "var(--background)", color: "var(--foreground)", border: "1px solid var(--border)" }}
+        />
+        <button
+          onClick={handleSend}
+          className="p-2 rounded-lg transition-colors hover:opacity-80"
+          style={{ backgroundColor: vertical.color, color: "white" }}
+        >
+          <Send size={12} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function VerticalsContent() {
+  const searchParams = useSearchParams();
+  const selectedVertical = searchParams.get("v");
+  const [expandedName, setExpandedName] = useState<string | null>(selectedVertical);
 
   return (
     <div>
@@ -148,11 +225,11 @@ export default function VerticalsPage() {
         <div className="flex items-center gap-2 mb-1">
           <Layers size={16} style={{ color: ACCENT }} />
           <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-            10 Health Verticals
+            Conceivable Experiences
           </p>
         </div>
         <p className="text-xs" style={{ color: "var(--muted)" }}>
-          Women&apos;s health lifecycle from Pre-Period through Post-Menopause. Click any vertical card for expanded details.
+          Women&apos;s health lifecycle from Pre-Period through Post-Menopause. Click any vertical for details and chat with Joy about product strategy.
         </p>
       </div>
 
@@ -164,14 +241,14 @@ export default function VerticalsPage() {
           const isExpanded = expandedName === v.name;
 
           return (
-            <button
+            <div
               key={v.name}
-              onClick={() => setExpandedName(isExpanded ? null : v.name)}
-              className={`text-left rounded-2xl border p-5 transition-all hover:shadow-sm ${isExpanded ? "sm:col-span-2 lg:col-span-3" : ""}`}
+              className={`text-left rounded-2xl border p-5 transition-all ${isExpanded ? "sm:col-span-2 lg:col-span-3" : "cursor-pointer hover:shadow-sm"}`}
               style={{
                 borderColor: isExpanded ? v.color : "var(--border)",
                 backgroundColor: isExpanded ? `${v.color}06` : "var(--surface)",
               }}
+              onClick={() => !isExpanded && setExpandedName(v.name)}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -193,11 +270,20 @@ export default function VerticalsPage() {
                     </span>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-2xl font-bold" style={{ color: v.readinessScore > 0 ? v.color : "var(--muted)" }}>
-                    {v.readinessScore}
-                  </p>
-                  <p className="text-[9px]" style={{ color: "var(--muted)" }}>readiness</p>
+                <div className="text-right shrink-0 flex items-center gap-2">
+                  <div>
+                    <p className="text-2xl font-bold" style={{ color: v.readinessScore > 0 ? v.color : "var(--muted)" }}>
+                      {v.readinessScore}
+                    </p>
+                    <p className="text-[9px]" style={{ color: "var(--muted)" }}>readiness</p>
+                  </div>
+                  {isExpanded ? (
+                    <button onClick={(e) => { e.stopPropagation(); setExpandedName(null); }}>
+                      <ChevronUp size={16} style={{ color: "var(--muted)" }} />
+                    </button>
+                  ) : (
+                    <ChevronDown size={16} style={{ color: "var(--muted)" }} />
+                  )}
                 </div>
               </div>
 
@@ -247,12 +333,23 @@ export default function VerticalsPage() {
                       {statusConf.label}
                     </span>
                   </div>
+
+                  {/* Chat Interface */}
+                  <VerticalChat vertical={v} />
                 </div>
               )}
-            </button>
+            </div>
           );
         })}
       </div>
     </div>
+  );
+}
+
+export default function VerticalsPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm" style={{ color: "var(--muted)" }}>Loading verticals...</div>}>
+      <VerticalsContent />
+    </Suspense>
   );
 }

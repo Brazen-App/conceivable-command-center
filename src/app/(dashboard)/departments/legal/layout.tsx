@@ -11,7 +11,6 @@ const TABS = [
   { href: "/departments/legal/patents", label: "Patents" },
   { href: "/departments/legal/compliance", label: "Compliance" },
   { href: "/departments/legal/testimonials", label: "Testimonials" },
-  { href: "/departments/legal/drafting", label: "Drafting" },
 ];
 
 export default function LegalLayout({

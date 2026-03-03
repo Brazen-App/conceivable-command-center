@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import {
   Zap,
   CheckCircle2,
@@ -76,8 +76,6 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function ProductDashboardPage() {
-  const [expandedVertical, setExpandedVertical] = useState<string | null>(null);
-
   return (
     <div>
       {/* Hero: Build Status */}
@@ -236,7 +234,7 @@ export default function ProductDashboardPage() {
         </div>
       </div>
 
-      {/* Health Vertical Readiness Summary */}
+      {/* Conceivable Experiences */}
       <div
         className="rounded-2xl border p-5 mb-6"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
@@ -247,7 +245,7 @@ export default function ProductDashboardPage() {
             className="text-xs font-bold uppercase tracking-wider"
             style={{ color: "var(--foreground)" }}
           >
-            Health Vertical Readiness
+            Conceivable Experiences
           </h3>
           <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}>
             10 Verticals
@@ -256,15 +254,14 @@ export default function ProductDashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {VERTICALS_MINI.map((v) => {
             const statusColor = STATUS_COLORS[v.status] || "var(--muted)";
-            const isExpanded = expandedVertical === v.name;
             return (
-              <button
+              <Link
                 key={v.name}
-                onClick={() => setExpandedVertical(isExpanded ? null : v.name)}
-                className="rounded-xl border p-3 text-left transition-all hover:shadow-sm"
+                href={`/departments/product/verticals?v=${encodeURIComponent(v.name)}`}
+                className="rounded-xl border p-3 text-left transition-all hover:shadow-sm block"
                 style={{
-                  borderColor: isExpanded ? ACCENT : "var(--border)",
-                  backgroundColor: isExpanded ? `${ACCENT}08` : "var(--background)",
+                  borderColor: "var(--border)",
+                  backgroundColor: "var(--background)",
                 }}
               >
                 <p className="text-xs font-medium truncate" style={{ color: "var(--foreground)" }}>
@@ -291,7 +288,7 @@ export default function ProductDashboardPage() {
                     style={{ width: `${v.score}%`, backgroundColor: v.score > 0 ? ACCENT : "transparent" }}
                   />
                 </div>
-              </button>
+              </Link>
             );
           })}
         </div>

@@ -7,7 +7,7 @@ import { Boxes } from "lucide-react";
 const TABS = [
   { href: "/departments/product", label: "Dashboard" },
   { href: "/departments/product/roadmap", label: "Roadmap" },
-  { href: "/departments/product/verticals", label: "Verticals" },
+  { href: "/departments/product/verticals", label: "Experiences" },
   { href: "/departments/product/user-research", label: "User Research" },
   { href: "/departments/product/design", label: "Design" },
 ];
@@ -60,7 +60,7 @@ export default function ProductLayout({
                 color: "var(--muted)",
               }}
             >
-              Dashboard &middot; Roadmap &middot; Verticals &middot; User Research &middot; Design
+              Dashboard &middot; Roadmap &middot; Experiences &middot; User Research &middot; Design
             </p>
           </div>
         </div>

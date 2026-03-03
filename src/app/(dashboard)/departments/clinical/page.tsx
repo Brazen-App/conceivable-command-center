@@ -12,17 +12,22 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  MessageSquare,
+  Target,
 } from "lucide-react";
 
 const ACCENT = "#78C3BF";
 
 const PIPELINE_STUDIES = [
-  { id: "pilot-001", title: "Conceivable Pilot Study", participants: 105, dataPoints: 240000, improvement: "150-260%", status: "active" as const, phase: "Data Collection" },
-  { id: "bbt-002", title: "BBT Pattern Recognition & Ovulation Prediction", participants: 78, dataPoints: 45000, improvement: "In progress", status: "active" as const, phase: "Analysis" },
-  { id: "nutr-003", title: "Nutritional Intervention & Hormone Response", participants: 62, dataPoints: 31000, improvement: "In progress", status: "active" as const, phase: "Enrollment" },
-  { id: "stress-004", title: "Stress Biomarkers & Fertility Correlation", participants: 45, dataPoints: 18000, improvement: "Preliminary", status: "planning" as const, phase: "Protocol Design" },
-  { id: "ring-005", title: "Halo Ring Continuous Monitoring Validation", participants: 0, dataPoints: 0, improvement: "Pending", status: "planning" as const, phase: "IRB Review" },
-  { id: "lp-006", title: "Luteal Phase Quality Enhancement Protocol", participants: 34, dataPoints: 12000, improvement: "23% improvement", status: "active" as const, phase: "Data Collection" },
+  { id: "pilot-001", title: "Conceivable Pilot Study", participants: 105, dataPoints: 240000, improvement: "150-260%", status: "active" as const, phase: "Data Collection", publicationTarget: "Fertility & Sterility", description: "Core pilot demonstrating multi-biomarker fertility optimization. 105 participants showing 150-260% improvement in key fertility markers." },
+  { id: "bbt-002", title: "BBT Pattern Recognition & Ovulation Prediction", participants: 78, dataPoints: 45000, improvement: "In progress", status: "active" as const, phase: "Analysis", publicationTarget: "JAMA Network Open", description: "AI-powered basal body temperature pattern recognition to predict ovulation with higher accuracy than existing methods." },
+  { id: "nutr-003", title: "Nutritional Intervention & Hormone Response", participants: 62, dataPoints: 31000, improvement: "In progress", status: "active" as const, phase: "Enrollment", publicationTarget: "American Journal of Clinical Nutrition", description: "Studying the impact of personalized nutritional interventions on hormonal balance and fertility outcomes." },
+  { id: "stress-004", title: "Stress Biomarkers & Fertility Correlation", participants: 45, dataPoints: 18000, improvement: "Preliminary", status: "planning" as const, phase: "Protocol Design", publicationTarget: "Psychoneuroendocrinology", description: "Investigating the relationship between stress biomarkers (cortisol, HRV) and fertility outcomes." },
+  { id: "ring-005", title: "Halo Ring Continuous Monitoring Validation", participants: 0, dataPoints: 0, improvement: "Pending", status: "planning" as const, phase: "IRB Review", publicationTarget: "Nature Digital Medicine", description: "Validation study for the Halo Ring wearable in continuous fertility biomarker monitoring." },
+  { id: "lp-006", title: "Luteal Phase Quality Enhancement Protocol", participants: 34, dataPoints: 12000, improvement: "23% improvement", status: "active" as const, phase: "Data Collection", publicationTarget: "Human Reproduction", description: "Protocol for enhancing luteal phase quality through targeted interventions based on continuous monitoring data." },
 ];
 
 const RESEARCH_AREAS = [
@@ -78,35 +83,8 @@ function StatusBadge({ status }: { status: "active" | "planning" | "drafting" | 
   );
 }
 
-function MiniSparkline({ data, color }: { data: number[]; color: string }) {
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const width = 80;
-  const height = 24;
-  const points = data
-    .map((v, i) => {
-      const x = (i / (data.length - 1)) * width;
-      const y = height - ((v - min) / range) * height;
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  return (
-    <svg width={width} height={height} className="inline-block">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export default function ClinicalDashboardPage() {
+  const [expandedStudy, setExpandedStudy] = useState<string | null>(null);
   const activeStudies = PIPELINE_STUDIES.filter((s) => s.status === "active").length;
   const totalParticipants = PIPELINE_STUDIES.reduce((sum, s) => sum + s.participants, 0);
   const totalDataPoints = PIPELINE_STUDIES.reduce((sum, s) => sum + s.dataPoints, 0);
@@ -297,7 +275,7 @@ export default function ClinicalDashboardPage() {
         </div>
       </div>
 
-      {/* Study Pipeline Table */}
+      {/* Study Pipeline — Clickable / Expandable */}
       <div
         className="rounded-xl overflow-hidden"
         style={{
@@ -313,47 +291,134 @@ export default function ClinicalDashboardPage() {
             {activeStudies} active / {PIPELINE_STUDIES.length} total
           </span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ backgroundColor: "var(--background)" }}>
-                <th className="text-left px-5 py-2 text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>Study</th>
-                <th className="text-left px-5 py-2 text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>Phase</th>
-                <th className="text-right px-5 py-2 text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>N</th>
-                <th className="text-right px-5 py-2 text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>Data Points</th>
-                <th className="text-left px-5 py-2 text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>Improvement</th>
-                <th className="text-left px-5 py-2 text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {PIPELINE_STUDIES.map((study) => (
-                <tr
-                  key={study.id}
-                  className="border-t"
-                  style={{ borderColor: "var(--border)" }}
+        <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+          {PIPELINE_STUDIES.map((study) => {
+            const isExpanded = expandedStudy === study.id;
+            return (
+              <div key={study.id}>
+                <div
+                  className="px-5 py-4 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setExpandedStudy(isExpanded ? null : study.id)}
                 >
-                  <td className="px-5 py-3 font-medium" style={{ color: "var(--foreground)" }}>
-                    {study.title}
-                  </td>
-                  <td className="px-5 py-3" style={{ color: "var(--muted)" }}>
-                    {study.phase}
-                  </td>
-                  <td className="px-5 py-3 text-right font-medium" style={{ color: "var(--foreground)" }}>
-                    {study.participants || "--"}
-                  </td>
-                  <td className="px-5 py-3 text-right" style={{ color: "var(--muted)" }}>
-                    {study.dataPoints ? `${(study.dataPoints / 1000).toFixed(0)}K` : "--"}
-                  </td>
-                  <td className="px-5 py-3 font-medium" style={{ color: ACCENT }}>
-                    {study.improvement}
-                  </td>
-                  <td className="px-5 py-3">
-                    <StatusBadge status={study.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                          {study.title}
+                        </p>
+                        <StatusBadge status={study.status} />
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        <span className="text-xs" style={{ color: "var(--muted)" }}>{study.phase}</span>
+                        <span className="text-xs" style={{ color: "var(--muted)" }}>N={study.participants || "--"}</span>
+                        <span className="text-xs" style={{ color: "var(--muted)" }}>
+                          {study.dataPoints ? `${(study.dataPoints / 1000).toFixed(0)}K pts` : "--"}
+                        </span>
+                        <span className="text-xs font-medium" style={{ color: ACCENT }}>
+                          {study.improvement}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "#9686B914", color: "#9686B9" }}>
+                        {study.publicationTarget}
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUp size={14} style={{ color: "var(--muted)" }} />
+                      ) : (
+                        <ChevronDown size={14} style={{ color: "var(--muted)" }} />
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {isExpanded && (
+                  <div className="px-5 pb-4" style={{ backgroundColor: "var(--background)" }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: ACCENT }}>
+                          Description
+                        </p>
+                        <p className="text-xs leading-relaxed" style={{ color: "var(--foreground)" }}>
+                          {study.description}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: ACCENT }}>
+                          Publication Target
+                        </p>
+                        <p className="text-xs" style={{ color: "var(--foreground)" }}>
+                          {study.publicationTarget}
+                        </p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-xs" style={{ color: "var(--muted)" }}>
+                            Participants: {study.participants || "Pending"}
+                          </span>
+                          <span className="text-xs" style={{ color: "var(--muted)" }}>
+                            Data: {study.dataPoints ? `${(study.dataPoints / 1000).toFixed(0)}K points` : "Pending"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 mt-4 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
+                      <button
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium text-white"
+                        style={{ backgroundColor: "#5A6FFF" }}
+                      >
+                        <Sparkles size={13} />
+                        Joy: Start Drafting
+                      </button>
+                      <button
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium"
+                        style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
+                      >
+                        <MessageSquare size={13} />
+                        Joy: Analyze Data
+                      </button>
+                      <button
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium"
+                        style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
+                      >
+                        <Target size={13} />
+                        Set Publication Target
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Publication Targets */}
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div className="px-5 py-4">
+          <h2 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+            Publication Pipeline
+          </h2>
+        </div>
+        <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+          {PUBLICATIONS.map((pub) => (
+            <div key={pub.title} className="px-5 py-3 flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>{pub.title}</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{pub.journal}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <StatusBadge status={pub.status} />
+                <button
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                  style={{ backgroundColor: "#5A6FFF" }}
+                >
+                  <Sparkles size={11} />
+                  Draft
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

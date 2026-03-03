@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Handshake,
   Mic2,
@@ -18,11 +18,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import {
-  EXPERTS,
   EXPERT_STATUS_CONFIG,
-  INTERVIEW_SCHEDULES,
   type Expert,
   type ExpertStatus,
+  type InterviewSchedule,
 } from "@/lib/data/community-data";
 
 const ACCENT = "#5A6FFF";
@@ -68,14 +67,42 @@ function StatusIcon({ status }: { status: ExpertStatus }) {
 
 export default function MarketingPartnershipsPage() {
   const [expandedExpert, setExpandedExpert] = useState<string | null>(null);
-  const pipeline = getPipelineCounts(EXPERTS);
+  const [experts, setExperts] = useState<Expert[]>([]);
+  const [interviews, setInterviews] = useState<InterviewSchedule[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/community");
+      const data = await res.json();
+      if (data.experts) setExperts(data.experts);
+      if (data.interviewSchedules) setInterviews(data.interviewSchedules);
+    } catch {
+      // Silently fall back to empty
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const pipeline = getPipelineCounts(experts);
   const activeCount =
-    EXPERTS.filter((e) =>
+    experts.filter((e) =>
       ["in_conversation", "scheduled", "completed"].includes(e.status)
     ).length + PODCAST_HOST_COUNT;
 
   // No confirmed upcoming collaborations yet
   const UPCOMING_COLLABS: { date: string; event: string; type: string; status: string }[] = [];
+
+  if (loading) {
+    return (
+      <div className="rounded-xl border p-12 text-center" style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}>
+        <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-3" style={{ borderColor: ACCENT, borderTopColor: "transparent" }} />
+        <p className="text-sm" style={{ color: "var(--muted)" }}>Loading partnerships...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -95,7 +122,7 @@ export default function MarketingPartnershipsPage() {
             Active Partnerships
           </p>
           <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>
-            {EXPERTS.length} experts + {PODCAST_HOST_COUNT} podcast hosts
+            {experts.length} experts + {PODCAST_HOST_COUNT} podcast hosts
           </p>
         </div>
 
@@ -125,13 +152,13 @@ export default function MarketingPartnershipsPage() {
           }}
         >
           <p className="text-3xl font-bold" style={{ color: "var(--foreground)" }}>
-            {INTERVIEW_SCHEDULES.filter((s) => s.confirmed).length}
+            {interviews.filter((s) => s.confirmed).length}
           </p>
           <p className="text-xs uppercase tracking-wider mt-1" style={{ color: "#1EAA55" }}>
             Interviews Confirmed
           </p>
           <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>
-            Next: {INTERVIEW_SCHEDULES[0]?.expertName} on {INTERVIEW_SCHEDULES[0]?.date}
+            {interviews[0] ? `Next: ${interviews[0].expertName} on ${interviews[0].date}` : "No interviews scheduled"}
           </p>
         </div>
       </div>
@@ -182,7 +209,7 @@ export default function MarketingPartnershipsPage() {
             className="rounded-xl overflow-hidden"
             style={{ border: "1px solid var(--border)" }}
           >
-            {EXPERTS.map((expert, i) => {
+            {experts.map((expert, i) => {
               const statusConfig = EXPERT_STATUS_CONFIG.find((s) => s.key === expert.status);
               const isExpanded = expandedExpert === expert.id;
 

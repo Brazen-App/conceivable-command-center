@@ -12,7 +12,13 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import type { CaptureDepartment } from "@/lib/stores/capture-store";
+type CaptureDepartment =
+  | "content-engine"
+  | "research"
+  | "ideas-parking-lot"
+  | "legal-review"
+  | "email-inspiration"
+  | "fundraising-intel";
 
 const DEPARTMENTS: { value: CaptureDepartment; label: string }[] = [
   { value: "content-engine", label: "Content Engine" },

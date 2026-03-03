@@ -151,9 +151,18 @@ export default function DepartmentNav() {
         )}
       </div>
 
-      {/* Joy AI status */}
-      {!collapsed && (
-        <div className="mx-3 mt-3 mb-1 px-3 py-2.5 rounded-lg" style={{ backgroundColor: "rgba(255,255,255,0.06)" }}>
+      {/* Joy AI status — clickable link to agent chat */}
+      {!collapsed ? (
+        <Link
+          href="/agents/executive-coach"
+          onClick={() => setMobileOpen(false)}
+          className="block mx-3 mt-3 mb-1 px-3 py-2.5 rounded-lg transition-all duration-150 hover:bg-white/[0.1]"
+          style={
+            isActive("/agents")
+              ? { backgroundColor: "rgba(90,111,255,0.2)", boxShadow: "0 0 20px rgba(90,111,255,0.15)" }
+              : { backgroundColor: "rgba(255,255,255,0.06)" }
+          }
+        >
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #5A6FFF, #ACB7FF)" }}>
               <Sparkles size={11} className="text-white" />
@@ -167,7 +176,23 @@ export default function DepartmentNav() {
               <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.4)" }}>Active</span>
             </div>
           </div>
-        </div>
+        </Link>
+      ) : (
+        <Link
+          href="/agents/executive-coach"
+          onClick={() => setMobileOpen(false)}
+          className="flex justify-center mx-2 mt-3 mb-1 p-2 rounded-lg transition-all duration-150 hover:bg-white/[0.1]"
+          style={
+            isActive("/agents")
+              ? { backgroundColor: "rgba(90,111,255,0.2)" }
+              : { backgroundColor: "rgba(255,255,255,0.06)" }
+          }
+          title="Joy — AI Chief of Staff"
+        >
+          <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #5A6FFF, #ACB7FF)" }}>
+            <Sparkles size={11} className="text-white" />
+          </div>
+        </Link>
       )}
 
       {/* Department nav */}

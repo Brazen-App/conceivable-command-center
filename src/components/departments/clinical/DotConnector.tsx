@@ -258,7 +258,7 @@ function FactorDetail({ factor, factors }: { factor: Factor; factors: Factor[] }
 }
 
 // ── Causal Chain Diagram ──
-function CausalChainDiagram({ chain }: { chain: CausalChain }) {
+function CausalChainDiagram({ chain, factors }: { chain: CausalChain; factors: Factor[] }) {
   const [expanded, setExpanded] = useState(false);
   const statusConf = {
     proven: { label: "Proven", color: "#1EAA55" },
@@ -298,7 +298,7 @@ function CausalChainDiagram({ chain }: { chain: CausalChain }) {
           <div className="mt-3 space-y-0">
             {chain.steps.map((step, i) => {
               const catConf = CATEGORY_CONFIG[
-                FACTORS.find((f) => f.id === step.factorId)?.category ?? "hormonal"
+                factors.find((f) => f.id === step.factorId)?.category ?? "hormonal"
               ] ?? { color: ACCENT };
               return (
                 <div key={i}>
@@ -338,9 +338,6 @@ function CausalChainDiagram({ chain }: { chain: CausalChain }) {
     </div>
   );
 }
-
-// Need FACTORS for causal chain lookups
-import { FACTORS } from "@/lib/data/clinical-data";
 
 // ── Main Component ──
 export default function DotConnector({
@@ -487,7 +484,7 @@ export default function DotConnector({
         </div>
         <div className="space-y-3">
           {causalChains.map((chain) => (
-            <CausalChainDiagram key={chain.id} chain={chain} />
+            <CausalChainDiagram key={chain.id} chain={chain} factors={factors} />
           ))}
         </div>
       </div>

@@ -42,12 +42,12 @@ const TEAM: TeamMember[] = [
     avatar: "VA",
   },
   {
-    name: "Sam",
+    name: "Joy",
     role: "Design & Brand",
     currentFocus: "Brand book execution, UI/UX design, marketing assets",
     workload: "medium",
     uniqueAbility: "Visual storytelling and brand consistency. Translates the Conceivable brand into every touchpoint.",
-    avatar: "S",
+    avatar: "J",
   },
   {
     name: "Joy",

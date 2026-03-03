@@ -7,30 +7,11 @@ export const dynamic = "force-dynamic";
 export default async function MarketingEmailPage() {
   let emails: LaunchEmail[] = [];
   let dbError: string | null = null;
-  let debugInfo = "";
 
   try {
-    // Raw SQL to bypass Prisma model layer
-    const rawCount = await prisma.$queryRawUnsafe(
-      'SELECT COUNT(*) as c FROM "Email"'
-    ) as Array<{ c: bigint }>;
-    debugInfo += `rawSQL=${String(rawCount[0]?.c)}; `;
-
-    // Also list all tables
-    const tables = await prisma.$queryRawUnsafe(
-      "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
-    ) as Array<{ tablename: string }>;
-    debugInfo += `tables=[${tables.map((t) => t.tablename).join(",")}]; `;
-
-    // Prisma model count
-    const count = await prisma.email.count();
-    debugInfo += `prismaCount=${count}; `;
-
     const dbEmails = await prisma.email.findMany({
       orderBy: [{ week: "asc" }, { sequence: "asc" }],
     });
-    debugInfo += `fetched=${dbEmails.length}; `;
-
     emails = dbEmails.map((e) => ({
       id: e.id,
       week: e.week,
@@ -48,15 +29,9 @@ export default async function MarketingEmailPage() {
     }));
   } catch (err) {
     dbError =
-      err instanceof Error
-        ? `${err.message} | ${err.constructor.name}`
-        : `Unknown error: ${String(err)}`;
+      err instanceof Error ? err.message : "Unknown database error";
     console.error("Failed to fetch emails from database:", err);
   }
-
-  const dbUrlPrefix = process.env.DATABASE_URL
-    ? process.env.DATABASE_URL.substring(0, 30) + "..."
-    : "NOT SET";
 
   if (dbError) {
     return (
@@ -65,30 +40,87 @@ export default async function MarketingEmailPage() {
           Database Connection Error
         </h2>
         <p className="text-sm text-red-600 mb-4">{dbError}</p>
-        <p className="text-xs text-red-500 mb-2">
-          DATABASE_URL: {dbUrlPrefix}
+        <p className="text-xs text-red-500">
+          Check that DATABASE_URL is set correctly in Vercel environment
+          variables.
         </p>
-        <p className="text-xs text-red-500">Debug: {debugInfo}</p>
       </div>
     );
   }
 
   if (emails.length === 0) {
     return (
-      <div className="rounded-2xl p-6 border border-yellow-300 bg-yellow-50">
-        <h2 className="text-lg font-semibold text-yellow-700 mb-2">
-          No Emails Found
-        </h2>
-        <p className="text-sm text-yellow-600 mb-2">
-          The database query succeeded but returned 0 emails.
-        </p>
-        <p className="text-xs text-yellow-500 mb-1">
-          DATABASE_URL: {dbUrlPrefix}
-        </p>
-        <p className="text-xs text-yellow-500">Debug: {debugInfo}</p>
+      <div className="space-y-4">
+        <div className="rounded-2xl p-6 border border-yellow-300 bg-yellow-50">
+          <h2 className="text-lg font-semibold text-yellow-700 mb-2">
+            Seeding Email Data...
+          </h2>
+          <p className="text-sm text-yellow-600 mb-4">
+            No emails found in the database. Click the button below to seed
+            the launch email data.
+          </p>
+          <SeedButton />
+        </div>
       </div>
     );
   }
 
   return <EmailDeploymentClient initialEmails={emails} />;
+}
+
+function SeedButton() {
+  return (
+    <form
+      action={async () => {
+        "use server";
+        const { LAUNCH_EMAILS } = await import("@/lib/data/launch-emails");
+        for (const e of LAUNCH_EMAILS) {
+          await prisma.email.upsert({
+            where: { id: e.id },
+            update: {
+              week: e.week,
+              sequence: e.sequence,
+              phase: e.phase,
+              subject: e.subject,
+              preview: e.preview,
+              body: e.body,
+              status: e.status,
+              segment: e.segment,
+              complianceStatus: e.complianceStatus,
+              approvedAt: e.approvedAt,
+              publishedAt: e.publishedAt,
+              metrics: e.metrics
+                ? JSON.parse(JSON.stringify(e.metrics))
+                : undefined,
+            },
+            create: {
+              id: e.id,
+              week: e.week,
+              sequence: e.sequence,
+              phase: e.phase,
+              subject: e.subject,
+              preview: e.preview,
+              body: e.body,
+              status: e.status,
+              segment: e.segment,
+              complianceStatus: e.complianceStatus,
+              approvedAt: e.approvedAt,
+              publishedAt: e.publishedAt,
+              metrics: e.metrics
+                ? JSON.parse(JSON.stringify(e.metrics))
+                : undefined,
+            },
+          });
+        }
+      }}
+    >
+      <button
+        type="submit"
+        className="px-4 py-2 rounded-lg text-sm font-medium text-white"
+        style={{ backgroundColor: "#5A6FFF" }}
+      >
+        Seed Email Data Now
+      </button>
+    </form>
+  );
 }

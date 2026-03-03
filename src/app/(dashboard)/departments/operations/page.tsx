@@ -2,15 +2,12 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
-  Mail,
-  PenTool,
-  Shield,
+  Calendar,
   DollarSign,
-  Rocket,
-  Heart,
-  Megaphone,
   Users,
-  FileCheck,
+  TrendingUp,
+  ShoppingBag,
+  UserMinus,
   Mic,
   Square,
   Upload,
@@ -18,134 +15,141 @@ import {
   Check,
   Loader2,
   X,
+  AlertTriangle,
+  Sparkles,
+  Target,
+  ArrowRight,
+  Shield,
+  Megaphone,
+  Rocket,
+  Heart,
 } from "lucide-react";
+import Link from "next/link";
+import CompanyGoalsBanner from "@/components/layout/CompanyGoalsBanner";
 
 const ACCENT = "#5A6FFF";
 
-/* ─── Pulse Score ─── */
-function PulseScore({ score }: { score: number }) {
-  const color =
-    score >= 80 ? "#1EAA55" : score >= 60 ? "#F1C028" : "#E24D47";
-  const label =
-    score >= 80 ? "Healthy" : score >= 60 ? "Needs Attention" : "Critical";
-  const circumference = 2 * Math.PI * 54;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+/* ─── Launch Countdown ─── */
+function LaunchCountdown() {
+  // Launch target: 7 weeks from now (configurable)
+  const launchDate = new Date("2026-04-20");
+  const now = new Date();
+  const daysLeft = Math.max(0, Math.ceil((launchDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+  const weeksLeft = Math.ceil(daysLeft / 7);
 
   return (
     <div
-      className="rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center gap-6"
+      className="rounded-2xl p-6 text-center"
       style={{
-        background: `linear-gradient(135deg, ${ACCENT}08 0%, ${color}06 100%)`,
-        border: `2px solid ${ACCENT}18`,
+        background: "linear-gradient(135deg, #5A6FFF 0%, #ACB7FF 60%, #78C3BF 100%)",
       }}
     >
-      <div className="relative w-32 h-32 shrink-0">
-        <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-          <circle
-            cx="60"
-            cy="60"
-            r="54"
-            fill="none"
-            stroke="var(--border)"
-            strokeWidth="8"
-          />
-          <circle
-            cx="60"
-            cy="60"
-            r="54"
-            fill="none"
-            stroke={color}
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-1000 ease-out"
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span
-            className="text-3xl font-bold"
-            style={{ color, fontFamily: "var(--font-display)" }}
-          >
-            {score}
-          </span>
-          <span
-            className="text-[9px] font-bold uppercase tracking-wider"
-            style={{ color: "var(--muted)" }}
-          >
-            Pulse
-          </span>
-        </div>
-      </div>
-      <div className="flex-1 text-center sm:text-left">
-        <p
-          className="text-[10px] font-bold uppercase tracking-widest mb-1"
-          style={{ color: "var(--muted)" }}
-        >
-          Conceivable Pulse Score
-        </p>
-        <p className="text-xl font-bold mb-1" style={{ color: "var(--foreground)" }}>
-          {label}
-        </p>
-        <p className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
-          Composite health score across all 10 departments.
-          Tracks email growth, content velocity, runway, compliance, IP protection, and community engagement.
-        </p>
-      </div>
+      <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-2">
+        Days to Launch
+      </p>
+      <p className="text-6xl font-bold text-white mb-1" style={{ fontFamily: "var(--font-display)" }}>
+        {daysLeft}
+      </p>
+      <p className="text-white/70 text-sm">{weeksLeft} weeks remaining</p>
     </div>
   );
 }
 
-/* ─── KPI Cards ─── */
-const KPI_CARDS = [
-  { label: "Email Subscribers", value: "28,905", target: "50,000", icon: Mail, accent: "#5A6FFF" },
-  { label: "Content / Day", value: "14", target: "100", icon: PenTool, accent: "#5A6FFF" },
-  { label: "Runway (Mo)", value: "8", target: null, icon: DollarSign, accent: "#1EAA55" },
-  { label: "Early Access Signups", value: "0", target: "5,000", icon: Users, accent: "#ACB7FF" },
-  { label: "Compliance Incidents", value: "0", target: "0", icon: Shield, accent: "#E24D47" },
-  { label: "Patent Applications", value: "5", target: null, icon: FileCheck, accent: "#78C3BF" },
-  { label: "Pipeline Value", value: "$5.15M", target: null, icon: Rocket, accent: "#356FB6" },
+/* ─── CEO Metric Cards ─── */
+const CEO_METRICS = [
+  {
+    label: "Runway",
+    value: "2 mo",
+    detail: "$28K/mo burn",
+    icon: DollarSign,
+    color: "#E24D47",
+    alert: true,
+  },
+  {
+    label: "Early Access Signups",
+    value: "0",
+    target: "5,000",
+    icon: Users,
+    color: "#5A6FFF",
+    progress: 0,
+  },
+  {
+    label: "Revenue (7 days)",
+    value: "$0",
+    detail: "Pre-launch",
+    icon: TrendingUp,
+    color: "#1EAA55",
+  },
+  {
+    label: "App Downloads",
+    value: "0",
+    detail: "Shopify + App Store",
+    icon: ShoppingBag,
+    color: "#356FB6",
+  },
+  {
+    label: "Conversion Rate",
+    value: "—",
+    detail: "No traffic yet",
+    icon: Target,
+    color: "#ACB7FF",
+  },
+  {
+    label: "Churn Rate",
+    value: "—",
+    detail: "Pre-launch",
+    icon: UserMinus,
+    color: "#9686B9",
+  },
 ];
 
 /* ─── Cross-Department Alerts ─── */
-const CROSS_DEPT_ALERTS = [
-  {
-    department: "Legal",
-    severity: "red" as const,
-    message: "Closed-loop patent provisional filing is overdue. File before fundraise begins.",
-    accent: "#E24D47",
-    icon: Shield,
-  },
+const ALERTS = [
   {
     department: "Marketing",
-    severity: "red" as const,
+    severity: "critical" as const,
     message: "23 launch emails written but 0 sent. Email sequence is the #1 bottleneck to signups.",
-    accent: "#5A6FFF",
+    action: "/departments/marketing/email",
+    actionLabel: "Open Email Deployment",
     icon: Megaphone,
+    accent: "#E37FB1",
   },
   {
-    department: "Community",
-    severity: "yellow" as const,
-    message: "39.7% of community members are dormant. 7-Day Fertility Reset challenge recommended.",
-    accent: "#1EAA55",
-    icon: Heart,
+    department: "Legal",
+    severity: "critical" as const,
+    message: "Closed-loop patent provisional filing overdue. Must file before fundraise begins.",
+    action: "/departments/legal/patents",
+    actionLabel: "View Patents",
+    icon: Shield,
+    accent: "#E24D47",
   },
   {
     department: "Fundraising",
-    severity: "yellow" as const,
-    message: "18 investors mapped, 5 active conversations. Pipeline built but calls not yet made.",
-    accent: "#356FB6",
+    severity: "warning" as const,
+    message: "14 investors mapped but outreach hasn't started. 2 months runway — bridge round is urgent.",
+    action: "/departments/fundraising",
+    actionLabel: "Open Fundraising",
     icon: Rocket,
+    accent: "#F1C028",
+  },
+  {
+    department: "Community",
+    severity: "info" as const,
+    message: "220 Circle members — engagement is organic but no structured campaign running.",
+    action: "/departments/community",
+    actionLabel: "View Community",
+    icon: Heart,
+    accent: "#E37FB1",
   },
 ];
 
-const SEVERITY_COLORS = {
-  red: "#E24D47",
-  yellow: "#F1C028",
-  green: "#1EAA55",
+const SEVERITY_STYLES = {
+  critical: { bg: "#E24D4710", border: "#E24D47", label: "URGENT", labelColor: "#E24D47" },
+  warning: { bg: "#F1C02810", border: "#F1C028", label: "WATCH", labelColor: "#F1C028" },
+  info: { bg: "#5A6FFF08", border: "#5A6FFF", label: "INFO", labelColor: "#5A6FFF" },
 };
 
-/* ─── Quick Capture (simplified inline version with all 10 depts) ─── */
+/* ─── Quick Capture ─── */
 const CAPTURE_DEPARTMENTS = [
   { value: "operations", label: "Operations" },
   { value: "marketing", label: "Marketing" },
@@ -182,19 +186,25 @@ function QuickCaptureWidget() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
       mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.ondataavailable = () => {};
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
       mediaRecorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         setIsRecording(false);
         if (timerRef.current) clearInterval(timerRef.current);
+        if (chunks.length > 0) {
+          setTextContent((prev) => prev + (prev ? "\n" : "") + "[Voice memo recorded]");
+        }
       };
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingSeconds(0);
       timerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000);
     } catch {
-      /* microphone permission denied */
+      alert("Microphone access is required for voice capture. Please allow microphone access in your browser settings.");
     }
   }, []);
 
@@ -243,20 +253,16 @@ function QuickCaptureWidget() {
 
   return (
     <div
-      className="rounded-3xl p-6 mb-8"
+      className="rounded-2xl p-5 mb-6"
       style={{
-        background: "linear-gradient(135deg, #5A6FFF08 0%, #ACB7FF08 50%, #78C3BF08 100%)",
-        border: "2px solid #5A6FFF18",
-        borderRadius: "24px",
+        background: "linear-gradient(135deg, #5A6FFF06 0%, #ACB7FF06 50%, #78C3BF06 100%)",
+        border: "1px solid rgba(90, 111, 255, 0.1)",
       }}
     >
-      <p className="text-sm mb-4" style={{ color: "var(--muted)", fontFamily: "var(--font-body)" }}>
+      <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
         {greeting}, Kirsten — what&apos;s on your mind?
       </p>
-
-      {/* Input row: mic + text + file + link */}
-      <div className="flex items-start gap-3 mb-4">
-        {/* Mic button */}
+      <div className="flex items-start gap-3 mb-3">
         <button
           onClick={isRecording ? stopRecording : startRecording}
           className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all"
@@ -271,8 +277,6 @@ function QuickCaptureWidget() {
             <Mic size={18} className="text-white" />
           )}
         </button>
-
-        {/* Text input */}
         <div className="flex-1">
           <textarea
             value={textContent}
@@ -284,7 +288,6 @@ function QuickCaptureWidget() {
               borderColor: "var(--border)",
               backgroundColor: "var(--surface)",
               color: "var(--foreground)",
-              fontFamily: "var(--font-body)",
             }}
           />
         </div>
@@ -299,8 +302,7 @@ function QuickCaptureWidget() {
         </div>
       )}
 
-      {/* File + URL row */}
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-2 mb-3 flex-wrap">
         <button
           onClick={() => fileInputRef.current?.click()}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
@@ -330,7 +332,7 @@ function QuickCaptureWidget() {
             if (file) setSelectedFile(file);
           }}
         />
-        <div className="flex-1 min-w-[200px]">
+        <div className="flex-1 min-w-[180px]">
           <input
             type="url"
             value={linkUrl}
@@ -346,17 +348,9 @@ function QuickCaptureWidget() {
         </div>
       </div>
 
-      {/* Bottom bar: department + submit */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-          <span
-            className="text-[10px] font-semibold uppercase tracking-wider shrink-0"
-            style={{
-              color: "var(--muted)",
-              fontFamily: "var(--font-caption)",
-              letterSpacing: "0.1em",
-            }}
-          >
+        <div className="flex items-center gap-2 flex-1 min-w-[180px]">
+          <span className="text-[10px] font-semibold uppercase tracking-wider shrink-0" style={{ color: "var(--muted)" }}>
             Route to:
           </span>
           <select
@@ -367,7 +361,6 @@ function QuickCaptureWidget() {
               borderColor: "var(--border)",
               backgroundColor: "var(--surface)",
               color: "var(--foreground)",
-              fontFamily: "var(--font-body)",
             }}
           >
             {CAPTURE_DEPARTMENTS.map((d) => (
@@ -375,11 +368,10 @@ function QuickCaptureWidget() {
             ))}
           </select>
         </div>
-
         <button
           onClick={handleSubmit}
           disabled={(!textContent.trim() && !linkUrl.trim() && !selectedFile) || submitting}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 disabled:opacity-40"
+          className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium transition-all duration-150 disabled:opacity-40"
           style={{ backgroundColor: ACCENT, color: "#FFFFFF" }}
         >
           {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
@@ -389,12 +381,8 @@ function QuickCaptureWidget() {
 
       {showSuccess && (
         <div
-          className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs font-medium"
-          style={{
-            backgroundColor: "#1EAA5514",
-            color: "#1EAA55",
-            border: "1px solid #1EAA5520",
-          }}
+          className="mt-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium"
+          style={{ backgroundColor: "#1EAA5514", color: "#1EAA55", border: "1px solid #1EAA5520" }}
         >
           <Check size={14} />
           Captured and routed to {CAPTURE_DEPARTMENTS.find((d) => d.value === department)?.label || department}
@@ -404,81 +392,142 @@ function QuickCaptureWidget() {
   );
 }
 
-/* ─── Main Operations Dashboard Page ─── */
+/* ─── Main Page ─── */
 export default function OperationsDashboardPage() {
   return (
     <div className="p-6 md:p-8 lg:p-10 max-w-7xl">
-      {/* Pulse Score Hero Metric */}
-      <PulseScore score={68} />
+      <CompanyGoalsBanner departmentFocus="Get first re-engagement emails sent this week" />
+
+      {/* Hero: Launch Countdown + Runway Alert */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <LaunchCountdown />
+
+        {/* Runway - RED ALERT */}
+        <div
+          className="rounded-2xl p-5 flex flex-col justify-center"
+          style={{
+            background: "linear-gradient(135deg, #E24D4708 0%, #E24D4712 100%)",
+            border: "2px solid #E24D4730",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle size={16} style={{ color: "#E24D47" }} />
+            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#E24D47" }}>
+              Runway Alert
+            </span>
+          </div>
+          <p className="text-4xl font-bold mb-1" style={{ color: "#E24D47", fontFamily: "var(--font-display)" }}>
+            2 months
+          </p>
+          <p className="text-xs" style={{ color: "var(--muted)" }}>
+            ~$28K/mo burn rate. Bridge round critical.
+          </p>
+          <Link
+            href="/departments/fundraising"
+            className="mt-3 flex items-center gap-1 text-xs font-medium"
+            style={{ color: "#E24D47" }}
+          >
+            Open Fundraising <ArrowRight size={11} />
+          </Link>
+        </div>
+
+        {/* Signups Progress */}
+        <div
+          className="rounded-2xl p-5 flex flex-col justify-center"
+          style={{
+            background: "linear-gradient(135deg, #5A6FFF06 0%, #ACB7FF08 100%)",
+            border: "1px solid rgba(90, 111, 255, 0.15)",
+          }}
+        >
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#5A6FFF" }}>
+            Early Access Signups
+          </p>
+          <div className="flex items-end gap-2 mb-3">
+            <span className="text-4xl font-bold" style={{ color: "var(--foreground)", fontFamily: "var(--font-display)" }}>
+              0
+            </span>
+            <span className="text-sm mb-1" style={{ color: "var(--muted)" }}>/ 5,000</span>
+          </div>
+          <div className="w-full h-2 rounded-full" style={{ backgroundColor: "var(--border)" }}>
+            <div className="h-2 rounded-full" style={{ width: "1%", backgroundColor: "#5A6FFF" }} />
+          </div>
+          <p className="text-[10px] mt-2" style={{ color: "var(--muted)" }}>
+            Email sequence launch is the #1 lever
+          </p>
+        </div>
+      </div>
+
+      {/* Secondary Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {CEO_METRICS.slice(2).map((metric) => {
+          const Icon = metric.icon;
+          return (
+            <div
+              key={metric.label}
+              className="rounded-xl border p-4 cursor-pointer hover:shadow-sm transition-shadow"
+              style={{
+                borderColor: "var(--border)",
+                backgroundColor: "var(--surface)",
+              }}
+            >
+              <div className="flex items-center gap-1.5 mb-2">
+                <Icon size={12} style={{ color: metric.color }} strokeWidth={2} />
+                <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                  {metric.label}
+                </span>
+              </div>
+              <p className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
+                {metric.value}
+              </p>
+              {metric.detail && (
+                <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>
+                  {metric.detail}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {/* Quick Capture */}
       <QuickCaptureWidget />
 
-      {/* Company KPIs */}
-      <section className="mb-10">
-        <h2
-          className="font-caption mb-4"
-          style={{
-            fontFamily: "var(--font-caption)",
-            fontSize: "10px",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: "var(--muted)",
-          }}
-        >
-          Company KPIs
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {KPI_CARDS.map((kpi) => {
-            const Icon = kpi.icon;
-            return (
-              <div
-                key={kpi.label}
-                className="rounded-xl border p-4"
-                style={{
-                  borderColor: "var(--border)",
-                  backgroundColor: "var(--surface)",
-                }}
-              >
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Icon size={12} style={{ color: kpi.accent }} strokeWidth={2} />
-                  <span
-                    className="font-caption"
-                    style={{
-                      fontFamily: "var(--font-caption)",
-                      fontSize: "9px",
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      color: "var(--muted)",
-                    }}
-                  >
-                    {kpi.label}
-                  </span>
-                </div>
-                <p
-                  className="text-xl font-bold"
-                  style={{ color: "var(--foreground)", fontFamily: "var(--font-body)" }}
-                >
-                  {kpi.value}
-                </p>
-                {kpi.target && (
-                  <p
-                    className="text-[10px] mt-1"
-                    style={{ color: "var(--muted-light)", fontFamily: "var(--font-body)" }}
-                  >
-                    Target: {kpi.target}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+      {/* Joy's 10x Recommendation */}
+      <div
+        className="rounded-2xl p-5 mb-6"
+        style={{
+          background: "linear-gradient(135deg, #F1C02808 0%, #9686B908 100%)",
+          border: "1px solid rgba(241, 192, 40, 0.15)",
+        }}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles size={14} style={{ color: "#F1C028" }} />
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#F1C028" }}>
+            Joy&apos;s 10x Recommendation
+          </span>
         </div>
-      </section>
+        <p className="text-sm font-medium mb-2" style={{ color: "var(--foreground)" }}>
+          Send the first 3 re-engagement emails this week.
+        </p>
+        <p className="text-xs leading-relaxed mb-3" style={{ color: "var(--muted)" }}>
+          The 23 emails are written and compliance-ready. The email list has 28,905 subscribers who haven&apos;t
+          heard from Conceivable in months. Every day of delay is lost signups. This is a 10x move —
+          one action that unblocks marketing, validates product-market fit, and gives fundraising real traction data.
+          The 2x alternative (perfecting the emails further) costs more than it gains.
+        </p>
+        <Link
+          href="/departments/marketing/email"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors"
+          style={{ backgroundColor: "#5A6FFF" }}
+        >
+          Open Email Deployment <ArrowRight size={13} />
+        </Link>
+      </div>
 
       {/* Cross-Department Alerts */}
-      <section className="mb-10">
+      <section>
         <h2
-          className="font-caption mb-4"
+          className="mb-4"
           style={{
             fontFamily: "var(--font-caption)",
             fontSize: "10px",
@@ -490,45 +539,54 @@ export default function OperationsDashboardPage() {
           Cross-Department Alerts
         </h2>
         <div className="space-y-3">
-          {CROSS_DEPT_ALERTS.map((alert, i) => {
+          {ALERTS.map((alert, i) => {
             const Icon = alert.icon;
-            const sevColor = SEVERITY_COLORS[alert.severity];
+            const style = SEVERITY_STYLES[alert.severity];
             return (
-              <div
+              <Link
                 key={i}
-                className="rounded-xl border-l-4 border p-4 flex items-start gap-3"
+                href={alert.action}
+                className="block rounded-xl border-l-4 border p-4 hover:shadow-sm transition-shadow"
                 style={{
                   borderColor: "var(--border)",
-                  borderLeftColor: sevColor,
-                  backgroundColor: "var(--surface)",
+                  borderLeftColor: style.border,
+                  backgroundColor: style.bg,
                 }}
               >
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${alert.accent}14` }}
-                >
-                  <Icon size={16} style={{ color: alert.accent }} strokeWidth={1.8} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: `${alert.accent}14` }}
+                  >
+                    <Icon size={16} style={{ color: alert.accent }} strokeWidth={1.8} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: `${alert.accent}14`, color: alert.accent }}
+                      >
+                        {alert.department}
+                      </span>
+                      <span
+                        className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: `${style.border}14`, color: style.labelColor }}
+                      >
+                        {style.label}
+                      </span>
+                    </div>
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--foreground)" }}>
+                      {alert.message}
+                    </p>
                     <span
-                      className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: `${alert.accent}14`, color: alert.accent }}
+                      className="inline-flex items-center gap-1 mt-2 text-[11px] font-medium"
+                      style={{ color: alert.accent }}
                     >
-                      {alert.department}
-                    </span>
-                    <span
-                      className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: `${sevColor}14`, color: sevColor }}
-                    >
-                      {alert.severity === "red" ? "URGENT" : "WATCH"}
+                      {alert.actionLabel} <ArrowRight size={10} />
                     </span>
                   </div>
-                  <p className="text-xs leading-relaxed" style={{ color: "var(--foreground)" }}>
-                    {alert.message}
-                  </p>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

@@ -11,7 +11,7 @@ const TABS = [
   { href: "/departments/marketing/email", label: "Email" },
   { href: "/departments/marketing/affiliates", label: "Affiliates" },
   { href: "/departments/marketing/partnerships", label: "Partnerships" },
-  { href: "/departments/marketing/paid", label: "Paid" },
+  { href: "/departments/marketing/paid", label: "PPC" },
 ];
 
 const ACCENT = "#5A6FFF";
@@ -62,7 +62,7 @@ export default function MarketingLayout({
                 color: "var(--muted)",
               }}
             >
-              Content &middot; Email &middot; SEO &middot; Affiliates &middot; Partnerships &middot; Paid
+              Content &middot; Email &middot; SEO &middot; Affiliates &middot; Partnerships &middot; PPC
             </p>
           </div>
         </div>

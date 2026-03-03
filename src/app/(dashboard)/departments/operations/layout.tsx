@@ -8,6 +8,7 @@ const ACCENT = "#5A6FFF";
 
 const TABS = [
   { href: "/departments/operations", label: "Overview" },
+  { href: "/departments/operations/review", label: "CEO Review" },
   { href: "/departments/operations/weekly-brief", label: "Weekly Brief" },
   { href: "/departments/operations/team", label: "Team" },
   { href: "/departments/operations/tools", label: "Tools" },

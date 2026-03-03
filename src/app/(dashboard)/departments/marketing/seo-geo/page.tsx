@@ -14,6 +14,9 @@ import {
   XCircle,
   TrendingUp,
   RefreshCw,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 const ACCENT = "#5A6FFF";
@@ -188,6 +191,7 @@ function StatusDot({ status }: { status: CitationStatus }) {
 }
 
 export default function SeoGeoPage() {
+  const [expandedQuery, setExpandedQuery] = useState<string | null>(null);
   const geoScore = getGeoScore(QUERIES);
   const citedCount = QUERIES.filter((q) =>
     q.engines.some((e) => e.status === "cited")
@@ -249,76 +253,132 @@ export default function SeoGeoPage() {
         </div>
       </div>
 
-      {/* Query Cards */}
+      {/* Query Cards — Expandable with Joy Actions */}
       <div className="space-y-3">
-        {QUERIES.map((q, idx) => (
-          <div
-            key={q.id}
-            className="rounded-xl p-4"
-            style={{
-              backgroundColor: "var(--surface)",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              {/* Query Number + Text */}
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <span
-                  className="text-xs font-bold shrink-0 w-6 h-6 rounded-md flex items-center justify-center"
-                  style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}
-                >
-                  {idx + 1}
-                </span>
-                <div className="min-w-0">
-                  <p
-                    className="text-sm font-medium truncate"
-                    style={{ color: "var(--foreground)" }}
-                  >
-                    &quot;{q.query}&quot;
-                  </p>
-                  <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>
-                    Last checked: {q.lastChecked}
-                  </p>
+        {QUERIES.map((q, idx) => {
+          const isExpanded = expandedQuery === q.id;
+          const hasCitation = q.engines.some((e) => e.status === "cited");
+          const absentEngines = q.engines.filter((e) => e.status === "absent");
+          return (
+            <div
+              key={q.id}
+              className="rounded-xl overflow-hidden"
+              style={{
+                backgroundColor: "var(--surface)",
+                border: `1px solid ${isExpanded ? `${ACCENT}40` : "var(--border)"}`,
+              }}
+            >
+              <div
+                className="p-4 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setExpandedQuery(isExpanded ? null : q.id)}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span
+                      className="text-xs font-bold shrink-0 w-6 h-6 rounded-md flex items-center justify-center"
+                      style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}
+                    >
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <p
+                        className="text-sm font-medium truncate"
+                        style={{ color: "var(--foreground)" }}
+                      >
+                        &quot;{q.query}&quot;
+                      </p>
+                      <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>
+                        Last checked: {q.lastChecked}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {q.engines.map((e) => (
+                      <div key={e.engine} className="flex flex-col items-center gap-0.5">
+                        <StatusDot status={e.status} />
+                        <span className="text-[9px] font-medium" style={{ color: "var(--muted)" }}>
+                          {e.engine}
+                        </span>
+                      </div>
+                    ))}
+                    {isExpanded ? (
+                      <ChevronUp size={14} style={{ color: "var(--muted)" }} />
+                    ) : (
+                      <ChevronDown size={14} style={{ color: "var(--muted)" }} />
+                    )}
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                    Also appears:
+                  </span>
+                  {q.competitors.map((c) => (
+                    <span
+                      key={c}
+                      className="text-[10px] px-2 py-0.5 rounded-full"
+                      style={{
+                        backgroundColor: "var(--background)",
+                        color: "var(--muted)",
+                        border: "1px solid var(--border)",
+                      }}
+                    >
+                      {c}
+                    </span>
+                  ))}
                 </div>
               </div>
-
-              {/* Engine Status */}
-              <div className="flex items-center gap-4">
-                {q.engines.map((e) => (
-                  <div key={e.engine} className="flex flex-col items-center gap-0.5">
-                    <StatusDot status={e.status} />
-                    <span
-                      className="text-[9px] font-medium"
-                      style={{ color: "var(--muted)" }}
-                    >
-                      {e.engine}
-                    </span>
+              {isExpanded && (
+                <div className="px-4 pb-4 pt-2" style={{ backgroundColor: "var(--background)", borderTop: "1px solid var(--border)" }}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: ACCENT }}>
+                        Strategy
+                      </p>
+                      <p className="text-xs" style={{ color: "var(--muted)" }}>
+                        {hasCitation
+                          ? `Conceivable is cited for "${q.query}". Maintain position by publishing supporting content and updating schema markup.`
+                          : `Not yet cited for "${q.query}". Create targeted content, add FAQ schema, and build backlinks from authoritative fertility sources.`}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: ACCENT }}>
+                        Gap Analysis
+                      </p>
+                      <p className="text-xs" style={{ color: "var(--muted)" }}>
+                        {absentEngines.length > 0
+                          ? `Absent from: ${absentEngines.map((e) => e.engine).join(", ")}. These engines need targeted content optimization.`
+                          : "Present across all tracked engines. Focus on improving from 'mentioned' to 'cited'."}
+                      </p>
+                    </div>
                   </div>
-                ))}
-              </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                      style={{ backgroundColor: "#5A6FFF" }}
+                    >
+                      <Sparkles size={11} />
+                      Joy: Write Content
+                    </button>
+                    <button
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{ backgroundColor: "#78C3BF14", color: "#78C3BF" }}
+                    >
+                      <RefreshCw size={11} />
+                      Re-check Engines
+                    </button>
+                    <button
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{ backgroundColor: "var(--border)", color: "var(--foreground)" }}
+                    >
+                      <Code2 size={11} />
+                      Add Schema Markup
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-
-            {/* Competitors */}
-            <div className="mt-3 flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-                Also appears:
-              </span>
-              {q.competitors.map((c) => (
-                <span
-                  key={c}
-                  className="text-[10px] px-2 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor: "var(--background)",
-                    color: "var(--muted)",
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  {c}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Infrastructure Status */}
@@ -353,6 +413,13 @@ export default function SeoGeoPage() {
             <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
               Action: Draft &quot;Conceivable (company)&quot; article with published research citations.
             </p>
+            <button
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white mt-2"
+              style={{ backgroundColor: "#5A6FFF" }}
+            >
+              <Sparkles size={11} />
+              Joy: Draft Wikipedia
+            </button>
           </div>
 
           {/* Schema.org */}

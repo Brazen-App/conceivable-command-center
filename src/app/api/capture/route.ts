@@ -11,10 +11,15 @@ const VALID_DEPARTMENTS = [
 ];
 
 export async function GET() {
-  const captures = await prisma.capture.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-  return NextResponse.json(captures);
+  try {
+    const captures = await prisma.capture.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json(captures);
+  } catch (error) {
+    console.error("[capture] GET", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -35,41 +40,46 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const id = `cap-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  try {
+    const id = `cap-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-  const saved = await prisma.capture.create({
-    data: {
-      id,
-      type: type || "text",
-      content,
-      summary: summary || null,
-      department,
-      fileName: fileName || null,
-      fileSize: fileSize || null,
-    },
-  });
-
-  // If routed to content-engine and is voice/text, also save as POV
-  if (
-    department === "content-engine" &&
-    (type === "voice" || type === "text")
-  ) {
-    await prisma.pOV.create({
+    const saved = await prisma.capture.create({
       data: {
-        id: `pov-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        topic: "Quick Capture POV",
-        transcript: content,
-        sourceType: "quick-capture",
-        keyPositions: [],
-        analogies: [],
-        emotionalTone: null,
-        relatedTopics: [],
+        id,
+        type: type || "text",
+        content,
+        summary: summary || null,
+        department,
+        fileName: fileName || null,
+        fileSize: fileSize || null,
       },
     });
-  }
 
-  return NextResponse.json(
-    { capture: saved, routedTo: department },
-    { status: 201 }
-  );
+    // If routed to content-engine and is voice/text, also save as POV
+    if (
+      department === "content-engine" &&
+      (type === "voice" || type === "text")
+    ) {
+      await prisma.pOV.create({
+        data: {
+          id: `pov-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          topic: "Quick Capture POV",
+          transcript: content,
+          sourceType: "quick-capture",
+          keyPositions: [],
+          analogies: [],
+          emotionalTone: null,
+          relatedTopics: [],
+        },
+      });
+    }
+
+    return NextResponse.json(
+      { capture: saved, routedTo: department },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("[capture] POST", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

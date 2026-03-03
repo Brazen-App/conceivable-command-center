@@ -104,47 +104,37 @@ export default function MarketingPaidPage() {
         </div>
       </div>
 
-      {/* Coming Soon Hero */}
+      {/* Strategic Hold Status */}
       <div
-        className="rounded-2xl p-10 text-center"
-        style={{
-          backgroundColor: "var(--surface)",
-          border: "1px solid var(--border)",
-        }}
+        className="rounded-2xl p-6"
+        style={{ backgroundColor: `${ACCENT}06`, border: `1px solid ${ACCENT}15` }}
       >
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-          style={{ backgroundColor: `${ACCENT}14` }}
-        >
-          <Clock size={32} style={{ color: ACCENT }} />
-        </div>
-        <h2
-          className="text-2xl font-bold mb-2"
-          style={{
-            fontFamily: "var(--font-display)",
-            letterSpacing: "0.06em",
-            color: "var(--foreground)",
-          }}
-        >
-          Coming Soon
-        </h2>
-        <p className="text-sm max-w-md mx-auto" style={{ color: "var(--muted)" }}>
-          Paid campaigns launch after early access validation. We build organic
-          first, prove unit economics, then scale with paid.
-        </p>
-
-        {/* Current Spend */}
-        <div
-          className="inline-flex items-center gap-2 mt-6 px-4 py-2 rounded-full"
-          style={{ backgroundColor: `${ACCENT}08`, border: `1px solid ${ACCENT}20` }}
-        >
-          <DollarSign size={16} style={{ color: ACCENT }} />
-          <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-            Current Spend:
-          </span>
-          <span className="text-lg font-bold" style={{ color: ACCENT }}>
-            $0
-          </span>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Clock size={16} style={{ color: ACCENT }} />
+              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: ACCENT }}>
+                Strategic Hold
+              </span>
+            </div>
+            <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+              Organic first, paid second — this is the 10x sequence
+            </p>
+            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+              Paid campaigns launch after early access validation proves unit economics.
+              Current focus: email sequences, SEO/GEO, and affiliate partnerships.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold" style={{ color: ACCENT }}>$0</p>
+              <p className="text-[10px]" style={{ color: "var(--muted)" }}>Current Spend</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold" style={{ color: "var(--muted)" }}>0/4</p>
+              <p className="text-[10px]" style={{ color: "var(--muted)" }}>Prerequisites</p>
+            </div>
+          </div>
         </div>
       </div>
 

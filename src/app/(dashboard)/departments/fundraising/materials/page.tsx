@@ -3,8 +3,9 @@
 import { useState } from "react";
 import {
   FileText, CheckCircle2, Clock, AlertCircle, ExternalLink, Shield, Presentation,
-  Database, Film, Calculator, BookOpen
+  Database, Film, Calculator, BookOpen, Sparkles
 } from "lucide-react";
+import JoyButton from "@/components/joy/JoyButton";
 
 const ACCENT = "#356FB6";
 
@@ -234,24 +235,41 @@ export default function MaterialsPage() {
         </div>
       </div>
 
-      {/* Narrative Generator Placeholder */}
+      {/* Narrative Generator */}
       <div
         className="rounded-xl p-5"
         style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
       >
         <div className="flex items-center gap-2 mb-3">
-          <FileText size={16} style={{ color: ACCENT }} />
+          <Sparkles size={16} style={{ color: "#5A6FFF" }} />
           <h2 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
             Narrative Generator
           </h2>
-          <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}>
-            Coming Soon
-          </span>
         </div>
-        <p className="text-xs" style={{ color: "var(--muted)" }}>
-          AI-powered narrative generator that pulls live metrics from Clinical, Community, and Finance
-          to create customized investor stories. Tailored by investor focus (science-first, consumer-first, impact-first).
+        <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
+          Joy generates customized investor narratives using live metrics from Clinical, Community, and Finance.
+          Tailored by investor focus: science-first, consumer-first, or impact-first.
         </p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <JoyButton
+            agent="executive-coach"
+            prompt={`Generate a science-first investor narrative for Conceivable. Use these data points: 5 patents (1 provisional pending), pilot study showing 150-260% improvement, ${PITCH_MATERIALS.filter((m) => m.status === "ready").length}/${PITCH_MATERIALS.length} pitch materials ready, data room ${Math.round((DATA_ROOM_CHECKLIST.filter((i) => i.status === "uploaded").length / DATA_ROOM_CHECKLIST.length) * 100)}% complete. Frame the story around clinical evidence and IP moat.`}
+            label="Science-First Narrative"
+            icon={<Sparkles size={12} />}
+          />
+          <JoyButton
+            agent="executive-coach"
+            prompt={`Generate a consumer-first investor narrative for Conceivable. Focus on: 28,905 email subscribers, 220 community members, 120+ podcast appearances, women's health lifecycle from pre-period through post-menopause (10 verticals). Frame the story around market size, consumer traction, and growth trajectory.`}
+            label="Consumer-First Narrative"
+            variant="secondary"
+          />
+          <JoyButton
+            agent="executive-coach"
+            prompt={`Generate an impact-first investor narrative for Conceivable. Frame around: transforming fertility care from reactive to proactive, closing the 7-year diagnosis gap for conditions like endometriosis, democratizing access to personalized fertility optimization. Include clinical outcomes (150-260% improvement) and community building (220 members).`}
+            label="Impact-First Narrative"
+            variant="secondary"
+          />
+        </div>
       </div>
     </div>
   );

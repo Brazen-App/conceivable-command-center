@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Shield,
   FileText,
@@ -10,6 +11,8 @@ import {
   TrendingUp,
   MessageSquare,
   Bell,
+  Sparkles,
+  Send,
 } from "lucide-react";
 
 const ACCENT = "#E24D47";
@@ -66,6 +69,84 @@ function AlertBadge({ type }: { type: "critical" | "warning" | "info" }) {
     <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: c.bg, color: c.color }}>
       {c.label}
     </span>
+  );
+}
+
+function JoyLegalChat() {
+  const [messages, setMessages] = useState<{ role: "user" | "joy"; text: string }[]>([
+    {
+      role: "joy",
+      text: "I'm Joy, your legal operations assistant. I can help with patent strategy, compliance questions, testimonial review, and FDA/FTC guidance. What would you like to explore?",
+    },
+  ]);
+  const [input, setInput] = useState("");
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", text: input },
+      {
+        role: "joy",
+        text: `I'll research "${input}" across our legal knowledge base. This will connect to the Joy AI engine once the Claude API integration is live. For now, I've logged this as a legal question for review.`,
+      },
+    ]);
+    setInput("");
+  };
+
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+      <div
+        className="px-4 py-3 flex items-center gap-2"
+        style={{ backgroundColor: `${ACCENT}08`, borderBottom: "1px solid var(--border)" }}
+      >
+        <Sparkles size={16} style={{ color: "#5A6FFF" }} />
+        <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
+          Joy: Legal Advisor
+        </span>
+        <span className="text-[10px] ml-auto px-2 py-0.5 rounded-full" style={{ backgroundColor: "#1EAA5514", color: "#1EAA55" }}>
+          Online
+        </span>
+      </div>
+      <div className="max-h-56 overflow-y-auto p-4 space-y-3" style={{ backgroundColor: "var(--background)" }}>
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`text-xs p-3 rounded-xl max-w-[85%] ${msg.role === "joy" ? "" : "ml-auto"}`}
+            style={{
+              backgroundColor: msg.role === "joy" ? "var(--surface)" : `#5A6FFF14`,
+              color: "var(--foreground)",
+              border: msg.role === "joy" ? "1px solid var(--border)" : "none",
+            }}
+          >
+            {msg.role === "joy" && (
+              <span className="text-[10px] font-bold block mb-1" style={{ color: "#5A6FFF" }}>
+                Joy
+              </span>
+            )}
+            {msg.text}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-2 p-3" style={{ borderTop: "1px solid var(--border)", backgroundColor: "var(--surface)" }}>
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          placeholder="Ask Joy about patents, compliance, FDA..."
+          className="flex-1 text-xs px-3 py-2 rounded-lg outline-none"
+          style={{ backgroundColor: "var(--background)", color: "var(--foreground)", border: "1px solid var(--border)" }}
+        />
+        <button
+          onClick={handleSend}
+          className="p-2 rounded-lg transition-colors hover:opacity-80"
+          style={{ backgroundColor: "#5A6FFF", color: "white" }}
+        >
+          <Send size={14} />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -231,6 +312,9 @@ export default function LegalDashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* Joy Legal Advisor */}
+      <JoyLegalChat />
 
       {/* Sullivan: Compliance as Moat */}
       <div

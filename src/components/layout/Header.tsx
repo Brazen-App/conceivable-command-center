@@ -18,6 +18,7 @@ const SEARCHABLE_PAGES = [
   { label: "Operations — Tools", href: "/departments/operations/tools", keywords: "tools integrations connect" },
   { label: "Marketing", href: "/departments/marketing", keywords: "email content voice campaigns" },
   { label: "Marketing — Email Strategy", href: "/departments/marketing/email", keywords: "email deploy send mailchimp sequence" },
+  { label: "Marketing — Email Ops", href: "/departments/marketing/email-ops", keywords: "mailchimp warmup segments automations abandoned cart newsletter" },
   { label: "Marketing — Content Engine", href: "/departments/marketing/content", keywords: "content news research reddit calendar" },
   { label: "Marketing — SEO / GEO", href: "/departments/marketing/seo-geo", keywords: "seo geo search engine ai visibility" },
   { label: "Marketing — Affiliates", href: "/departments/marketing/affiliates", keywords: "affiliate partner practitioners" },

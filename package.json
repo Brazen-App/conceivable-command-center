@@ -12,6 +12,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
     "@getlatedev/node": "^0.1.35",
+    "@google-analytics/data": "^5.2.1",
     "@google/genai": "^1.42.0",
     "@mailchimp/mailchimp_marketing": "^3.0.80",
     "@prisma/client": "^5.22.0",

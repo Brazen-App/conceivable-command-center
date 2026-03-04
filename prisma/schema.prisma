@@ -305,6 +305,57 @@ model Capture {
 }
 
 // ============================================================
+// Patent Claims (Individual Claims Master List)
+// ============================================================
+
+model PatentClaim {
+  id              String   @id @default(cuid())
+  claimNumber     Int
+  claimText       String   @db.Text
+  parentPatentId  String?  // references Patent.id
+  parentPatentRef String?  // human-readable patent reference
+  valueTier       String   @default("MEDIUM") // HIGH, MEDIUM, LOW
+  estimatedValue  Int?     // in dollars
+  rationale       String?  @db.Text // why pursue this
+  status          String   @default("not_drafted") // not_drafted, drafted, filed, granted
+  priority        Boolean  @default(false)
+  archived        Boolean  @default(false)
+  category        String?  // wearable, software_ai, supplement, data_privacy, method, design
+  urgency         String?  // file_now, monitor, exploratory
+  priorArtRisk    String?  // low, medium, high
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================================
+// Rejection Learning System
+// ============================================================
+
+model Rejection {
+  id                 String   @id @default(cuid())
+  recommendationId   String   // ID of the rejected item
+  recommendationType String   // email, patent, task, content, outreach, etc.
+  reasonCategory     String   // not_priority, wrong_timing, disagree_approach, needs_modification, other
+  reasonText         String?  @db.Text
+  userId             String   @default("kirsten")
+  createdAt          DateTime @default(now())
+}
+
+// ============================================================
+// Chat Logs (Joy Conversations)
+// ============================================================
+
+model ChatLog {
+  id          String   @id @default(cuid())
+  contextType String   // email, patent, general, task, content, etc.
+  contextId   String?  // ID of the thing being discussed
+  role        String   // user, assistant
+  message     String   @db.Text
+  createdAt   DateTime @default(now())
+  sessionId   String   // groups messages in same conversation
+}
+
+// ============================================================
 // Generic Department Data (Tier 2 — read-only JSON blobs)
 // ============================================================
 

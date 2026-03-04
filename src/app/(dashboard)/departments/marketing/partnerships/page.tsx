@@ -13,10 +13,13 @@ import {
   Clock,
   Send,
   MessageSquare,
+  MessageCircle,
   XCircle,
   Star,
 } from "lucide-react";
 import JoyButton from "@/components/joy/JoyButton";
+import RejectionModal from "@/components/review/RejectionModal";
+import DiscussPanel from "@/components/review/DiscussPanel";
 import {
   EXPERT_STATUS_CONFIG,
   type Expert,
@@ -70,6 +73,10 @@ export default function MarketingPartnershipsPage() {
   const [experts, setExperts] = useState<Expert[]>([]);
   const [interviews, setInterviews] = useState<InterviewSchedule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rejectionTarget, setRejectionTarget] = useState<{ id: string; title: string; type: string } | null>(null);
+  const [discussTarget, setDiscussTarget] = useState<{ id: string; title: string; type: string; detail?: string } | null>(null);
+  const [passedExperts, setPassedExperts] = useState<Set<string>>(new Set());
+  const [advancedExperts, setAdvancedExperts] = useState<Set<string>>(new Set());
 
   const fetchData = useCallback(async () => {
     try {
@@ -85,6 +92,30 @@ export default function MarketingPartnershipsPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleAdvanceExpert = async (expertId: string) => {
+    setAdvancedExperts((prev) => new Set(prev).add(expertId));
+  };
+
+  const handleRejectExpert = (id: string, name: string) => {
+    setRejectionTarget({ id, title: name, type: "expert_partnership" });
+  };
+
+  const handleSubmitRejection = async (reasonCategory: string, reasonText: string) => {
+    if (!rejectionTarget) return;
+    await fetch("/api/rejections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recommendationId: rejectionTarget.id,
+        recommendationType: rejectionTarget.type,
+        reasonCategory,
+        reasonText,
+      }),
+    });
+    setPassedExperts((prev) => new Set(prev).add(rejectionTarget.id));
+    setRejectionTarget(null);
+  };
 
   const pipeline = getPipelineCounts(experts);
   const activeCount =
@@ -281,6 +312,47 @@ export default function MarketingPartnershipsPage() {
                         {expert.audienceSize.toLocaleString()}
                       </p>
                       <div className="flex items-center gap-2 flex-wrap mt-2 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
+                        {advancedExperts.has(expert.id) ? (
+                          <span className="flex items-center gap-1 text-[10px] font-medium" style={{ color: "#1EAA55" }}>
+                            <CheckCircle2 size={12} /> Advanced
+                          </span>
+                        ) : passedExperts.has(expert.id) ? (
+                          <span className="flex items-center gap-1 text-[10px] font-medium" style={{ color: "#E24D47" }}>
+                            <XCircle size={12} /> Passed
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleAdvanceExpert(expert.id); }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium text-white"
+                              style={{ backgroundColor: "#1EAA55" }}
+                            >
+                              <CheckCircle2 size={11} /> Advance
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleRejectExpert(expert.id, expert.name); }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium text-white"
+                              style={{ backgroundColor: "#E24D47" }}
+                            >
+                              <XCircle size={11} /> Pass
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDiscussTarget({
+                                  id: expert.id,
+                                  title: expert.name,
+                                  type: "expert_partnership",
+                                  detail: `${expert.title} at ${expert.organization}. Expertise: ${expert.expertise.join(", ")}. Audience: ${expert.audienceSize.toLocaleString()}. Notes: ${expert.notes}`,
+                                });
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium"
+                              style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
+                            >
+                              <MessageCircle size={11} /> Discuss
+                            </button>
+                          </>
+                        )}
                         <JoyButton
                           agent="marketing"
                           prompt={`Draft a personalized outreach message to ${expert.name} (${expert.title} at ${expert.organization}). Expertise: ${expert.expertise.join(", ")}. Audience: ${expert.audienceSize.toLocaleString()}. Notes: ${expert.notes}`}
@@ -404,6 +476,37 @@ export default function MarketingPartnershipsPage() {
           </div>
         </div>
       </div>
+
+      {/* Rejection Modal */}
+      <RejectionModal
+        isOpen={!!rejectionTarget}
+        onClose={() => setRejectionTarget(null)}
+        onSubmit={handleSubmitRejection}
+        itemTitle={rejectionTarget?.title ?? ""}
+        itemType="expert_partnership"
+      />
+
+      {/* Discuss Panel */}
+      <DiscussPanel
+        isOpen={!!discussTarget}
+        onClose={() => setDiscussTarget(null)}
+        contextType="expert_partnership"
+        contextId={discussTarget?.id ?? ""}
+        contextTitle={discussTarget?.title ?? ""}
+        contextDetail={discussTarget?.detail}
+        onApprove={() => {
+          if (discussTarget) {
+            setAdvancedExperts((prev) => new Set(prev).add(discussTarget.id));
+            setDiscussTarget(null);
+          }
+        }}
+        onReject={() => {
+          if (discussTarget) {
+            handleRejectExpert(discussTarget.id, discussTarget.title);
+            setDiscussTarget(null);
+          }
+        }}
+      />
     </div>
   );
 }

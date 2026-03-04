@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Clock, Calendar, Users, AlertCircle, CheckCircle2 } from "lucide-react";
+import { MessageSquare, MessageCircle, Clock, Calendar, Users, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import RejectionModal from "@/components/review/RejectionModal";
+import DiscussPanel from "@/components/review/DiscussPanel";
 
 const ACCENT = "#1EAA55";
 
@@ -97,6 +99,35 @@ function ResponderBadge({ responder }: { responder: string }) {
 }
 
 export default function EngagementPage() {
+  const [rejectionTarget, setRejectionTarget] = useState<{ id: string; title: string; type: string } | null>(null);
+  const [discussTarget, setDiscussTarget] = useState<{ id: string; title: string; type: string; detail?: string } | null>(null);
+  const [handledItems, setHandledItems] = useState<Set<string>>(new Set());
+  const [skippedItems, setSkippedItems] = useState<Set<string>>(new Set());
+
+  const handleRespond = (id: string) => {
+    setHandledItems((prev) => new Set(prev).add(id));
+  };
+
+  const handleSkip = (id: string, title: string) => {
+    setRejectionTarget({ id, title, type: "community_response" });
+  };
+
+  const handleSubmitRejection = async (reasonCategory: string, reasonText: string) => {
+    if (!rejectionTarget) return;
+    await fetch("/api/rejections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recommendationId: rejectionTarget.id,
+        recommendationType: rejectionTarget.type,
+        reasonCategory,
+        reasonText,
+      }),
+    });
+    setSkippedItems((prev) => new Set(prev).add(rejectionTarget.id));
+    setRejectionTarget(null);
+  };
+
   const pendingCount = RESPONSE_QUEUE.filter((r) => r.status === "pending").length;
 
   return (
@@ -183,6 +214,37 @@ export default function EngagementPage() {
               <div className="flex items-center gap-2 shrink-0">
                 <PriorityBadge priority={item.priority} />
                 <ResponderBadge responder={item.needsResponse} />
+                {item.status === "pending" && !handledItems.has(item.id) && !skippedItems.has(item.id) && (
+                  <>
+                    <button
+                      onClick={() => handleRespond(item.id)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-white"
+                      style={{ backgroundColor: "#1EAA55" }}
+                    >
+                      <CheckCircle2 size={10} /> Respond
+                    </button>
+                    <button
+                      onClick={() => handleSkip(item.id, item.postTitle)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-white"
+                      style={{ backgroundColor: "#E24D47" }}
+                    >
+                      <XCircle size={10} /> Skip
+                    </button>
+                    <button
+                      onClick={() => setDiscussTarget({ id: item.id, title: item.postTitle, type: "community_response", detail: `From ${item.memberName}, ${item.timePosted}. Priority: ${item.priority}. Needs response from: ${item.needsResponse}.` })}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium"
+                      style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
+                    >
+                      <MessageCircle size={10} /> Discuss
+                    </button>
+                  </>
+                )}
+                {handledItems.has(item.id) && (
+                  <span className="text-[10px] font-medium" style={{ color: "#1EAA55" }}>Handled</span>
+                )}
+                {skippedItems.has(item.id) && (
+                  <span className="text-[10px] font-medium" style={{ color: "#E24D47" }}>Skipped</span>
+                )}
               </div>
             </div>
           ))}
@@ -220,6 +282,34 @@ export default function EngagementPage() {
           })}
         </div>
       </div>
+      <RejectionModal
+        isOpen={!!rejectionTarget}
+        onClose={() => setRejectionTarget(null)}
+        onSubmit={handleSubmitRejection}
+        itemTitle={rejectionTarget?.title ?? ""}
+        itemType="community_response"
+      />
+
+      <DiscussPanel
+        isOpen={!!discussTarget}
+        onClose={() => setDiscussTarget(null)}
+        contextType="community_response"
+        contextId={discussTarget?.id ?? ""}
+        contextTitle={discussTarget?.title ?? ""}
+        contextDetail={discussTarget?.detail}
+        onApprove={() => {
+          if (discussTarget) {
+            setHandledItems((prev) => new Set(prev).add(discussTarget.id));
+            setDiscussTarget(null);
+          }
+        }}
+        onReject={() => {
+          if (discussTarget) {
+            handleSkip(discussTarget.id, discussTarget.title);
+            setDiscussTarget(null);
+          }
+        }}
+      />
     </div>
   );
 }

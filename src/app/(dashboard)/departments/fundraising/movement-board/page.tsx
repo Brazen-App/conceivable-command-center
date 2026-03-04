@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Calendar, ExternalLink, ChevronDown, Search, Users, RefreshCw, MessageSquare } from "lucide-react";
+import { Star, Calendar, ExternalLink, ChevronDown, Search, Users, RefreshCw, MessageSquare, MessageCircle, CheckCircle2, XCircle } from "lucide-react";
 import JoyButton from "@/components/joy/JoyButton";
+import RejectionModal from "@/components/review/RejectionModal";
+import DiscussPanel from "@/components/review/DiscussPanel";
 
 const ACCENT = "#356FB6";
 
@@ -126,6 +128,34 @@ function ConnectionStrength({ strength }: { strength: number }) {
 
 export default function MovementBoardPage() {
   const [expandedId, setExpandedId] = useState<string | null>("mt02");
+  const [rejectionTarget, setRejectionTarget] = useState<{ id: string; title: string; type: string } | null>(null);
+  const [discussTarget, setDiscussTarget] = useState<{ id: string; title: string; type: string; detail?: string } | null>(null);
+  const [advancedTargets, setAdvancedTargets] = useState<Set<string>>(new Set());
+  const [passedTargets, setPassedTargets] = useState<Set<string>>(new Set());
+
+  const handleAdvance = (id: string) => {
+    setAdvancedTargets((prev) => new Set(prev).add(id));
+  };
+
+  const handleReject = (id: string, name: string) => {
+    setRejectionTarget({ id, title: name, type: "movement_target" });
+  };
+
+  const handleSubmitRejection = async (reasonCategory: string, reasonText: string) => {
+    if (!rejectionTarget) return;
+    await fetch("/api/rejections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recommendationId: rejectionTarget.id,
+        recommendationType: rejectionTarget.type,
+        reasonCategory,
+        reasonText,
+      }),
+    });
+    setPassedTargets((prev) => new Set(prev).add(rejectionTarget.id));
+    setRejectionTarget(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -238,8 +268,49 @@ export default function MovementBoardPage() {
                   </div>
                 </div>
 
-                {/* Joy Action Buttons */}
+                {/* Action Buttons */}
                 <div className="flex items-center gap-2 flex-wrap pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+                  {advancedTargets.has(target.id) ? (
+                    <span className="flex items-center gap-1 text-xs font-medium" style={{ color: "#1EAA55" }}>
+                      <CheckCircle2 size={12} /> Advanced
+                    </span>
+                  ) : passedTargets.has(target.id) ? (
+                    <span className="flex items-center gap-1 text-xs font-medium" style={{ color: "#E24D47" }}>
+                      <XCircle size={12} /> Passed
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleAdvance(target.id); }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                        style={{ backgroundColor: "#1EAA55" }}
+                      >
+                        <CheckCircle2 size={11} /> Advance
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleReject(target.id, target.name); }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                        style={{ backgroundColor: "#E24D47" }}
+                      >
+                        <XCircle size={11} /> Pass
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDiscussTarget({
+                            id: target.id,
+                            title: target.name,
+                            type: "movement_target",
+                            detail: `${target.title}. Why they fit: ${target.whyTheyFit}. Potential ask: ${target.potentialAsk}. Latest intel: ${target.latestIntel}`,
+                          });
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium"
+                        style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
+                      >
+                        <MessageCircle size={11} /> Discuss
+                      </button>
+                    </>
+                  )}
                   <JoyButton
                     agent="executive-coach"
                     prompt={`Research update on ${target.name} (${target.title}). What's the latest news, recent activity, and any new connections we should know about? Current intel: ${target.latestIntel}`}
@@ -265,6 +336,35 @@ export default function MovementBoardPage() {
           </div>
         ))}
       </div>
+
+      <RejectionModal
+        isOpen={!!rejectionTarget}
+        onClose={() => setRejectionTarget(null)}
+        onSubmit={handleSubmitRejection}
+        itemTitle={rejectionTarget?.title ?? ""}
+        itemType="movement_target"
+      />
+
+      <DiscussPanel
+        isOpen={!!discussTarget}
+        onClose={() => setDiscussTarget(null)}
+        contextType="movement_target"
+        contextId={discussTarget?.id ?? ""}
+        contextTitle={discussTarget?.title ?? ""}
+        contextDetail={discussTarget?.detail}
+        onApprove={() => {
+          if (discussTarget) {
+            setAdvancedTargets((prev) => new Set(prev).add(discussTarget.id));
+            setDiscussTarget(null);
+          }
+        }}
+        onReject={() => {
+          if (discussTarget) {
+            handleReject(discussTarget.id, discussTarget.title);
+            setDiscussTarget(null);
+          }
+        }}
+      />
     </div>
   );
 }

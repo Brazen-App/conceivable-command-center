@@ -1,4 +1,5 @@
 import DepartmentNav from "@/components/layout/DepartmentNav";
+import VoiceInput from "@/components/voice/VoiceInput";
 
 export default function DashboardLayout({
   children,
@@ -11,6 +12,7 @@ export default function DashboardLayout({
       <main className="flex-1 md:ml-[252px] pt-14 md:pt-0 min-h-screen">
         {children}
       </main>
+      <VoiceInput />
     </div>
   );
 }

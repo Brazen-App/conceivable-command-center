@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Handshake, ExternalLink, Star, ArrowRight, MessageSquare, RefreshCw } from "lucide-react";
+import { Handshake, ExternalLink, Star, ArrowRight, MessageSquare, MessageCircle, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
 import JoyButton from "@/components/joy/JoyButton";
+import RejectionModal from "@/components/review/RejectionModal";
+import DiscussPanel from "@/components/review/DiscussPanel";
 
 const ACCENT = "#356FB6";
 
@@ -95,6 +97,34 @@ function StatusBadge({ status }: { status: PartnerStatus }) {
 
 export default function StrategicPage() {
   const [expandedId, setExpandedId] = useState<string | null>("sp01");
+  const [rejectionTarget, setRejectionTarget] = useState<{ id: string; title: string; type: string } | null>(null);
+  const [discussTarget, setDiscussTarget] = useState<{ id: string; title: string; type: string; detail?: string } | null>(null);
+  const [advancedPartners, setAdvancedPartners] = useState<Set<string>>(new Set());
+  const [passedPartners, setPassedPartners] = useState<Set<string>>(new Set());
+
+  const handleAdvance = (id: string) => {
+    setAdvancedPartners((prev) => new Set(prev).add(id));
+  };
+
+  const handleReject = (id: string, name: string) => {
+    setRejectionTarget({ id, title: name, type: "strategic_partnership" });
+  };
+
+  const handleSubmitRejection = async (reasonCategory: string, reasonText: string) => {
+    if (!rejectionTarget) return;
+    await fetch("/api/rejections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recommendationId: rejectionTarget.id,
+        recommendationType: rejectionTarget.type,
+        reasonCategory,
+        reasonText,
+      }),
+    });
+    setPassedPartners((prev) => new Set(prev).add(rejectionTarget.id));
+    setRejectionTarget(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -186,6 +216,47 @@ export default function StrategicPage() {
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+                  {advancedPartners.has(partner.id) ? (
+                    <span className="flex items-center gap-1 text-xs font-medium" style={{ color: "#1EAA55" }}>
+                      <CheckCircle2 size={12} /> Advanced
+                    </span>
+                  ) : passedPartners.has(partner.id) ? (
+                    <span className="flex items-center gap-1 text-xs font-medium" style={{ color: "#E24D47" }}>
+                      <XCircle size={12} /> Passed
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleAdvance(partner.id); }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                        style={{ backgroundColor: "#1EAA55" }}
+                      >
+                        <CheckCircle2 size={11} /> Advance
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleReject(partner.id, partner.company); }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                        style={{ backgroundColor: "#E24D47" }}
+                      >
+                        <XCircle size={11} /> Pass
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDiscussTarget({
+                            id: partner.id,
+                            title: partner.company,
+                            type: "strategic_partnership",
+                            detail: `Opportunity: ${partner.opportunity}. Strategic value: ${partner.strategicValue}. Pitch angle: ${partner.pitchAngle}.`,
+                          });
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium"
+                        style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
+                      >
+                        <MessageCircle size={11} /> Discuss
+                      </button>
+                    </>
+                  )}
                   <JoyButton
                     agent="executive-coach"
                     prompt={`Draft a strategic partnership proposal for ${partner.company}. Opportunity: ${partner.opportunity}. Strategic value: ${partner.strategicValue}. Pitch angle: ${partner.pitchAngle}. Integration details: ${partner.integrationDetails}.`}
@@ -211,6 +282,35 @@ export default function StrategicPage() {
           </div>
         ))}
       </div>
+
+      <RejectionModal
+        isOpen={!!rejectionTarget}
+        onClose={() => setRejectionTarget(null)}
+        onSubmit={handleSubmitRejection}
+        itemTitle={rejectionTarget?.title ?? ""}
+        itemType="strategic_partnership"
+      />
+
+      <DiscussPanel
+        isOpen={!!discussTarget}
+        onClose={() => setDiscussTarget(null)}
+        contextType="strategic_partnership"
+        contextId={discussTarget?.id ?? ""}
+        contextTitle={discussTarget?.title ?? ""}
+        contextDetail={discussTarget?.detail}
+        onApprove={() => {
+          if (discussTarget) {
+            setAdvancedPartners((prev) => new Set(prev).add(discussTarget.id));
+            setDiscussTarget(null);
+          }
+        }}
+        onReject={() => {
+          if (discussTarget) {
+            handleReject(discussTarget.id, discussTarget.title);
+            setDiscussTarget(null);
+          }
+        }}
+      />
     </div>
   );
 }

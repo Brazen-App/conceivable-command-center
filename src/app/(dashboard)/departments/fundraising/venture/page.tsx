@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, DollarSign, Calendar, ArrowRight, MessageSquare, Search } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, ArrowRight, MessageSquare, Search, CheckCircle2, XCircle, MessageCircle } from "lucide-react";
 import JoyButton from "@/components/joy/JoyButton";
+import RejectionModal from "@/components/review/RejectionModal";
+import DiscussPanel from "@/components/review/DiscussPanel";
 
 const ACCENT = "#356FB6";
 
@@ -115,6 +117,30 @@ function AlignmentIndicator({ level }: { level: "strong" | "moderate" | "low" })
 export default function VenturePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [stageFilter, setStageFilter] = useState<VCStage | "all">("all");
+  const [rejectionTarget, setRejectionTarget] = useState<{ id: string; title: string } | null>(null);
+  const [discussTarget, setDiscussTarget] = useState<{ id: string; title: string; detail: string } | null>(null);
+  const [passedFirms, setPassedFirms] = useState<Set<string>>(new Set());
+  const [advancedFirms, setAdvancedFirms] = useState<Set<string>>(new Set());
+
+  const handleAdvanceStage = (id: string) => {
+    setAdvancedFirms((prev) => new Set(prev).add(id));
+  };
+
+  const handleRejectVC = async (reasonCategory: string, reasonText: string) => {
+    if (!rejectionTarget) return;
+    await fetch("/api/rejections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recommendationId: rejectionTarget.id,
+        recommendationType: "investor",
+        reasonCategory,
+        reasonText,
+      }),
+    });
+    setPassedFirms((prev) => new Set(prev).add(rejectionTarget.id));
+    setRejectionTarget(null);
+  };
 
   const filtered = stageFilter === "all" ? VC_PIPELINE : VC_PIPELINE.filter((v) => v.stage === stageFilter);
 
@@ -222,16 +248,36 @@ export default function VenturePage() {
                             <p className="text-xs leading-relaxed" style={{ color: "var(--foreground)" }}>{vc.notes}</p>
                           </div>
                         </div>
+                        {/* Universal action buttons */}
                         <div className="flex items-center gap-2 flex-wrap mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-                          <JoyButton
-                            agent="executive-coach"
-                            prompt={`Research ${vc.firm} and their partner ${vc.partner}. What's their latest investment activity, fund status, and any recent news? Thesis alignment: ${vc.thesisAlignment}. Check size: ${vc.checkSize}.`}
-                            label="Joy: Research Firm"
-                          />
+                          <button
+                            onClick={() => handleAdvanceStage(vc.id)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                            style={{ backgroundColor: "#1EAA55" }}
+                          >
+                            <CheckCircle2 size={12} />
+                            Advance Stage
+                          </button>
+                          <button
+                            onClick={() => setRejectionTarget({ id: vc.id, title: vc.firm })}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                            style={{ backgroundColor: "#E24D47" }}
+                          >
+                            <XCircle size={12} />
+                            Pass
+                          </button>
+                          <button
+                            onClick={() => setDiscussTarget({ id: vc.id, title: vc.firm, detail: `VC Firm: ${vc.firm}. Partner: ${vc.partner}. Stage: ${vc.stage}. Check size: ${vc.checkSize}. Thesis alignment: ${vc.thesisAlignment}. Notes: ${vc.notes}. Next action: ${vc.nextAction}` })}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                            style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
+                          >
+                            <MessageCircle size={12} />
+                            Discuss
+                          </button>
                           <JoyButton
                             agent="executive-coach"
                             prompt={`Draft a personalized outreach email to ${vc.partner} at ${vc.firm}. They invest ${vc.checkSize} checks with ${vc.thesisAlignment} thesis alignment. Notes: ${vc.notes}`}
-                            label="Joy: Draft Outreach"
+                            label="Draft Outreach"
                             variant="secondary"
                             icon={<MessageSquare size={11} />}
                           />
@@ -252,6 +298,27 @@ export default function VenturePage() {
           </table>
         </div>
       </div>
+
+      {/* Rejection Modal */}
+      <RejectionModal
+        isOpen={!!rejectionTarget}
+        onClose={() => setRejectionTarget(null)}
+        onSubmit={handleRejectVC}
+        itemTitle={rejectionTarget?.title || ""}
+        itemType="investor"
+      />
+
+      {/* Discuss Panel */}
+      <DiscussPanel
+        isOpen={!!discussTarget}
+        onClose={() => setDiscussTarget(null)}
+        contextType="investor"
+        contextId={discussTarget?.id || ""}
+        contextTitle={discussTarget?.title || ""}
+        contextDetail={discussTarget?.detail}
+        onApprove={discussTarget ? () => { handleAdvanceStage(discussTarget.id); setDiscussTarget(null); } : undefined}
+        onReject={discussTarget ? () => { setRejectionTarget({ id: discussTarget.id, title: discussTarget.title }); setDiscussTarget(null); } : undefined}
+      />
     </div>
   );
 }

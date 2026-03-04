@@ -20,8 +20,12 @@ import {
   Sparkles,
   Heart,
   MessageSquare,
+  XCircle,
+  MessageCircle,
 } from "lucide-react";
 import JoyButton from "@/components/joy/JoyButton";
+import RejectionModal from "@/components/review/RejectionModal";
+import DiscussPanel from "@/components/review/DiscussPanel";
 
 const ACCENT = "#5A6FFF";
 
@@ -157,6 +161,29 @@ const DEPLOYMENT_STRATEGIES = [
 
 export default function MarketingContentPage() {
   const [activeSection, setActiveSection] = useState<"brief" | "vault" | "deploy">("brief");
+  const [approvedItems, setApprovedItems] = useState<Set<string>>(new Set());
+  const [rejectionTarget, setRejectionTarget] = useState<{ id: string; title: string } | null>(null);
+  const [discussTarget, setDiscussTarget] = useState<{ id: string; title: string; detail: string } | null>(null);
+
+  const handleApproveContent = async (id: string) => {
+    setApprovedItems((prev) => new Set(prev).add(id));
+  };
+
+  const handleRejectContent = async (reasonCategory: string, reasonText: string) => {
+    if (!rejectionTarget) return;
+    await fetch("/api/rejections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recommendationId: rejectionTarget.id,
+        recommendationType: "content",
+        reasonCategory,
+        reasonText,
+      }),
+    });
+    setApprovedItems((prev) => new Set(prev).add(rejectionTarget.id));
+    setRejectionTarget(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -257,64 +284,93 @@ export default function MarketingContentPage() {
 
           {/* News / Research / Reddit Items */}
           <div className="space-y-3">
-            {DAILY_BRIEF_ITEMS.map((item) => (
+            {DAILY_BRIEF_ITEMS.filter((item) => !approvedItems.has(item.id)).map((item) => (
               <div
                 key={item.id}
-                className="rounded-xl p-4 flex items-start gap-4"
+                className="rounded-xl overflow-hidden"
                 style={{
                   backgroundColor: "var(--surface)",
                   border: "1px solid var(--border)",
                 }}
               >
-                <div
-                  className="px-2 py-1 rounded text-[10px] font-bold uppercase shrink-0"
-                  style={{
-                    backgroundColor:
-                      item.type === "news"
-                        ? "#356FB614"
-                        : item.type === "research"
-                        ? "#9686B914"
-                        : "#F1C02814",
-                    color:
-                      item.type === "news"
-                        ? "#356FB6"
-                        : item.type === "research"
-                        ? "#9686B9"
-                        : "#F1C028",
-                  }}
-                >
-                  {item.type}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium leading-snug" style={{ color: "var(--foreground)" }}>
-                    {item.title}
-                  </p>
-                  <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-                    {item.source} &middot; Relevance: {item.relevance}/10
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {item.status === "review" && (
-                    <span
-                      className="text-[10px] font-bold px-2 py-1 rounded-full"
-                      style={{ backgroundColor: "#F1C02814", color: "#F1C028" }}
+                <div className="p-4 flex items-start gap-4">
+                  <div
+                    className="px-2 py-1 rounded text-[10px] font-bold uppercase shrink-0"
+                    style={{
+                      backgroundColor:
+                        item.type === "news"
+                          ? "#356FB614"
+                          : item.type === "research"
+                          ? "#9686B914"
+                          : "#F1C02814",
+                      color:
+                        item.type === "news"
+                          ? "#356FB6"
+                          : item.type === "research"
+                          ? "#9686B9"
+                          : "#F1C028",
+                    }}
+                  >
+                    {item.type}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium leading-snug" style={{ color: "var(--foreground)" }}>
+                      {item.title}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+                      {item.source} &middot; Relevance: {item.relevance}/10
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {item.status === "review" && (
+                      <span
+                        className="text-[10px] font-bold px-2 py-1 rounded-full"
+                        style={{ backgroundColor: "#F1C02814", color: "#F1C028" }}
+                      >
+                        NEEDS REVIEW
+                      </span>
+                    )}
+                    <button
+                      className="w-8 h-8 rounded-lg flex items-center justify-center hover:scale-105 transition-transform"
+                      style={{ backgroundColor: `${ACCENT}14` }}
+                      title="Record POV"
                     >
-                      NEEDS REVIEW
-                    </span>
-                  )}
+                      <Mic size={14} style={{ color: ACCENT }} />
+                    </button>
+                  </div>
+                </div>
+                {/* Action buttons row */}
+                <div className="px-4 pb-3 flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => handleApproveContent(item.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                    style={{ backgroundColor: "#1EAA55" }}
+                  >
+                    <CheckCircle2 size={12} />
+                    Add to Pipeline
+                  </button>
+                  <button
+                    onClick={() => setRejectionTarget({ id: item.id, title: item.title })}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                    style={{ backgroundColor: "#E24D47" }}
+                  >
+                    <XCircle size={12} />
+                    Skip
+                  </button>
+                  <button
+                    onClick={() => setDiscussTarget({ id: item.id, title: item.title, detail: `${item.type} from ${item.source}: "${item.title}" (relevance: ${item.relevance}/10)` })}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
+                  >
+                    <MessageCircle size={12} />
+                    Discuss
+                  </button>
                   <JoyButton
                     agent="content-engine"
                     prompt={`Draft a Conceivable content response to this ${item.type} item: "${item.title}" (source: ${item.source}, relevance: ${item.relevance}/10). Write it in Conceivable's brand voice — calm, intelligent, empathetic, empowering. Include a social media post, a blog angle, and an email snippet.`}
-                    label="Draft"
+                    label="Draft Content"
                     iconSize={10}
                   />
-                  <button
-                    className="w-8 h-8 rounded-lg flex items-center justify-center hover:scale-105 transition-transform"
-                    style={{ backgroundColor: `${ACCENT}14` }}
-                    title="Record POV"
-                  >
-                    <Mic size={14} style={{ color: ACCENT }} />
-                  </button>
                 </div>
               </div>
             ))}
@@ -502,6 +558,27 @@ export default function MarketingContentPage() {
           })}
         </div>
       </div>
+
+      {/* Rejection Modal */}
+      <RejectionModal
+        isOpen={!!rejectionTarget}
+        onClose={() => setRejectionTarget(null)}
+        onSubmit={handleRejectContent}
+        itemTitle={rejectionTarget?.title || ""}
+        itemType="content"
+      />
+
+      {/* Discuss Panel */}
+      <DiscussPanel
+        isOpen={!!discussTarget}
+        onClose={() => setDiscussTarget(null)}
+        contextType="content"
+        contextId={discussTarget?.id || ""}
+        contextTitle={discussTarget?.title || ""}
+        contextDetail={discussTarget?.detail}
+        onApprove={discussTarget ? () => { handleApproveContent(discussTarget.id); setDiscussTarget(null); } : undefined}
+        onReject={discussTarget ? () => { setRejectionTarget({ id: discussTarget.id, title: discussTarget.title }); setDiscussTarget(null); } : undefined}
+      />
     </div>
   );
 }

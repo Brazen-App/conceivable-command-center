@@ -122,6 +122,33 @@ export async function POST() {
       reviewCount++;
     }
 
+    // Seed Patent Claims
+    const { PATENT_CLAIMS } = await import("@/lib/data/patent-claims-data");
+    let patentClaimCount = 0;
+    for (const pc of PATENT_CLAIMS) {
+      await prisma.patentClaim.upsert({
+        where: { id: pc.id },
+        update: {},
+        create: {
+          id: pc.id,
+          claimNumber: pc.claimNumber,
+          claimText: pc.claimText,
+          parentPatentId: pc.parentPatentId,
+          parentPatentRef: pc.parentPatentRef,
+          valueTier: pc.valueTier,
+          estimatedValue: pc.estimatedValue,
+          rationale: pc.rationale,
+          status: pc.status,
+          priority: pc.priority,
+          archived: pc.archived,
+          category: pc.category,
+          urgency: pc.urgency,
+          priorArtRisk: pc.priorArtRisk,
+        },
+      });
+      patentClaimCount++;
+    }
+
     const totalEmails = await prisma.email.count();
 
     return NextResponse.json({
@@ -131,6 +158,7 @@ export async function POST() {
         patents: patentCount,
         claims: claimCount,
         reviews: reviewCount,
+        patentClaims: patentClaimCount,
       },
       totalEmailsNow: totalEmails,
     });
@@ -153,6 +181,7 @@ export async function GET() {
     patents: await prisma.patent.count(),
     claims: await prisma.complianceClaim.count(),
     reviews: await prisma.pendingReview.count(),
+    patentClaims: await prisma.patentClaim.count(),
   };
   return NextResponse.json({ counts, hint: "POST to this endpoint to seed data" });
 }

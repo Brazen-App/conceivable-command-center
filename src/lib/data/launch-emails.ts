@@ -67,7 +67,7 @@ export const LAUNCH_EMAILS: LaunchEmail[] = [
     phase: "re-engagement",
     subject: "We've been quiet. Here's why.",
     preview: "We disappeared for a reason — and it's a good one.",
-    body: `Hi there,
+    body: `Hi *|FNAME|*,
 
 You haven't heard from us in a while. That was intentional.
 
@@ -95,7 +95,9 @@ Kirsten`,
     phase: "re-engagement",
     subject: "Something is broken in fertility care",
     preview: "You already know this. Here's what we're doing about it.",
-    body: `Here's what most fertility care looks like today:
+    body: `Hi *|FNAME|*,
+
+Here's what most fertility care looks like today:
 
 You get basic bloodwork. Maybe an ultrasound. Your doctor has 12 minutes to assess something as complex as your reproductive health. You leave with a prescription and a "let's see what happens."
 
@@ -125,7 +127,9 @@ Kirsten`,
     phase: "re-engagement",
     subject: "What if your body was trying to tell you something?",
     preview: "The signals are there. You just need someone to translate them.",
-    body: `Every morning, your body tells a story through your temperature.
+    body: `Hi *|FNAME|*,
+
+Every morning, your body tells a story through your temperature.
 
 Not just "did I ovulate?" — that's the basic reading. The deeper story is in the patterns: the variability, the rise speed, the luteal phase stability, the relationship between your temperature and your sleep, your stress, your cycle length.
 
@@ -155,7 +159,9 @@ Kirsten`,
     phase: "re-engagement",
     subject: "The data your doctor isn't looking at",
     preview: "It's not their fault. They just don't have the tools yet.",
-    body: `Here's a question most fertility doctors don't ask:
+    body: `Hi *|FNAME|*,
+
+Here's a question most fertility doctors don't ask:
 
 "How's your sleep?"
 
@@ -187,7 +193,9 @@ Kirsten`,
     phase: "re-engagement",
     subject: "120 podcasts. One breakthrough.",
     preview: "Our founder talked to everyone. Then she built something new.",
-    body: `Over 4 months, Kirsten Karchmer did 120 podcast interviews.
+    body: `Hi *|FNAME|*,
+
+Over 4 months, Kirsten Karchmer did 120 podcast interviews.
 
 Not as a guest — as a student. She talked to reproductive endocrinologists, naturopathic doctors, TCM practitioners, data scientists, sleep researchers, nutritionists, and women who'd been through every protocol imaginable.
 
@@ -217,7 +225,9 @@ Kirsten`,
     phase: "re-engagement",
     subject: "We built something. Want to see it first?",
     preview: "Early access opens in 3 weeks. Here's how to get in.",
-    body: `Quick update:
+    body: `Hi *|FNAME|*,
+
+Quick update:
 
 In 3 weeks, we're opening early access to Conceivable for a limited group.
 
@@ -256,7 +266,9 @@ Kirsten`,
     phase: "education",
     subject: "Your CON Score: the number that changes everything",
     preview: "One score that captures what dozens of tests miss.",
-    body: `Let's talk about the CON Score.
+    body: `Hi *|FNAME|*,
+
+Let's talk about the CON Score.
 
 In traditional fertility care, you get individual data points: FSH levels, AMH, thyroid panel, cycle length. Each tells you something. None tells you the whole story.
 
@@ -290,7 +302,9 @@ Kirsten`,
     phase: "education",
     subject: "Why temperature isn't just about ovulation",
     preview: "Your BBT data contains 10x more information than you're using.",
-    body: `Most apps use your basal body temperature (BBT) for one thing: confirming ovulation.
+    body: `Hi *|FNAME|*,
+
+Most apps use your basal body temperature (BBT) for one thing: confirming ovulation.
 
 That's like using a telescope to look at your shoes.
 
@@ -324,7 +338,9 @@ Kirsten`,
     phase: "education",
     subject: "The closed-loop system your body needs",
     preview: "Measure. Intervene. Verify. Adjust. Repeat.",
-    body: `Here's the fundamental problem with most health interventions:
+    body: `Hi *|FNAME|*,
+
+Here's the fundamental problem with most health interventions:
 
 You try something. You wait. You hope.
 
@@ -361,7 +377,9 @@ Kirsten`,
     phase: "education",
     subject: "Meet Kai: your AI fertility coach",
     preview: "She's not a chatbot. She's a system that understands your body.",
-    body: `Kai is not a chatbot that Googles your symptoms.
+    body: `Hi *|FNAME|*,
+
+Kai is not a chatbot that Googles your symptoms.
 
 Kai is the AI coach at the heart of Conceivable. She's built on a knowledge base of thousands of clinical studies, trained on reproductive endocrinology frameworks, and designed to understand the specific nuances of YOUR data.
 
@@ -400,7 +418,9 @@ Kirsten`,
     phase: "education",
     subject: "The 7 drivers of fertility health",
     preview: "Your body is a system. We finally treat it like one.",
-    body: `Conceivable tracks 7 interconnected drivers of fertility health:
+    body: `Hi *|FNAME|*,
+
+Conceivable tracks 7 interconnected drivers of fertility health:
 
 1. HORMONAL BALANCE — Not just estrogen and progesterone. The full cascade: thyroid, cortisol, insulin, and how they interact across your cycle.
 
@@ -436,7 +456,9 @@ Kirsten`,
     phase: "education",
     subject: "Real data. Real patterns. Real change.",
     preview: "Here's what the system actually sees in your data.",
-    body: `We've been sharing the theory. Now let's talk about what this looks like in practice.
+    body: `Hi *|FNAME|*,
+
+We've been sharing the theory. Now let's talk about what this looks like in practice.
 
 When a user connects their wearable and starts tracking with Conceivable, the system begins identifying patterns within the first cycle. By the second cycle, the recommendations become highly personalized.
 
@@ -470,7 +492,9 @@ Kirsten`,
     phase: "launch",
     subject: "Early access is open. 5,000 spots.",
     preview: "This is what we've been building toward. Join now.",
-    body: `It's here.
+    body: `Hi *|FNAME|*,
+
+It's here.
 
 Early access to Conceivable is now open.
 
@@ -509,7 +533,9 @@ Kirsten`,
     phase: "launch",
     subject: "What happens when you join",
     preview: "Your first 14 days inside Conceivable, step by step.",
-    body: `Wondering what happens after you sign up?
+    body: `Hi *|FNAME|*,
+
+Wondering what happens after you sign up?
 
 Here's your first 14 days inside Conceivable:
 
@@ -545,7 +571,9 @@ Kirsten`,
     phase: "launch",
     subject: "The science behind your personalized protocol",
     preview: "This isn't generic wellness advice. Here's why.",
-    body: `Let's be clear about something:
+    body: `Hi *|FNAME|*,
+
+Let's be clear about something:
 
 Conceivable doesn't give generic advice.
 
@@ -583,7 +611,9 @@ Kirsten`,
     phase: "launch",
     subject: "2,500 spots remaining",
     preview: "Half of early access is already claimed.",
-    body: `Quick update: we're halfway there.
+    body: `Hi *|FNAME|*,
+
+Quick update: we're halfway there.
 
 Since opening early access last week, 2,500 founding members have joined Conceivable. That means 2,500 spots remain.
 
@@ -616,7 +646,9 @@ Kirsten`,
     phase: "launch",
     subject: "From confusion to clarity in 14 days",
     preview: "What changes when someone actually connects the dots.",
-    body: `The number one thing we hear from women in the fertility space:
+    body: `Hi *|FNAME|*,
+
+The number one thing we hear from women in the fertility space:
 
 "I feel lost."
 
@@ -654,7 +686,9 @@ Kirsten`,
     phase: "launch",
     subject: "Your questions, answered",
     preview: "Everything you want to know before joining.",
-    body: `We've received hundreds of replies over the past few weeks. Here are the most common questions:
+    body: `Hi *|FNAME|*,
+
+We've received hundreds of replies over the past few weeks. Here are the most common questions:
 
 Q: "Is this a replacement for my doctor?"
 A: No. Conceivable is a complement to clinical care. We help you understand your body better so you can have more productive conversations with your healthcare provider.
@@ -695,7 +729,9 @@ Kirsten`,
     phase: "final-push",
     subject: "48 hours. Last chance for early access.",
     preview: "After Friday, founding member pricing is gone.",
-    body: `Early access closes in 48 hours.
+    body: `Hi *|FNAME|*,
+
+Early access closes in 48 hours.
 
 After Friday at midnight, the founding member window closes. The next cohort will open at a later date at standard pricing, and without the founding member benefits.
 
@@ -725,9 +761,9 @@ Kirsten`,
     phase: "final-push",
     subject: "A letter from our founder",
     preview: "Kirsten on why she built this and what it means.",
-    body: `Hi — it's Kirsten.
+    body: `Hi *|FNAME|*,
 
-I want to tell you why I built Conceivable, because it wasn't a business plan. It was personal.
+It's Kirsten. I want to tell you why I built Conceivable, because it wasn't a business plan. It was personal.
 
 I spent years in the fertility space — first as a practitioner, then as a researcher, then as someone who talked to hundreds of experts through 120 podcast interviews in 4 months. And the same frustration kept coming up: the knowledge exists. The personalization doesn't scale.
 
@@ -757,7 +793,9 @@ Kirsten`,
     phase: "final-push",
     subject: "Last call: early access closes tonight",
     preview: "Midnight. Then it's over.",
-    body: `This is the last email about early access.
+    body: `Hi *|FNAME|*,
+
+This is the last email about early access.
 
 Tonight at midnight, the founding member window closes.
 
@@ -801,7 +839,9 @@ Kirsten`,
     phase: "post-close",
     subject: "Welcome to the journey",
     preview: "You're in. Here's what happens now.",
-    body: `Welcome to Conceivable. You made a powerful decision.
+    body: `Hi *|FNAME|*,
+
+Welcome to Conceivable. You made a powerful decision.
 
 Here's exactly what happens next:
 
@@ -838,7 +878,9 @@ Kirsten`,
     phase: "post-close",
     subject: "What happens next (and what we're building)",
     preview: "Your roadmap as a founding member.",
-    body: `You're one of 5,000 founding members. That means something.
+    body: `Hi *|FNAME|*,
+
+You're one of 5,000 founding members. That means something.
 
 As a founding member, you're not just a user — you're a co-creator. Here's what that looks like:
 

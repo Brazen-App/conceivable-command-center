@@ -41,7 +41,7 @@ export const PHASE_CONFIG = {
     label: "Launch",
     weeks: "Week 5–6",
     color: "#E37FB1",
-    description: "Introduce the app, the ring, and the system. Open early access.",
+    description: "Introduce the app, the Halo Ring, and the system. Open early access.",
   },
   "final-push": {
     label: "Final Push",
@@ -519,11 +519,11 @@ It's time.
 
 I've been telling you the story for 4 weeks. The problem, the philosophy, the research. Now let me show you what we actually made.
 
-Conceivable is a system — app + smart ring + AI coaching — that does what I've been describing:
+Conceivable is a system — app + Halo Ring + AI coaching — that does what I've been describing:
 
-It reads the signals your body is already sending (through the ring, your cycle tracking, and daily inputs). It analyzes them against the 7 drivers of fertility health. And it tells you exactly what to focus on, in what order, with evidence-based protocols personalized to YOUR body.
+It reads the signals your body is already sending (through the Halo Ring, your cycle tracking, and daily inputs). It analyzes them against the 7 drivers of fertility health. And it tells you exactly what to focus on, in what order, with evidence-based protocols personalized to YOUR body.
 
-The ring tracks your temperature, sleep, HRV, and activity continuously — so you don't have to remember to take your BBT every morning. It just... does it. All day, all night.
+The Halo Ring tracks your temperature, sleep, HRV, and activity continuously — so you don't have to remember to take your BBT every morning. It just... does it. All day, all night.
 
 The app is where Kai lives — your AI fertility coach. Kai isn't a chatbot. She's built on the clinical frameworks from those 120 podcast interviews and thousands of research papers. She understands YOUR data and gives you recommendations that are specific to what YOUR body is doing right now.
 
@@ -559,7 +559,7 @@ She's not a chatbot that Googles your symptoms. She's not a generic wellness app
 
 Here's what Kai actually does:
 
-She reads your ring data and daily inputs to understand what's happening in YOUR body right now. She identifies which of the 7 fertility drivers need attention — and in what order. She recommends specific protocols — supplements, nutrition changes, sleep adjustments, stress management techniques — based on YOUR patterns, not generic guidelines.
+She reads your Halo Ring data and daily inputs to understand what's happening in YOUR body right now. She identifies which of the 7 fertility drivers need attention — and in what order. She recommends specific protocols — supplements, nutrition changes, sleep adjustments, stress management techniques — based on YOUR patterns, not generic guidelines.
 
 And then — this is the part I'm proudest of — she tracks whether it's working.
 
@@ -587,15 +587,15 @@ Kirsten`,
     week: 5,
     sequence: 3,
     phase: "launch",
-    subject: "The ring that reads what your doctor can't",
+    subject: "The Halo Ring reads what your doctor can't",
     preview: "Continuous data. Not just one snapshot at one appointment.",
     body: `Hi *|FNAME|*,
 
-Let's talk about the ring for a second.
+Let's talk about the Halo Ring for a second.
 
 You know how your doctor gets a snapshot of your health — one blood draw, one moment in time? And then makes decisions based on that single frame?
 
-The Conceivable ring is like having a movie instead of a photograph.
+The Halo Ring is like having a movie instead of a photograph.
 
 It tracks your temperature continuously (not just one morning reading — ALL day and night). It captures your sleep stages, your HRV, your resting heart rate, your activity patterns. Every night, every cycle, every day.
 
@@ -605,7 +605,7 @@ Because the patterns BETWEEN your data points are where the real insights live. 
 
 These cross-signal patterns are invisible in a single doctor's appointment. They're invisible in most apps. They're even invisible to you unless someone is connecting the dots continuously.
 
-The ring does the capturing. Kai does the connecting. And together, they give you a picture of your fertility health that simply hasn't been possible before.
+The Halo Ring does the capturing. Kai does the connecting. And together, they give you a picture of your fertility health that simply hasn't been possible before.
 
 No more wondering. No more guessing. Just your body's actual story, told in data.
 
@@ -631,13 +631,13 @@ Kirsten`,
 
 It's here.
 
-Early access to Conceivable is now open — app, ring, Kai, the whole system.
+Early access to Conceivable is now open — app, Halo Ring, Kai, the whole system.
 
 We're accepting 5,000 founding members. Here's what you get:
 
 Your personalized CON Score — one number that captures your overall fertility readiness across all 7 drivers, with a full breakdown of what's driving it and what to address first.
 
-The Conceivable ring — continuous tracking of temperature, sleep, HRV, and activity. No more morning BBT alarms. No more single-snapshot data.
+The Halo Ring — continuous tracking of temperature, sleep, HRV, and activity. No more morning BBT alarms. No more single-snapshot data.
 
 Kai AI coaching — unlimited, personalized to YOUR data. Evidence-based protocols that adapt as your body responds.
 
@@ -671,9 +671,9 @@ Kirsten`,
 
 Wondering what actually happens after you sign up? Let me walk you through it.
 
-DAY 1: Your ring ships. While you wait, you set up the app and complete your health profile. Takes about 10 minutes. (We ask smart questions — the kind your doctor should ask but doesn't have time to.)
+DAY 1: Your Halo Ring ships. While you wait, you set up the app and complete your health profile. Takes about 10 minutes. (We ask smart questions — the kind your doctor should ask but doesn't have time to.)
 
-DAY 3-5: Ring arrives. Put it on. That's it. It starts capturing data immediately.
+DAY 3-5: Halo Ring arrives. Put it on. That's it. It starts capturing data immediately.
 
 DAY 7: Your initial CON Score is generated. This is the moment. You'll see a full breakdown of all 7 drivers — which ones are strong, which ones need attention, and which one to address FIRST for the biggest impact.
 
@@ -710,8 +710,8 @@ You've had questions. (I love that you've had questions.) Here are the honest an
 "Is this replacing my doctor?"
 No. And I'd be worried about anyone who says it does. Conceivable is a complement to clinical care. We give you better data so you can have better conversations with your provider. Bring your CON Score to your next appointment — your doctor will thank you.
 
-"Do I need the ring?"
-It makes a huge difference, but you can start with the app alone using cycle tracking and daily inputs. The ring adds continuous temperature, sleep, and HRV data — which makes the analysis dramatically more precise.
+"Do I need the Halo Ring?"
+It makes a huge difference, but you can start with the app alone using cycle tracking and daily inputs. The Halo Ring adds continuous temperature, sleep, and HRV data — which makes the analysis dramatically more precise.
 
 "How is this different from Clue / Flo / Natural Cycles?"
 Those are trackers. They record what you tell them and show you patterns. Conceivable is a system. It analyzes the CONNECTIONS between signals, recommends interventions, verifies they're working, and adjusts if they're not. Tracker vs. closed-loop adaptive system.
@@ -797,7 +797,7 @@ And every single time, when I could actually sit with someone and connect the do
 
 I can't sit with millions of women. But I could build a system that does what I do in those moments — connect the dots, explain the why, create a real plan, and actually follow through.
 
-That's Conceivable. That's Kai. That's the ring and the app and the closed loop and all of it.
+That's Conceivable. That's Kai. That's the Halo Ring and the app and the closed loop and all of it.
 
 It's my life's work. And I'd love for you to try it.
 
@@ -829,7 +829,7 @@ Tonight at midnight, the founding member window closes. I won't extend it or add
 
 If you're in, here's what's waiting for you:
 — Your CON Score within 7 days
-— The Conceivable ring shipped to your door
+— The Halo Ring shipped to your door
 — Kai AI coaching, personalized to your body
 — Founding member pricing locked in forever
 — A real, adaptive system that actually follows through
@@ -868,9 +868,9 @@ You're in. And I'm genuinely thrilled.
 
 Here's exactly what happens now:
 
-TODAY: Check your inbox for your onboarding email with login details and ring shipping confirmation.
+TODAY: Check your inbox for your onboarding email with login details and Halo Ring shipping confirmation.
 
-THIS WEEK: Set up the app, complete your health profile. When your ring arrives, put it on. That's it — it starts working immediately.
+THIS WEEK: Set up the app, complete your health profile. When your Halo Ring arrives, put it on. That's it — it starts working immediately.
 
 WITHIN 7 DAYS: Your initial CON Score drops. This is the good stuff — a full breakdown of all 7 drivers, what's strong, what needs attention, and where to start.
 
@@ -910,7 +910,7 @@ It means you're not just using Conceivable — you're helping build it. Your fee
 
 WHAT'S LIVE NOW:
 — CON Score with full 7-driver breakdown
-— Conceivable ring (continuous temp, sleep, HRV, activity)
+— Halo Ring (continuous temp, sleep, HRV, activity)
 — Kai AI coaching (personalized, unlimited)
 — Closed-loop recommendation system
 — Supplement protocol guidance
@@ -925,7 +925,7 @@ WHAT'S COMING (and you'll help shape):
 
 We'll ask for your feedback regularly. Don't hold back. The whole point of a founding member group is that you make this better for every woman who comes after you.
 
-For now: focus on getting your CON Score. Start the conversation with Kai. Wear the ring. Let the system learn your body.
+For now: focus on getting your CON Score. Start the conversation with Kai. Wear the Halo Ring. Let the system learn your body.
 
 And if you know someone who should be on the waitlist for the next cohort — forward them this link. The best thing you can do for a friend going through this is give them access to better tools.
 

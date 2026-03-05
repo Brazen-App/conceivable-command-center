@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import mailchimp from "@/lib/mailchimp";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mc = mailchimp as any;
+import { getClient } from "@/lib/mailchimp";
 
 /**
  * GET /api/mailchimp/segments
@@ -14,6 +11,8 @@ export async function GET() {
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mc = getClient() as any;
     const listsResponse = await mc.lists.getAllLists({ count: 1 });
     const listId = listsResponse?.lists?.[0]?.id;
     if (!listId) {
@@ -52,6 +51,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mc = getClient() as any;
 
     const listsResponse = await mc.lists.getAllLists({ count: 1 });
     const listId = listsResponse?.lists?.[0]?.id;

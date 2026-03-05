@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import mailchimp from "@/lib/mailchimp";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mc = mailchimp as any;
+import { getClient } from "@/lib/mailchimp";
 
 /**
  * GET /api/mailchimp
@@ -17,6 +14,8 @@ export async function GET() {
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mc = getClient() as any;
     // Verify connection with ping
     const ping = await mc.ping.get();
 

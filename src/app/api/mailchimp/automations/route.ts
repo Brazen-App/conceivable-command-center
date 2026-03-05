@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import mailchimp from "@/lib/mailchimp";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mc = mailchimp as any;
+import { getClient } from "@/lib/mailchimp";
 
 /**
  * GET /api/mailchimp/automations
@@ -14,6 +11,8 @@ export async function GET() {
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mc = getClient() as any;
     const response = await mc.automations.list({ count: 50 });
     const automations = (response?.automations || []).map((a: Record<string, unknown>) => ({
       id: a.id,
@@ -442,6 +441,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Mailchimp not configured" }, { status: 503 });
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mc = getClient() as any;
       // Get list ID
       const listsResponse = await mc.lists.getAllLists({ count: 1 });
       const listId = listsResponse?.lists?.[0]?.id;

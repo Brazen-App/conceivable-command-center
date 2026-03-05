@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import mailchimp from "@/lib/mailchimp";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mc = mailchimp as any;
+import { getClient } from "@/lib/mailchimp";
 
 // Fallback mock data when env vars are missing
 const MOCK_DATA = {
@@ -24,6 +21,8 @@ export async function GET() {
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mc = getClient() as any;
     // Fetch list stats for subscriber count
     const listsResponse = await mc.lists.getAllLists({ count: 100 });
     const lists = (listsResponse as { lists?: Array<{ stats?: { member_count?: number } }> }).lists ?? [];

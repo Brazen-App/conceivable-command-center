@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import mailchimp from "@/lib/mailchimp";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mc = mailchimp as any;
+import { getClient } from "@/lib/mailchimp";
 
 interface ScheduleBody {
   emailIds: string[];
@@ -87,6 +84,8 @@ export async function POST(req: NextRequest) {
 
   for (const email of emails) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mc = getClient() as any;
       // Get the list ID (use first list)
       const listsResponse = await mc.lists.getAllLists({ count: 1 });
       const listId = (listsResponse as { lists?: Array<{ id: string }> }).lists?.[0]?.id;

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import mailchimp from "@/lib/mailchimp";
+import { getClient } from "@/lib/mailchimp";
 import { prisma } from "@/lib/prisma";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mc = mailchimp as any;
 
 /**
  * GET /api/mailchimp/warmup
@@ -15,6 +12,8 @@ export async function GET() {
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mc = getClient() as any;
     // Get campaigns with warmup tag
     const campaignsResponse = await mc.campaigns.list({
       count: 50,
@@ -92,6 +91,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mc = getClient() as any;
     // Get list ID
     const listsResponse = await mc.lists.getAllLists({ count: 1 });
     const listId = listsResponse?.lists?.[0]?.id;

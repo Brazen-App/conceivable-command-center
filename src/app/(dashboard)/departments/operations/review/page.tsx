@@ -253,7 +253,7 @@ export default function CEOReviewPage() {
   const handleApproveAndSchedule = async (item: ReviewItem) => {
     setActionLoading(item.id);
     try {
-      // Step 1: Approve
+      // Approve only — does NOT send. Sending follows the warmup schedule.
       const approveRes = await fetch("/api/emails", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -261,30 +261,18 @@ export default function CEOReviewPage() {
       });
       if (!approveRes.ok) throw new Error("Failed to approve");
 
-      // Step 2: Schedule to Mailchimp
-      const scheduleRes = await fetch("/api/emails/schedule", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailIds: [item.id], segment: "all", sendTime: "optimal" }),
-      });
-      const scheduleData = await scheduleRes.json();
-
-      // Update local state
+      // Update local state — move to approved (not published)
       setEmails((prev) =>
         prev.map((e) =>
           e.id === item.id
-            ? { ...e, status: "published", approvedAt: new Date().toISOString(), publishedAt: new Date().toISOString() }
+            ? { ...e, status: "approved", approvedAt: new Date().toISOString() }
             : e
         )
       );
 
-      if (scheduleData.mock) {
-        addToast(`Approved & scheduled: "${item.title}" (Mailchimp mock mode)`);
-      } else {
-        addToast(`Approved & scheduled in Mailchimp: "${item.title}"`);
-      }
+      addToast(`Approved & queued: "${item.title}" — will send on its warmup schedule date`);
     } catch {
-      addToast("Failed to approve & schedule — please try again", "error");
+      addToast("Failed to approve — please try again", "error");
     } finally {
       setActionLoading(null);
     }
@@ -572,7 +560,7 @@ export default function CEOReviewPage() {
                             title="Approve & Schedule to Mailchimp"
                           >
                             {isApproving ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
-                            <span className="hidden sm:inline">Approve & Send</span>
+                            <span className="hidden sm:inline">Approve & Queue</span>
                           </button>
                         )}
                         <button

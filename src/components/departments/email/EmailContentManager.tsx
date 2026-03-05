@@ -65,10 +65,10 @@ export default function EmailContentManager({ emails, onUpdate, onAction }: Prop
 
   const cancelEdit = () => setEditingId(null);
 
-  const handleApproveAndSend = async (email: LaunchEmail) => {
+  const handleApproveAndQueue = async (email: LaunchEmail) => {
     setScheduleLoading(email.id);
     try {
-      // Step 1: Approve
+      // Approve the email — does NOT send it
       const approveRes = await fetch("/api/emails", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -76,24 +76,12 @@ export default function EmailContentManager({ emails, onUpdate, onAction }: Prop
       });
       if (!approveRes.ok) throw new Error("Failed to approve");
 
-      // Step 2: Schedule to Mailchimp
-      const scheduleRes = await fetch("/api/emails/schedule", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailIds: [email.id], segment: "all", sendTime: "optimal" }),
-      });
-      const scheduleData = await scheduleRes.json();
-
-      // Optimistic update — mark as published so it disappears from pending
+      // Optimistic update — move to approved section
       onAction(email.id, "approve");
 
-      if (scheduleData.mock) {
-        addToast(`Approved & scheduled: "${email.subject}" (Mailchimp mock mode)`);
-      } else {
-        addToast(`Approved & sent to Mailchimp: "${email.subject}"`);
-      }
+      addToast(`Approved & queued: "${email.subject}" — will send on its scheduled warmup date`);
     } catch {
-      addToast("Failed to approve & schedule — try again", "error");
+      addToast("Failed to approve — try again", "error");
     } finally {
       setScheduleLoading(null);
     }
@@ -258,14 +246,14 @@ export default function EmailContentManager({ emails, onUpdate, onAction }: Prop
                     {/* ── ACTION BUTTONS ── */}
                     <div className="shrink-0 flex flex-col gap-1.5">
                       <button
-                        onClick={() => handleApproveAndSend(email)}
+                        onClick={() => handleApproveAndQueue(email)}
                         disabled={isLoading}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white disabled:opacity-50 transition-opacity hover:opacity-90"
                         style={{ backgroundColor: "#5A6FFF" }}
-                        title="Approve & Schedule to Mailchimp"
+                        title="Approve & add to warmup schedule (does NOT send immediately)"
                       >
                         {scheduleLoading === email.id ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-                        Approve & Send
+                        Approve & Queue
                       </button>
                       <button
                         onClick={() => handleApprove(email)}

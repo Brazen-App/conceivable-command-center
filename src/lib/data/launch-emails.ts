@@ -1,5 +1,5 @@
 // 23 Launch Emails — 8-Week Early Access Sequence
-// Target: 5,000 early access signups from ~29,000 cleaned, warming list
+// Target: 500 early access signups from ~29,000 cleaned, warming list
 // Arc: Feelings → Mission/Why → Them → Supplements → App → Ring
 // Phases: Re-engagement → Education → Launch → Final Push → Post-Close
 
@@ -377,7 +377,7 @@ If you've been taking something for 3 months and you have no objective way to kn
 
 This "measure → intervene → verify → adjust" approach is the foundation of everything we've built. It applies to supplements, to lifestyle changes, to everything.
 
-Speaking of which — my next email is about the system we built to do exactly this. I think you're going to like it.
+Speaking of which — my next email is about something we built that I'm really excited about. Personalized supplement packs, designed for YOUR body.
 
 Sending you big love,
 Kirsten`,
@@ -392,6 +392,52 @@ Kirsten`,
     id: "email-10",
     week: 4,
     sequence: 1,
+    phase: "education",
+    subject: "Your supplements should be as unique as your body",
+    preview: "We built personalized supplement packs. Here's why.",
+    body: `Hi *|FNAME|*,
+
+Remember when I said most fertility supplements are a waste of money?
+
+I meant it. But here's the thing — the RIGHT supplements, for the RIGHT person, at the RIGHT dose, at the RIGHT time? That's genuinely powerful.
+
+The problem has always been: how do you know which ones are right for YOU?
+
+So we built something: personalized supplement packs.
+
+Here's how it works:
+
+When you join Conceivable, the system analyzes your 7 fertility drivers — your hormonal patterns, your cycle dynamics, your sleep, your stress load, your nutrition gaps — and identifies exactly where your body needs support.
+
+Then we build you a custom supplement pack based on that analysis. Not a generic "fertility blend" with a little bit of everything. A targeted protocol with specific ingredients at specific doses, designed for what YOUR body actually needs.
+
+If your luteal phase temps suggest progesterone support? Your pack includes targeted nutrients for that. If your HRV patterns show elevated stress load? We address the cortisol cascade. If your cycle variability points to thyroid or blood sugar issues? Different protocol entirely.
+
+And here's the part that makes this completely different from anything else out there:
+
+WE TRACK WHETHER IT'S WORKING.
+
+Your Halo Ring and the app monitor your biomarkers continuously. After 4-6 weeks on your protocol, Kai analyzes whether your drivers are shifting in the expected direction. If they are — great, we optimize. If not — we adjust the protocol.
+
+No more guessing. No more taking 17 supplements because Instagram told you to. Just the ones your body needs, verified by your own data.
+
+This is one of the things I'm most excited about. It's the "closed loop" applied to supplementation — and it's something nobody else is doing.
+
+More soon.
+
+Sending you big love,
+Kirsten`,
+    status: "pending",
+    segment: "Engaged subscribers — supplement-interested segment",
+    approvedAt: null,
+    publishedAt: null,
+    complianceStatus: "not_reviewed",
+    metrics: null,
+  },
+  {
+    id: "email-10b",
+    week: 4,
+    sequence: 2,
     phase: "education",
     subject: "Why sleep is the fertility hack nobody talks about",
     preview: "Your Apple Watch knows something your doctor doesn't.",
@@ -431,7 +477,7 @@ Kirsten`,
   {
     id: "email-11",
     week: 4,
-    sequence: 2,
+    sequence: 3,
     phase: "education",
     subject: "Your body is a system, not a symptom",
     preview: "This is the shift that changes everything.",
@@ -467,7 +513,7 @@ Kirsten`,
   {
     id: "email-12",
     week: 4,
-    sequence: 3,
+    sequence: 4,
     phase: "education",
     subject: "What if there was a better way?",
     preview: "After everything I've shared — here's what we actually built.",
@@ -529,7 +575,7 @@ The app is where Kai lives — your AI fertility coach. Kai isn't a chatbot. She
 
 And the key piece: the closed loop. Measure → intervene → verify → adjust. The system doesn't just give you advice and walk away. It tracks whether the intervention is working and adapts if it's not.
 
-We're opening early access to 5,000 founding members. Not as a marketing tactic — because we want to make sure everyone who joins gets real support.
+We're opening early access to 500 founding members. Not as a marketing tactic — because we want to make sure everyone who joins gets real support.
 
 More details in my next email. But I wanted you to see the full picture first.
 
@@ -609,7 +655,7 @@ The Halo Ring does the capturing. Kai does the connecting. And together, they gi
 
 No more wondering. No more guessing. Just your body's actual story, told in data.
 
-Early access: 5,000 spots. Details coming this week.
+Early access: 500 spots. Details coming this week.
 
 Sending you big love,
 Kirsten`,
@@ -625,7 +671,7 @@ Kirsten`,
     week: 6,
     sequence: 1,
     phase: "launch",
-    subject: "Early access is open. 5,000 spots.",
+    subject: "Early access is open. 500 spots.",
     preview: "This is what we've been building toward.",
     body: `Hi *|FNAME|*,
 
@@ -633,9 +679,9 @@ It's here.
 
 Early access to Conceivable is now open — app, Halo Ring, Kai, the whole system.
 
-We're accepting 5,000 founding members. Here's what you get:
+We're accepting 500 founding members. Here's what you get:
 
-Your personalized CON Score — one number that captures your overall fertility readiness across all 7 drivers, with a full breakdown of what's driving it and what to address first.
+Your personalized Conceivable Score — one number that captures your overall fertility readiness across all 7 drivers, with a full breakdown of what's driving it and what to address first.
 
 The Halo Ring — continuous tracking of temperature, sleep, HRV, and activity. No more morning BBT alarms. No more single-snapshot data.
 
@@ -675,7 +721,7 @@ DAY 1: Your Halo Ring ships. While you wait, you set up the app and complete you
 
 DAY 3-5: Halo Ring arrives. Put it on. That's it. It starts capturing data immediately.
 
-DAY 7: Your initial CON Score is generated. This is the moment. You'll see a full breakdown of all 7 drivers — which ones are strong, which ones need attention, and which one to address FIRST for the biggest impact.
+DAY 7: Your initial Conceivable Score is generated. This is the moment. You'll see a full breakdown of all 7 drivers — which ones are strong, which ones need attention, and which one to address FIRST for the biggest impact.
 
 DAY 7-10: Kai delivers your first personalized protocol. Not "eat more vegetables." Specific, evidence-based recommendations targeting YOUR top priority driver. Supplements if needed, lifestyle adjustments, things you can actually do.
 
@@ -685,7 +731,7 @@ From there, it's an ongoing conversation between you, your body, and a system th
 
 No more guesswork. No more "let's see what happens." A real plan that adapts to you.
 
-5,000 founding member spots. Join now →
+500 founding member spots. Join now →
 
 Sending you big love,
 Kirsten`,
@@ -708,7 +754,7 @@ Kirsten`,
 You've had questions. (I love that you've had questions.) Here are the honest answers:
 
 "Is this replacing my doctor?"
-No. And I'd be worried about anyone who says it does. Conceivable is a complement to clinical care. We give you better data so you can have better conversations with your provider. Bring your CON Score to your next appointment — your doctor will thank you.
+No. And I'd be worried about anyone who says it does. Conceivable is a complement to clinical care. We give you better data so you can have better conversations with your provider. Bring your Conceivable Score to your next appointment — your doctor will thank you.
 
 "Do I need the Halo Ring?"
 It makes a huge difference, but you can start with the app alone using cycle tracking and daily inputs. The Halo Ring adds continuous temperature, sleep, and HRV data — which makes the analysis dramatically more precise.
@@ -759,7 +805,7 @@ I'm not going to re-pitch you. You've been reading these emails for 6 weeks — 
 
 I'll just say this:
 
-If you've been on the fence, the thing you're waiting for — more information, more proof, more certainty — is on the other side of trying it. Your CON Score will tell you more about your fertility health in one week than months of wondering.
+If you've been on the fence, the thing you're waiting for — more information, more proof, more certainty — is on the other side of trying it. Your Conceivable Score will tell you more about your fertility health in one week than months of wondering.
 
 And if now isn't the right time, that's completely OK too. I mean that. This journey is yours and there's no wrong timeline.
 
@@ -828,7 +874,7 @@ This is the last email about early access.
 Tonight at midnight, the founding member window closes. I won't extend it or add more spots — that wouldn't be fair to the people who already joined.
 
 If you're in, here's what's waiting for you:
-— Your CON Score within 7 days
+— Your Conceivable Score within 7 days
 — The Halo Ring shipped to your door
 — Kai AI coaching, personalized to your body
 — Founding member pricing locked in forever
@@ -872,7 +918,7 @@ TODAY: Check your inbox for your onboarding email with login details and Halo Ri
 
 THIS WEEK: Set up the app, complete your health profile. When your Halo Ring arrives, put it on. That's it — it starts working immediately.
 
-WITHIN 7 DAYS: Your initial CON Score drops. This is the good stuff — a full breakdown of all 7 drivers, what's strong, what needs attention, and where to start.
+WITHIN 7 DAYS: Your initial Conceivable Score drops. This is the good stuff — a full breakdown of all 7 drivers, what's strong, what needs attention, and where to start.
 
 WITHIN 14 DAYS: Kai delivers your first personalized protocol. Real recommendations, based on your actual data.
 
@@ -882,7 +928,7 @@ Reply to any email if you need help. I read everything. (OK, my team reads every
 
 Kai is available 24/7 in the app. Don't be shy — she literally never gets tired of your questions.
 
-You're part of a founding group of 5,000 women. You're not alone in this — even though it can feel that way sometimes.
+You're part of a founding group of 500 women. You're not alone in this — even though it can feel that way sometimes.
 
 Welcome to the journey. I'm so glad you're here.
 
@@ -904,12 +950,12 @@ Kirsten`,
     preview: "You're not just a user — you're shaping what comes next.",
     body: `Hi *|FNAME|*,
 
-You're one of 5,000 founding members. I want you to know what that actually means.
+You're one of 500 founding members. I want you to know what that actually means.
 
 It means you're not just using Conceivable — you're helping build it. Your feedback, your experience, your "this is confusing" and "I wish it did this" — that's gold to us. We're listening. Actively.
 
 WHAT'S LIVE NOW:
-— CON Score with full 7-driver breakdown
+— Conceivable Score with full 7-driver breakdown
 — Halo Ring (continuous temp, sleep, HRV, activity)
 — Kai AI coaching (personalized, unlimited)
 — Closed-loop recommendation system
@@ -925,7 +971,7 @@ WHAT'S COMING (and you'll help shape):
 
 We'll ask for your feedback regularly. Don't hold back. The whole point of a founding member group is that you make this better for every woman who comes after you.
 
-For now: focus on getting your CON Score. Start the conversation with Kai. Wear the Halo Ring. Let the system learn your body.
+For now: focus on getting your Conceivable Score. Start the conversation with Kai. Wear the Halo Ring. Let the system learn your body.
 
 And if you know someone who should be on the waitlist for the next cohort — forward them this link. The best thing you can do for a friend going through this is give them access to better tools.
 

@@ -91,8 +91,8 @@ function buildWarmupSchedule(
       { segment: "All non-converters — last chance", size: "~24,000", note: "Final send. After this, early access closes." },
     ],
     "post-close": [
-      { segment: "Converted members only", size: "~5,000", note: "Onboarding. Only goes to people who signed up." },
-      { segment: "Converted members only", size: "~5,000", note: "Founding member roadmap + referral ask." },
+      { segment: "Converted members only", size: "~500", note: "Onboarding. Only goes to people who signed up." },
+      { segment: "Converted members only", size: "~500", note: "Founding member roadmap + referral ask." },
     ],
   };
 
@@ -210,7 +210,7 @@ export async function GET(req: NextRequest) {
       { week: "3-4", audience: "~8,000–14,000 (engaged openers)", purpose: "Education to proven engagers" },
       { week: "5-6", audience: "~28,000 (full warmed list)", purpose: "Launch to everyone" },
       { week: "7", audience: "~6,000–24,000 (non-converters)", purpose: "Final push" },
-      { week: "8", audience: "~5,000 (converted only)", purpose: "Onboarding" },
+      { week: "8", audience: "~500 (converted only)", purpose: "Onboarding" },
     ],
     schedule,
     warning:

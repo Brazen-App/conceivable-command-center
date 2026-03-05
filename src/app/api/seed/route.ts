@@ -8,7 +8,7 @@ export async function POST() {
   try {
     let emailCount = 0;
 
-    // Seed Emails
+    // Seed Emails — update content fields but PRESERVE status/approvedAt/publishedAt
     for (const e of LAUNCH_EMAILS) {
       await prisma.email.upsert({
         where: { id: e.id },
@@ -19,11 +19,8 @@ export async function POST() {
           subject: e.subject,
           preview: e.preview,
           body: e.body,
-          status: e.status,
+          // DO NOT update: status, approvedAt, publishedAt (preserve user actions)
           segment: e.segment,
-          complianceStatus: e.complianceStatus,
-          approvedAt: e.approvedAt,
-          publishedAt: e.publishedAt,
           metrics: e.metrics ? JSON.parse(JSON.stringify(e.metrics)) : undefined,
         },
         create: {
@@ -169,6 +166,45 @@ export async function POST() {
         error: err instanceof Error ? err.message : "Unknown seed error",
         stack: err instanceof Error ? err.stack : undefined,
       },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH — resync email bodies only (preserves status, approvedAt, etc.)
+export async function PATCH() {
+  try {
+    let updated = 0;
+    for (const e of LAUNCH_EMAILS) {
+      await prisma.email.upsert({
+        where: { id: e.id },
+        update: {
+          subject: e.subject,
+          preview: e.preview,
+          body: e.body,
+        },
+        create: {
+          id: e.id,
+          week: e.week,
+          sequence: e.sequence,
+          phase: e.phase,
+          subject: e.subject,
+          preview: e.preview,
+          body: e.body,
+          status: e.status,
+          segment: e.segment,
+          complianceStatus: e.complianceStatus,
+          approvedAt: e.approvedAt,
+          publishedAt: e.publishedAt,
+        },
+      });
+      updated++;
+    }
+    return NextResponse.json({ success: true, updated, message: "Email bodies resynced (status preserved)" });
+  } catch (err) {
+    console.error("Resync error:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Resync failed" },
       { status: 500 }
     );
   }

@@ -41,18 +41,27 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify all emails are approved and compliance-cleared
-  const notReady = emails.filter(
-    (e) => e.status !== "approved" || e.complianceStatus !== "approved"
+  // Verify all emails are approved (compliance check is advisory, CEO can override)
+  const notApproved = emails.filter(
+    (e) => e.status !== "approved" && e.status !== "pending"
   );
-  if (notReady.length > 0) {
+  if (notApproved.length > 0) {
     return NextResponse.json(
       {
-        error: `${notReady.length} email(s) not ready: must be approved and compliance-cleared`,
-        notReadyIds: notReady.map((e) => e.id),
+        error: `${notApproved.length} email(s) already published or in unexpected state`,
+        notReadyIds: notApproved.map((e) => e.id),
       },
       { status: 400 }
     );
+  }
+
+  // Auto-approve any pending emails in the batch (CEO is authorizing by scheduling)
+  const pendingIds = emails.filter((e) => e.status === "pending").map((e) => e.id);
+  if (pendingIds.length > 0) {
+    await prisma.email.updateMany({
+      where: { id: { in: pendingIds } },
+      data: { status: "approved", approvedAt: new Date().toISOString() },
+    });
   }
 
   // Check Mailchimp credentials

@@ -17,6 +17,7 @@ import {
   Loader2,
   Filter,
   Eye,
+  RefreshCw,
 } from "lucide-react";
 import CompanyGoalsBanner from "@/components/layout/CompanyGoalsBanner";
 import RejectionModal from "@/components/review/RejectionModal";
@@ -51,7 +52,6 @@ interface ReviewItem {
   department: string;
   submittedAt: string;
   detail?: string;
-  // Email-specific fields
   emailBody?: string;
   emailPhase?: string;
   emailWeek?: number;
@@ -62,12 +62,12 @@ interface ReviewItem {
 // ── Constants ───────────────────────────────────────────────────────
 
 const CATEGORIES: { id: ReviewCategory; label: string; icon: typeof Mail; color: string }[] = [
-  { id: "emails", label: "Emails to Approve", icon: Mail, color: "#E37FB1" },
-  { id: "content", label: "Content to Approve", icon: FileText, color: "#5A6FFF" },
-  { id: "outreach", label: "Outreach Drafts", icon: Send, color: "#356FB6" },
-  { id: "compliance", label: "Compliance Flags", icon: Shield, color: "#E24D47" },
-  { id: "patents", label: "Patent Drafts", icon: FileCheck, color: "#78C3BF" },
-  { id: "decisions", label: "Strategy Decisions", icon: Lightbulb, color: "#F1C028" },
+  { id: "emails", label: "Emails", icon: Mail, color: "#E37FB1" },
+  { id: "content", label: "Content", icon: FileText, color: "#5A6FFF" },
+  { id: "outreach", label: "Outreach", icon: Send, color: "#356FB6" },
+  { id: "compliance", label: "Compliance", icon: Shield, color: "#E24D47" },
+  { id: "patents", label: "Patents", icon: FileCheck, color: "#78C3BF" },
+  { id: "decisions", label: "Decisions", icon: Lightbulb, color: "#F1C028" },
 ];
 
 const PRIORITY_STYLES = {
@@ -92,7 +92,6 @@ const PHASE_LABELS: Record<string, string> = {
   "post-close": "Post-Close",
 };
 
-// Non-email review items (compliance, patents, decisions still hardcoded for now)
 const NON_EMAIL_ITEMS: ReviewItem[] = [
   {
     id: "r-compliance-1",
@@ -136,7 +135,7 @@ function emailToReviewItem(email: EmailRecord): ReviewItem {
     subtitle: `${PHASE_LABELS[email.phase] || email.phase} phase — ${email.preview}`,
     priority: PHASE_PRIORITY[email.phase] || "medium",
     department: "Marketing",
-    submittedAt: email.status === "pending" ? "Ready to send" : email.status,
+    submittedAt: "Ready to review",
     detail: email.preview,
     emailBody: email.body,
     emailPhase: email.phase,
@@ -149,25 +148,27 @@ function emailToReviewItem(email: EmailRecord): ReviewItem {
 // ── Component ───────────────────────────────────────────────────────
 
 export default function CEOReviewPage() {
-  // Data state
   const [emails, setEmails] = useState<EmailRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // UI state
   const [activeCategory, setActiveCategory] = useState<ReviewCategory | "all">("all");
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [approvedItems, setApprovedItems] = useState<Set<string>>(new Set());
   const [rejectedItems, setRejectedItems] = useState<Set<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<{ id: string; text: string } | null>(null);
+  const [toasts, setToasts] = useState<Array<{ id: string; text: string; type: "success" | "error" }>>([]);
 
-  // Modal/panel state
   const [rejectionTarget, setRejectionTarget] = useState<ReviewItem | null>(null);
   const [discussTarget, setDiscussTarget] = useState<ReviewItem | null>(null);
+  const [resyncLoading, setResyncLoading] = useState(false);
 
-  // Fetch emails from DB
+  const addToast = (text: string, type: "success" | "error" = "success") => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, text, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+  };
+
   const fetchEmails = useCallback(async () => {
     try {
       const res = await fetch("/api/emails");
@@ -186,29 +187,25 @@ export default function CEOReviewPage() {
     fetchEmails();
   }, [fetchEmails]);
 
-  // Build review items from DB emails + static items
-  const pendingEmailItems: ReviewItem[] = emails
-    .filter((e) => e.status === "pending")
-    .map(emailToReviewItem);
-
+  // Separate emails by status
+  const pendingEmails = emails.filter((e) => e.status === "pending");
   const approvedEmails = emails.filter((e) => e.status === "approved");
   const publishedEmails = emails.filter((e) => e.status === "published");
+
+  // Build review items — only pending emails go in the review queue
+  const pendingEmailItems: ReviewItem[] = pendingEmails
+    .filter((e) => !rejectedItems.has(e.id))
+    .map(emailToReviewItem);
 
   const allItems = [...pendingEmailItems, ...NON_EMAIL_ITEMS];
 
   const filteredItems = allItems
-    .filter(
-      (item) =>
-        !approvedItems.has(item.id) &&
-        !rejectedItems.has(item.id) &&
-        (activeCategory === "all" || item.category === activeCategory)
-    )
+    .filter((item) => activeCategory === "all" || item.category === activeCategory)
     .sort((a, b) => {
       const p = { high: 0, medium: 1, low: 2 };
       return p[a.priority] - p[b.priority];
     });
 
-  // Pagination: show 10 by default, all if showAll
   const INITIAL_COUNT = 10;
   const visibleItems = showAll ? filteredItems : filteredItems.slice(0, INITIAL_COUNT);
   const hasMore = filteredItems.length > INITIAL_COUNT && !showAll;
@@ -222,7 +219,7 @@ export default function CEOReviewPage() {
     });
   };
 
-  // ── Actions ─────────────────────────────────────────────────────
+  // ── Approve: update DB then refetch ─────────────────────────────
 
   const handleApprove = async (item: ReviewItem) => {
     setActionLoading(item.id);
@@ -235,22 +232,65 @@ export default function CEOReviewPage() {
         });
         if (!res.ok) throw new Error("Failed to approve email");
       }
-      setApprovedItems((prev) => new Set(prev).add(item.id));
-      setSuccessMessage({ id: item.id, text: `✓ "${item.title}" approved and moved to Scheduled queue` });
-      setTimeout(() => setSuccessMessage(null), 4000);
-      // Refetch so approved section updates
-      fetchEmails();
-    } catch (err) {
-      console.error("Approve error:", err);
-      setSuccessMessage({ id: item.id, text: "Failed to approve — please try again" });
-      setTimeout(() => setSuccessMessage(null), 4000);
+      // Immediately remove from pending list
+      setEmails((prev) =>
+        prev.map((e) =>
+          e.id === item.id
+            ? { ...e, status: "approved", approvedAt: new Date().toISOString() }
+            : e
+        )
+      );
+      addToast(`Approved: "${item.title}" — moved to scheduling queue`);
+    } catch {
+      addToast("Failed to approve — please try again", "error");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // ── Approve & Schedule in one click ──────────────────────────────
+
+  const handleApproveAndSchedule = async (item: ReviewItem) => {
+    setActionLoading(item.id);
+    try {
+      // Step 1: Approve
+      const approveRes = await fetch("/api/emails", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id, action: "approve" }),
+      });
+      if (!approveRes.ok) throw new Error("Failed to approve");
+
+      // Step 2: Schedule to Mailchimp
+      const scheduleRes = await fetch("/api/emails/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailIds: [item.id], segment: "all", sendTime: "optimal" }),
+      });
+      const scheduleData = await scheduleRes.json();
+
+      // Update local state
+      setEmails((prev) =>
+        prev.map((e) =>
+          e.id === item.id
+            ? { ...e, status: "published", approvedAt: new Date().toISOString(), publishedAt: new Date().toISOString() }
+            : e
+        )
+      );
+
+      if (scheduleData.mock) {
+        addToast(`Approved & scheduled: "${item.title}" (Mailchimp mock mode)`);
+      } else {
+        addToast(`Approved & scheduled in Mailchimp: "${item.title}"`);
+      }
+    } catch {
+      addToast("Failed to approve & schedule — please try again", "error");
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleReject = async (item: ReviewItem, reasonCategory: string, reasonText: string) => {
-    // Log rejection
     await fetch("/api/rejections", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -261,44 +301,52 @@ export default function CEOReviewPage() {
         reasonText,
       }),
     });
-
-    // If email, revert to pending (it stays in DB but leaves review queue via rejectedItems set)
     setRejectedItems((prev) => new Set(prev).add(item.id));
-    setSuccessMessage({ id: item.id, text: "Rejected and logged — Joy will learn from this" });
-    setTimeout(() => setSuccessMessage(null), 3000);
+    addToast("Rejected and logged — Joy will learn from this");
   };
 
-  // ── Schedule to Mailchimp ──────────────────────────────────────
-  const [scheduleLoading, setScheduleLoading] = useState(false);
-  const [scheduleMessage, setScheduleMessage] = useState<string | null>(null);
+  // ── Resync email bodies from seed data ──────────────────────────
 
-  const handleScheduleToMailchimp = async (emailIds: string[], sendTime: "optimal" | "immediate" = "optimal") => {
+  const handleResync = async () => {
+    setResyncLoading(true);
+    try {
+      const res = await fetch("/api/seed", { method: "PATCH" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Resync failed");
+      addToast(`Resynced ${data.updated} email bodies (status preserved)`);
+      fetchEmails();
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Resync failed", "error");
+    } finally {
+      setResyncLoading(false);
+    }
+  };
+
+  // ── Schedule approved to Mailchimp ──────────────────────────────
+
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+
+  const handleScheduleToMailchimp = async (emailIds: string[]) => {
     setScheduleLoading(true);
-    setScheduleMessage(null);
     try {
       const res = await fetch("/api/emails/schedule", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailIds, segment: "all", sendTime }),
+        body: JSON.stringify({ emailIds, segment: "all", sendTime: "optimal" }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setScheduleMessage(data.error || "Failed to schedule emails");
+        addToast(data.error || "Schedule failed", "error");
       } else if (data.mock) {
-        setScheduleMessage(`${data.scheduled.length} email(s) marked as scheduled (Mailchimp mock mode)`);
+        addToast(`${data.scheduled?.length || 0} email(s) scheduled (Mailchimp mock mode)`);
       } else {
-        const succeeded = data.scheduled?.length || 0;
-        const failed = data.failed?.length || 0;
-        setScheduleMessage(
-          `${succeeded} email(s) scheduled in Mailchimp${failed > 0 ? `. ${failed} failed.` : "."}`
-        );
-        fetchEmails();
+        addToast(`${data.scheduled?.length || 0} email(s) scheduled in Mailchimp`);
       }
+      fetchEmails();
     } catch {
-      setScheduleMessage("Connection error — check your internet and try again");
+      addToast("Connection error — check your internet", "error");
     } finally {
       setScheduleLoading(false);
-      setTimeout(() => setScheduleMessage(null), 6000);
     }
   };
 
@@ -306,14 +354,10 @@ export default function CEOReviewPage() {
 
   const pendingCounts = CATEGORIES.map((cat) => ({
     ...cat,
-    count: allItems.filter(
-      (i) => i.category === cat.id && !approvedItems.has(i.id) && !rejectedItems.has(i.id)
-    ).length,
+    count: allItems.filter((i) => i.category === cat.id).length,
   }));
 
-  const totalPending = allItems.filter(
-    (i) => !approvedItems.has(i.id) && !rejectedItems.has(i.id)
-  ).length;
+  const totalPending = allItems.length;
 
   // ── Render ──────────────────────────────────────────────────────
 
@@ -321,59 +365,59 @@ export default function CEOReviewPage() {
     <div className="p-6 md:p-8 lg:p-10 max-w-5xl">
       <CompanyGoalsBanner departmentFocus="Clear review queue to unblock email launch" />
 
-      {/* Success Toast */}
-      {successMessage && (
-        <div
-          className="rounded-xl border p-3 mb-4 text-sm font-medium flex items-center gap-2 animate-in fade-in"
-          style={{
-            borderColor: successMessage.text.includes("Failed") ? "#E24D4730" : "#1EAA5530",
-            backgroundColor: successMessage.text.includes("Failed") ? "#E24D4708" : "#1EAA5508",
-            color: successMessage.text.includes("Failed") ? "#E24D47" : "#1EAA55",
-          }}
-        >
-          <CheckCircle2 size={14} />
-          {successMessage.text}
+      {/* Toasts */}
+      {toasts.length > 0 && (
+        <div className="space-y-2 mb-4">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className="rounded-xl border p-3 text-sm font-medium flex items-center gap-2"
+              style={{
+                borderColor: toast.type === "error" ? "#E24D4730" : "#1EAA5530",
+                backgroundColor: toast.type === "error" ? "#E24D4708" : "#1EAA5508",
+                color: toast.type === "error" ? "#E24D47" : "#1EAA55",
+              }}
+            >
+              <CheckCircle2 size={14} />
+              {toast.text}
+            </div>
+          ))}
         </div>
       )}
 
-      {scheduleMessage && (
-        <div
-          className="rounded-xl border p-3 mb-4 text-sm font-medium flex items-center gap-2"
-          style={{
-            borderColor: scheduleMessage.includes("failed") || scheduleMessage.includes("error") ? "#E24D4730" : "#5A6FFF30",
-            backgroundColor: scheduleMessage.includes("failed") || scheduleMessage.includes("error") ? "#E24D4708" : "#5A6FFF08",
-            color: scheduleMessage.includes("failed") || scheduleMessage.includes("error") ? "#E24D47" : "#5A6FFF",
-          }}
-        >
-          <Send size={14} />
-          {scheduleMessage}
-        </div>
-      )}
-
-      {/* Summary */}
-      <div className="flex items-center gap-3 mb-4">
+      {/* Summary + Resync */}
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Clock size={16} style={{ color: "#5A6FFF" }} />
           <h2 className="text-lg font-bold" style={{ color: "var(--foreground)" }}>
             {loading ? "Loading..." : `${totalPending} items need your review`}
           </h2>
         </div>
+        <button
+          onClick={handleResync}
+          disabled={resyncLoading}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors hover:opacity-80"
+          style={{ borderColor: "var(--border)", color: "var(--foreground)", backgroundColor: "var(--surface)" }}
+        >
+          <RefreshCw size={12} className={resyncLoading ? "animate-spin" : ""} />
+          Sync Latest Content
+        </button>
       </div>
 
       {/* Email status summary */}
       {!loading && emails.length > 0 && (
         <div className="flex items-center gap-4 mb-6 flex-wrap">
           <span className="text-xs font-medium px-2 py-1 rounded-lg" style={{ backgroundColor: "#F1C02810", color: "#F1C028" }}>
-            {emails.filter((e) => e.status === "pending").length} pending
+            {pendingEmails.length} pending
           </span>
           <span className="text-xs font-medium px-2 py-1 rounded-lg" style={{ backgroundColor: "#1EAA5510", color: "#1EAA55" }}>
             {approvedEmails.length} approved
           </span>
           <span className="text-xs font-medium px-2 py-1 rounded-lg" style={{ backgroundColor: "#5A6FFF10", color: "#5A6FFF" }}>
-            {publishedEmails.length} sent/scheduled
+            {publishedEmails.length} sent
           </span>
           <span className="text-xs" style={{ color: "var(--muted)" }}>
-            {emails.length} total emails in system
+            {emails.length} total emails
           </span>
         </div>
       )}
@@ -445,7 +489,7 @@ export default function CEOReviewPage() {
         </div>
       )}
 
-      {/* Review Items */}
+      {/* ═══ REVIEW ITEMS ═══ */}
       {!loading && (
         <div className="space-y-3">
           {visibleItems.length === 0 ? (
@@ -466,25 +510,24 @@ export default function CEOReviewPage() {
               const pStyle = PRIORITY_STYLES[item.priority];
               const isExpanded = expandedItems.has(item.id);
               const isApproving = actionLoading === item.id;
+
               return (
                 <div
                   key={item.id}
                   className="rounded-xl border overflow-hidden transition-shadow hover:shadow-sm"
                   style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
                 >
-                  {/* Header — always visible */}
-                  <div
-                    className="p-4 cursor-pointer"
-                    onClick={() => toggleExpanded(item.id)}
-                  >
+                  {/* Card header — ALWAYS shows approve/reject buttons */}
+                  <div className="p-4">
                     <div className="flex items-start gap-3">
                       <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 cursor-pointer"
                         style={{ backgroundColor: `${cat.color}14` }}
+                        onClick={() => toggleExpanded(item.id)}
                       >
                         <Icon size={15} style={{ color: cat.color }} />
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleExpanded(item.id)}>
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <span
                             className="text-[9px] font-bold px-2 py-0.5 rounded-full"
@@ -506,34 +549,6 @@ export default function CEOReviewPage() {
                               {PHASE_LABELS[item.emailPhase]}
                             </span>
                           )}
-                          {item.emailComplianceStatus && (
-                            <span
-                              className="text-[9px] font-medium px-2 py-0.5 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  item.emailComplianceStatus === "approved"
-                                    ? "#1EAA5510"
-                                    : item.emailComplianceStatus === "flagged"
-                                    ? "#E24D4710"
-                                    : "#F1C02810",
-                                color:
-                                  item.emailComplianceStatus === "approved"
-                                    ? "#1EAA55"
-                                    : item.emailComplianceStatus === "flagged"
-                                    ? "#E24D47"
-                                    : "#F1C028",
-                              }}
-                            >
-                              {item.emailComplianceStatus === "approved"
-                                ? "Compliance OK"
-                                : item.emailComplianceStatus === "flagged"
-                                ? "Compliance Flagged"
-                                : "Needs Review"}
-                            </span>
-                          )}
-                          <span className="text-[9px]" style={{ color: "var(--muted)" }}>
-                            {item.submittedAt}
-                          </span>
                         </div>
                         <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
                           {item.title}
@@ -542,27 +557,109 @@ export default function CEOReviewPage() {
                           {item.subtitle}
                         </p>
                       </div>
-                      <div className="shrink-0 flex items-center gap-2">
-                        {isExpanded ? (
-                          <ChevronUp size={16} style={{ color: "var(--muted)" }} />
-                        ) : (
-                          <ChevronDown size={16} style={{ color: "var(--muted)" }} />
+
+                      {/* ── INLINE ACTION BUTTONS ── */}
+                      <div className="shrink-0 flex items-center gap-1.5">
+                        {item.category === "emails" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApproveAndSchedule(item);
+                            }}
+                            disabled={isApproving}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-white disabled:opacity-50 transition-opacity hover:opacity-90"
+                            style={{ backgroundColor: "#5A6FFF" }}
+                            title="Approve & Schedule to Mailchimp"
+                          >
+                            {isApproving ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+                            <span className="hidden sm:inline">Approve & Send</span>
+                          </button>
                         )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleApprove(item);
+                          }}
+                          disabled={isApproving}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-white disabled:opacity-50 transition-opacity hover:opacity-90"
+                          style={{ backgroundColor: "#1EAA55" }}
+                          title="Approve"
+                        >
+                          <CheckCircle2 size={11} />
+                          <span className="hidden sm:inline">Approve</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRejectionTarget(item);
+                          }}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-white transition-opacity hover:opacity-90"
+                          style={{ backgroundColor: "#E24D47" }}
+                          title="Reject"
+                        >
+                          <XCircle size={11} />
+                          <span className="hidden sm:inline">Reject</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDiscussTarget(item);
+                          }}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-opacity hover:opacity-90"
+                          style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}
+                          title="Discuss with Joy"
+                        >
+                          <MessageCircle size={11} />
+                        </button>
+                        <button
+                          onClick={() => toggleExpanded(item.id)}
+                          className="p-1.5 rounded-lg hover:bg-gray-50"
+                        >
+                          {isExpanded ? (
+                            <ChevronUp size={14} style={{ color: "var(--muted)" }} />
+                          ) : (
+                            <ChevronDown size={14} style={{ color: "var(--muted)" }} />
+                          )}
+                        </button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Expanded section */}
+                  {/* Expanded section — email preview only */}
                   {isExpanded && (
                     <div className="px-4 pb-4 pt-0 border-t" style={{ borderColor: "var(--border)" }}>
-                      {/* Email body preview */}
                       {item.emailBody ? (
-                        <div className="mt-3 mb-4">
+                        <div className="mt-3">
                           <div className="flex items-center gap-1.5 mb-2">
                             <Eye size={12} style={{ color: "var(--muted)" }} />
                             <span className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "var(--muted)" }}>
                               Email Preview
                             </span>
+                            {item.emailComplianceStatus && (
+                              <span
+                                className="text-[9px] font-medium px-2 py-0.5 rounded-full ml-2"
+                                style={{
+                                  backgroundColor:
+                                    item.emailComplianceStatus === "approved"
+                                      ? "#1EAA5510"
+                                      : item.emailComplianceStatus === "flagged"
+                                        ? "#E24D4710"
+                                        : "#F1C02810",
+                                  color:
+                                    item.emailComplianceStatus === "approved"
+                                      ? "#1EAA55"
+                                      : item.emailComplianceStatus === "flagged"
+                                        ? "#E24D47"
+                                        : "#F1C028",
+                                }}
+                              >
+                                {item.emailComplianceStatus === "approved"
+                                  ? "Compliance OK"
+                                  : item.emailComplianceStatus === "flagged"
+                                    ? "Compliance Flagged"
+                                    : "Needs Review"}
+                              </span>
+                            )}
                           </div>
                           <div
                             className="rounded-lg border p-4 text-sm leading-relaxed max-h-80 overflow-y-auto"
@@ -580,58 +677,10 @@ export default function CEOReviewPage() {
                           </div>
                         </div>
                       ) : (
-                        <p
-                          className="text-xs leading-relaxed mt-3 mb-4"
-                          style={{ color: "var(--foreground)" }}
-                        >
+                        <p className="text-xs leading-relaxed mt-3" style={{ color: "var(--foreground)" }}>
                           {item.detail}
                         </p>
                       )}
-
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleApprove(item);
-                          }}
-                          disabled={isApproving}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white disabled:opacity-50"
-                          style={{ backgroundColor: "#1EAA55" }}
-                        >
-                          {isApproving ? (
-                            <Loader2 size={13} className="animate-spin" />
-                          ) : (
-                            <CheckCircle2 size={13} />
-                          )}
-                          Approve
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setRejectionTarget(item);
-                          }}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white"
-                          style={{ backgroundColor: "#E24D47" }}
-                        >
-                          <XCircle size={13} />
-                          Reject
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDiscussTarget(item);
-                          }}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium"
-                          style={{
-                            backgroundColor: "#5A6FFF14",
-                            color: "#5A6FFF",
-                          }}
-                        >
-                          <MessageCircle size={13} />
-                          Discuss with Joy
-                        </button>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -639,16 +688,11 @@ export default function CEOReviewPage() {
             })
           )}
 
-          {/* Show All button */}
           {hasMore && (
             <button
               onClick={() => setShowAll(true)}
               className="w-full py-3 rounded-xl border text-sm font-medium transition-colors hover:shadow-sm"
-              style={{
-                borderColor: "var(--border)",
-                backgroundColor: "var(--surface)",
-                color: "#5A6FFF",
-              }}
+              style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)", color: "#5A6FFF" }}
             >
               <div className="flex items-center justify-center gap-2">
                 <Filter size={14} />
@@ -669,17 +713,15 @@ export default function CEOReviewPage() {
                 Approved &amp; Ready to Schedule ({approvedEmails.length})
               </h3>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleScheduleToMailchimp(approvedEmails.map((e) => e.id), "optimal")}
-                disabled={scheduleLoading}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white disabled:opacity-50"
-                style={{ backgroundColor: "#5A6FFF" }}
-              >
-                {scheduleLoading ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
-                Schedule All in Mailchimp
-              </button>
-            </div>
+            <button
+              onClick={() => handleScheduleToMailchimp(approvedEmails.map((e) => e.id))}
+              disabled={scheduleLoading}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-white disabled:opacity-50"
+              style={{ backgroundColor: "#5A6FFF" }}
+            >
+              {scheduleLoading ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+              Schedule All in Mailchimp
+            </button>
           </div>
           <div className="space-y-2">
             {approvedEmails.map((email) => (
@@ -701,7 +743,7 @@ export default function CEOReviewPage() {
                     APPROVED
                   </span>
                   <button
-                    onClick={() => handleScheduleToMailchimp([email.id], "optimal")}
+                    onClick={() => handleScheduleToMailchimp([email.id])}
                     disabled={scheduleLoading}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium text-white disabled:opacity-50"
                     style={{ backgroundColor: "#5A6FFF" }}
@@ -715,7 +757,7 @@ export default function CEOReviewPage() {
         </div>
       )}
 
-      {/* ── Sent / Published Emails ───────────────────────────────── */}
+      {/* ── Sent / Published ───────────────────────────────────────── */}
       {!loading && publishedEmails.length > 0 && (
         <div className="mt-8">
           <div className="flex items-center gap-2 mb-3">

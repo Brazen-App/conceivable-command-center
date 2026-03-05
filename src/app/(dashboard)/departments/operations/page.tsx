@@ -2,12 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
-  Calendar,
-  DollarSign,
-  Users,
-  TrendingUp,
-  ShoppingBag,
-  UserMinus,
   Mic,
   Square,
   Upload,
@@ -16,13 +10,12 @@ import {
   Loader2,
   X,
   AlertTriangle,
-  Sparkles,
   Target,
   ArrowRight,
   Shield,
-  Megaphone,
-  Rocket,
-  Heart,
+  Mail,
+  Clock,
+  Link2,
 } from "lucide-react";
 import Link from "next/link";
 import CompanyGoalsBanner from "@/components/layout/CompanyGoalsBanner";
@@ -55,99 +48,64 @@ function LaunchCountdown() {
   );
 }
 
-/* ─── CEO Metric Cards ─── */
-const CEO_METRICS = [
+/* ─── 5 CEO Priorities (Dan Sullivan Framework) ─── */
+const CEO_PRIORITIES = [
   {
-    label: "Runway",
-    value: "2 mo",
-    detail: "$28K/mo burn",
-    icon: DollarSign,
-    color: "#E24D47",
-    alert: true,
-  },
-  {
-    label: "Early Access Signups",
-    value: "0",
-    target: "5,000",
-    icon: Users,
+    number: 1,
+    label: "HIGHEST ROI",
+    title: "Send First 3 Re-engagement Emails",
+    description:
+      "28,905 subscribers haven't heard from you. Every day of delay = lost signups. This one action unblocks the entire funnel.",
+    type: "10x Multiplier",
+    link: "/departments/marketing/email",
     color: "#5A6FFF",
-    progress: 0,
+    icon: Mail,
   },
   {
-    label: "Revenue (7 days)",
-    value: "$0",
-    detail: "Pre-launch",
-    icon: TrendingUp,
-    color: "#1EAA55",
-  },
-  {
-    label: "App Downloads",
-    value: "0",
-    detail: "Shopify + App Store",
-    icon: ShoppingBag,
-    color: "#356FB6",
-  },
-  {
-    label: "Conversion Rate",
-    value: "—",
-    detail: "No traffic yet",
-    icon: Target,
-    color: "#ACB7FF",
-  },
-  {
-    label: "Churn Rate",
-    value: "—",
-    detail: "Pre-launch",
-    icon: UserMinus,
-    color: "#9686B9",
-  },
-];
-
-/* ─── Cross-Department Alerts ─── */
-const ALERTS = [
-  {
-    department: "Marketing",
-    severity: "critical" as const,
-    message: "23 launch emails written but 0 sent. Email sequence is the #1 bottleneck to signups.",
-    action: "/departments/marketing/email",
-    actionLabel: "Open Email Deployment",
-    icon: Megaphone,
-    accent: "#E37FB1",
-  },
-  {
-    department: "Legal",
-    severity: "critical" as const,
-    message: "Closed-loop patent provisional filing overdue. Must file before fundraise begins.",
-    action: "/departments/legal/patents",
-    actionLabel: "View Patents",
+    number: 2,
+    label: "BIGGEST RISK",
+    title: "File Closed-Loop Patent",
+    description:
+      "Provisional must be filed before fundraise begins. Competitors are active. This protects your core IP.",
+    type: "Risk/Blocker",
+    link: "/departments/legal/patents",
+    color: "#E24D47",
     icon: Shield,
-    accent: "#E24D47",
   },
   {
-    department: "Fundraising",
-    severity: "warning" as const,
-    message: "14 investors mapped but outreach hasn't started. 2 months runway — bridge round is urgent.",
-    action: "/departments/fundraising",
-    actionLabel: "Open Fundraising",
-    icon: Rocket,
-    accent: "#F1C028",
+    number: 3,
+    label: "TIME-SENSITIVE",
+    title: "Start Bridge Round Outreach",
+    description:
+      "2 months runway at $28K/mo burn. 14 investors mapped, 0 contacted. Every week without outreach narrows your options.",
+    type: "Deadline",
+    link: "/departments/fundraising",
+    color: "#F1C028",
+    icon: Clock,
   },
   {
-    department: "Community",
-    severity: "info" as const,
-    message: "220 Circle members — engagement is organic but no structured campaign running.",
-    action: "/departments/community",
-    actionLabel: "View Community",
-    icon: Heart,
-    accent: "#E37FB1",
+    number: 4,
+    label: "UNIQUE ABILITY",
+    title: "Record 3 POV Takes (5 min each)",
+    description:
+      "Your unique ability is vision + storytelling. Record quick takes on today's fertility news \u2014 agents multiply each into 5+ content pieces.",
+    type: "CEO Unique Ability",
+    link: "/departments/marketing/content",
+    color: "#9686B9",
+    icon: Mic,
+  },
+  {
+    number: 5,
+    label: "CROSS-DEPARTMENT",
+    title: "Connect Mailchimp for Email Warmup",
+    description:
+      "Email warmup takes 2-3 weeks. Starting now means ready for launch. This unblocks Marketing, gives Fundraising traction data, and validates product-market fit.",
+    type: "Cross-Dept Multiplier",
+    link: "/departments/marketing/email-ops",
+    color: "#1EAA55",
+    icon: Link2,
   },
 ];
-
-const SEVERITY_STYLES = {
-  critical: { bg: "#E24D4710", border: "#E24D47", label: "URGENT", labelColor: "#E24D47" },
-  warning: { bg: "#F1C02810", border: "#F1C028", label: "WATCH", labelColor: "#F1C028" },
-  info: { bg: "#5A6FFF08", border: "#5A6FFF", label: "INFO", labelColor: "#5A6FFF" },
-};
 
 /* ─── Quick Capture ─── */
 const CAPTURE_DEPARTMENTS = [
@@ -260,7 +218,7 @@ function QuickCaptureWidget() {
       }}
     >
       <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-        {greeting}, Kirsten — what&apos;s on your mind?
+        {greeting}, Kirsten &mdash; what&apos;s on your mind?
       </p>
       <div className="flex items-start gap-3 mb-3">
         <button
@@ -457,133 +415,93 @@ export default function OperationsDashboardPage() {
         </div>
       </div>
 
-      {/* Secondary Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        {CEO_METRICS.slice(2).map((metric) => {
-          const Icon = metric.icon;
-          return (
-            <div
-              key={metric.label}
-              className="rounded-xl border p-4 cursor-pointer hover:shadow-sm transition-shadow"
-              style={{
-                borderColor: "var(--border)",
-                backgroundColor: "var(--surface)",
-              }}
-            >
-              <div className="flex items-center gap-1.5 mb-2">
-                <Icon size={12} style={{ color: metric.color }} strokeWidth={2} />
-                <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-                  {metric.label}
-                </span>
-              </div>
-              <p className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
-                {metric.value}
-              </p>
-              {metric.detail && (
-                <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>
-                  {metric.detail}
-                </p>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
       {/* Quick Capture */}
       <QuickCaptureWidget />
 
-      {/* Joy's 10x Recommendation */}
-      <div
-        className="rounded-2xl p-5 mb-6"
-        style={{
-          background: "linear-gradient(135deg, #F1C02808 0%, #9686B908 100%)",
-          border: "1px solid rgba(241, 192, 40, 0.15)",
-        }}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles size={14} style={{ color: "#F1C028" }} />
-          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#F1C028" }}>
-            Joy&apos;s 10x Recommendation
-          </span>
+      {/* 5 Things That Need Your Attention */}
+      <section className="mb-6">
+        <div className="flex items-center gap-3 mb-5">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: `${ACCENT}14` }}
+          >
+            <Target size={16} style={{ color: ACCENT }} />
+          </div>
+          <div>
+            <h2
+              className="text-sm font-bold"
+              style={{ color: "var(--foreground)" }}
+            >
+              5 Things That Need Your Attention
+            </h2>
+            <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+              Ranked by leverage. Do these and everything else moves forward.
+            </p>
+          </div>
         </div>
-        <p className="text-sm font-medium mb-2" style={{ color: "var(--foreground)" }}>
-          Send the first 3 re-engagement emails this week.
-        </p>
-        <p className="text-xs leading-relaxed mb-3" style={{ color: "var(--muted)" }}>
-          The 23 emails are written and compliance-ready. The email list has 28,905 subscribers who haven&apos;t
-          heard from Conceivable in months. Every day of delay is lost signups. This is a 10x move —
-          one action that unblocks marketing, validates product-market fit, and gives fundraising real traction data.
-          The 2x alternative (perfecting the emails further) costs more than it gains.
-        </p>
-        <Link
-          href="/departments/marketing/email"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors"
-          style={{ backgroundColor: "#5A6FFF" }}
-        >
-          Open Email Deployment <ArrowRight size={13} />
-        </Link>
-      </div>
 
-      {/* Cross-Department Alerts */}
-      <section>
-        <h2
-          className="mb-4"
-          style={{
-            fontFamily: "var(--font-caption)",
-            fontSize: "10px",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: "var(--muted)",
-          }}
-        >
-          Cross-Department Alerts
-        </h2>
         <div className="space-y-3">
-          {ALERTS.map((alert, i) => {
-            const Icon = alert.icon;
-            const style = SEVERITY_STYLES[alert.severity];
+          {CEO_PRIORITIES.map((priority) => {
+            const Icon = priority.icon;
             return (
               <Link
-                key={i}
-                href={alert.action}
-                className="block rounded-xl border-l-4 border p-4 hover:shadow-sm transition-shadow"
+                key={priority.number}
+                href={priority.link}
+                className="group block rounded-xl border overflow-hidden hover:shadow-md transition-all"
                 style={{
                   borderColor: "var(--border)",
-                  borderLeftColor: style.border,
-                  backgroundColor: style.bg,
+                  backgroundColor: "var(--surface)",
                 }}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-stretch">
+                  {/* Numbered badge column */}
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: `${alert.accent}14` }}
+                    className="flex flex-col items-center justify-center px-4 py-5 shrink-0"
+                    style={{
+                      backgroundColor: `${priority.color}10`,
+                      borderRight: `1px solid ${priority.color}20`,
+                      minWidth: "64px",
+                    }}
                   >
-                    <Icon size={16} style={{ color: alert.accent }} strokeWidth={1.8} />
+                    <span
+                      className="text-2xl font-bold"
+                      style={{ color: priority.color, fontFamily: "var(--font-display)" }}
+                    >
+                      {priority.number}
+                    </span>
+                    <span
+                      className="text-[8px] font-bold uppercase tracking-wider mt-1 text-center leading-tight"
+                      style={{ color: priority.color }}
+                    >
+                      {priority.label}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+
+                  {/* Content */}
+                  <div className="flex-1 p-4 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Icon size={14} style={{ color: priority.color }} strokeWidth={2} />
+                      <h3 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                        {priority.title}
+                      </h3>
+                    </div>
+                    <p className="text-xs leading-relaxed mb-2" style={{ color: "var(--muted)" }}>
+                      {priority.description}
+                    </p>
+                    <div className="flex items-center gap-3">
                       <span
                         className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: `${alert.accent}14`, color: alert.accent }}
+                        style={{ backgroundColor: `${priority.color}14`, color: priority.color }}
                       >
-                        {alert.department}
+                        {priority.type}
                       </span>
                       <span
-                        className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: `${style.border}14`, color: style.labelColor }}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ color: priority.color }}
                       >
-                        {style.label}
+                        Take Action <ArrowRight size={10} />
                       </span>
                     </div>
-                    <p className="text-xs leading-relaxed" style={{ color: "var(--foreground)" }}>
-                      {alert.message}
-                    </p>
-                    <span
-                      className="inline-flex items-center gap-1 mt-2 text-[11px] font-medium"
-                      style={{ color: alert.accent }}
-                    >
-                      {alert.actionLabel} <ArrowRight size={10} />
-                    </span>
                   </div>
                 </div>
               </Link>

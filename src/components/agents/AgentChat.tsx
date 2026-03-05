@@ -1,8 +1,45 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Bot, User, Sparkles } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Loader2, Bot, User, Sparkles, Mic, MicOff, X, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { AgentConfig } from "@/types";
+
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionResultList {
+  length: number;
+  [index: number]: SpeechRecognitionResult;
+}
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  [index: number]: SpeechRecognitionAlternative;
+}
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: Event) => void) | null;
+  onend: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognitionInstance;
+    webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+  }
+}
 
 interface Message {
   id: string;
@@ -17,15 +54,81 @@ interface AgentChatProps {
 }
 
 export default function AgentChat({ config, initialPrompt }: AgentChatProps) {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initialPromptSent = useRef(false);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setIsRecording(false);
+  }, []);
+
+  const startRecording = useCallback(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: "Voice input is not supported in this browser. Try Chrome or Edge.",
+          timestamp: new Date(),
+        },
+      ]);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      let finalTranscript = "";
+      let interimTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        } else {
+          interimTranscript += result[0].transcript;
+        }
+      }
+      if (finalTranscript) {
+        setVoiceTranscript((prev) => prev + finalTranscript);
+        setInput((prev) => prev + finalTranscript);
+      } else if (interimTranscript) {
+        setVoiceTranscript(interimTranscript);
+      }
+    };
+
+    recognition.onerror = () => {
+      stopRecording();
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+    setVoiceTranscript("");
+  }, [stopRecording]);
 
   // Auto-send initial prompt from Joy button navigation
   useEffect(() => {
@@ -106,10 +209,24 @@ export default function AgentChat({ config, initialPrompt }: AgentChatProps) {
         className="px-8 py-3 border-b flex items-center gap-3"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
       >
+        <button
+          onClick={() => router.back()}
+          className="p-1.5 rounded-lg hover:bg-black/5 shrink-0 transition-colors"
+          title="Go back"
+        >
+          <ArrowLeft size={16} style={{ color: "var(--muted)" }} />
+        </button>
         <Sparkles size={16} style={{ color: "var(--brand-primary)" }} />
-        <span className="text-xs" style={{ color: "var(--muted)" }}>
+        <span className="text-xs flex-1" style={{ color: "var(--muted)" }}>
           {config.capabilities.join(" · ")}
         </span>
+        <button
+          onClick={() => router.push("/agents")}
+          className="p-1.5 rounded-lg hover:bg-black/5 shrink-0 transition-colors"
+          title="Close agent chat"
+        >
+          <X size={16} style={{ color: "var(--muted)" }} />
+        </button>
       </div>
 
       {/* Messages */}
@@ -213,12 +330,34 @@ export default function AgentChat({ config, initialPrompt }: AgentChatProps) {
         )}
       </div>
 
+      {/* Recording indicator */}
+      {isRecording && (
+        <div
+          className="px-8 py-2 text-xs flex items-center gap-2 border-t"
+          style={{ backgroundColor: "#E24D4710", color: "#E24D47", borderColor: "var(--border)" }}
+        >
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          Recording{voiceTranscript ? `: "${voiceTranscript}"` : "..."}
+        </div>
+      )}
+
       {/* Input */}
       <div
         className="px-8 py-4 border-t"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
       >
         <div className="flex gap-3 max-w-3xl">
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            className="px-3 py-2.5 rounded-xl shrink-0 transition-colors"
+            style={{
+              backgroundColor: isRecording ? "#E24D4718" : "var(--brand-primary-light, #5A6FFF14)",
+              color: isRecording ? "#E24D47" : "var(--brand-primary)",
+            }}
+            title={isRecording ? "Stop recording" : "Start voice input"}
+          >
+            {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
+          </button>
           <input
             type="text"
             value={input}

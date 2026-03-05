@@ -103,9 +103,10 @@ export async function generateContentBatch(
 
   const pieces: ContentPiece[] = [];
 
-  // Generate content for each platform
+  // Generate content for each platform — individual failures don't crash the batch
   for (const platform of PLATFORMS) {
-    const prompt = `Topic: ${topic}
+    try {
+      const prompt = `Topic: ${topic}
 
 Founder's POV/Angle: ${founderAngle}
 
@@ -116,25 +117,40 @@ ${PLATFORM_PROMPTS[platform]}
 
 Write the content now. Be authentic to the founder's voice and angle.`;
 
-    const result = await invokeAgent({
-      agentId: "content-engine",
-      message: prompt,
-    });
+      const result = await invokeAgent({
+        agentId: "content-engine",
+        message: prompt,
+      });
 
-    const { content, imagePrompt } = extractImagePrompt(result.response);
+      const { content, imagePrompt } = extractImagePrompt(result.response);
 
-    pieces.push({
-      id: uuid(),
-      platform,
-      title: `${topic} — ${platform}`,
-      body: content,
-      imagePrompt: imagePrompt || undefined,
-      hashtags: extractHashtags(content),
-      status: "draft",
-      sourceStoryId,
-      founderPov: founderAngle,
-      createdAt: new Date(),
-    });
+      pieces.push({
+        id: uuid(),
+        platform,
+        title: `${topic} — ${platform}`,
+        body: content,
+        imagePrompt: imagePrompt || undefined,
+        hashtags: extractHashtags(content),
+        status: "draft",
+        sourceStoryId,
+        founderPov: founderAngle,
+        createdAt: new Date(),
+      });
+    } catch (err) {
+      console.error(`Content generation failed for platform ${platform}:`, err);
+      // Push a failed piece so the user knows which platform had issues
+      pieces.push({
+        id: uuid(),
+        platform,
+        title: `${topic} — ${platform}`,
+        body: `Content generation for ${platform} encountered an issue. Please try regenerating this piece.`,
+        hashtags: [],
+        status: "draft",
+        sourceStoryId,
+        founderPov: founderAngle,
+        createdAt: new Date(),
+      });
+    }
   }
 
   return {

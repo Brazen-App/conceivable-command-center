@@ -10,7 +10,45 @@ import {
   CheckCircle2,
   XCircle,
   Sparkles,
+  Mic,
+  MicOff,
 } from "lucide-react";
+
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionResultList {
+  length: number;
+  [index: number]: SpeechRecognitionResult;
+}
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  [index: number]: SpeechRecognitionAlternative;
+}
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: Event) => void) | null;
+  onend: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognitionInstance;
+    webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+  }
+}
 
 interface Message {
   id: string;
@@ -43,9 +81,12 @@ export default function DiscussPanel({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -65,6 +106,75 @@ export default function DiscussPanel({
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [isOpen, onClose]);
+
+  const stopRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setIsRecording(false);
+  }, []);
+
+  const startRecording = useCallback(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: "Voice input is not supported in this browser. Try Chrome or Edge.",
+          timestamp: new Date(),
+        },
+      ]);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      let finalTranscript = "";
+      let interimTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        } else {
+          interimTranscript += result[0].transcript;
+        }
+      }
+      if (finalTranscript) {
+        setVoiceTranscript((prev) => prev + finalTranscript);
+        setInput((prev) => prev + finalTranscript);
+      } else if (interimTranscript) {
+        setVoiceTranscript(interimTranscript);
+      }
+    };
+
+    recognition.onerror = () => {
+      stopRecording();
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+    setVoiceTranscript("");
+  }, [stopRecording]);
+
+  // Clean up recording when panel closes
+  useEffect(() => {
+    if (!isOpen && isRecording) {
+      stopRecording();
+    }
+  }, [isOpen, isRecording, stopRecording]);
 
   const logMessage = useCallback(async (role: string, message: string) => {
     try {
@@ -305,12 +415,34 @@ export default function DiscussPanel({
           </div>
         )}
 
+        {/* Recording indicator */}
+        {isRecording && (
+          <div
+            className="px-5 py-2 text-xs flex items-center gap-2 border-t"
+            style={{ backgroundColor: "#E24D4710", color: "#E24D47", borderColor: "var(--border)" }}
+          >
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            Recording{voiceTranscript ? `: "${voiceTranscript}"` : "..."}
+          </div>
+        )}
+
         {/* Input */}
         <div
           className="px-5 py-3 border-t shrink-0"
           style={{ borderColor: "var(--border)" }}
         >
           <div className="flex gap-2">
+            <button
+              onClick={isRecording ? stopRecording : startRecording}
+              className="px-2.5 py-2.5 rounded-xl shrink-0 transition-colors"
+              style={{
+                backgroundColor: isRecording ? "#E24D4718" : "#5A6FFF14",
+                color: isRecording ? "#E24D47" : "#5A6FFF",
+              }}
+              title={isRecording ? "Stop recording" : "Start voice input"}
+            >
+              {isRecording ? <MicOff size={14} /> : <Mic size={14} />}
+            </button>
             <input
               ref={inputRef}
               type="text"

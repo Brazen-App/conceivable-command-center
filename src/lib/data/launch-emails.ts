@@ -1,5 +1,6 @@
 // 23 Launch Emails — 8-Week Early Access Sequence
 // Target: 5,000 early access signups from ~29,000 cleaned, warming list
+// Arc: Feelings → Mission/Why → Them → Supplements → App → Ring
 // Phases: Re-engagement → Education → Launch → Final Push → Post-Close
 
 export interface LaunchEmail {
@@ -28,19 +29,19 @@ export const PHASE_CONFIG = {
     label: "Re-engagement",
     weeks: "Week 1–2",
     color: "#78C3BF",
-    description: "Warm the list. Remind them why they subscribed. Build anticipation.",
+    description: "Feelings & reconnection. Remind them why they subscribed. Build the relationship.",
   },
   education: {
     label: "Education",
     weeks: "Week 3–4",
     color: "#5A6FFF",
-    description: "Teach the framework. Establish scientific credibility. Create desire.",
+    description: "Their bodies, their health. Supplements & nutrition. Build trust through real knowledge.",
   },
   launch: {
     label: "Launch",
     weeks: "Week 5–6",
     color: "#E37FB1",
-    description: "Open early access. Drive signups. Social proof and urgency.",
+    description: "Introduce the app, the ring, and the system. Open early access.",
   },
   "final-push": {
     label: "Final Push",
@@ -58,7 +59,7 @@ export const PHASE_CONFIG = {
 
 export const LAUNCH_EMAILS: LaunchEmail[] = [
   // ============================================================
-  // PHASE 1: RE-ENGAGEMENT (Week 1–2) — 6 emails
+  // PHASE 1: RE-ENGAGEMENT (Week 1–2) — FEELINGS & MISSION
   // ============================================================
   {
     id: "email-01",
@@ -69,15 +70,19 @@ export const LAUNCH_EMAILS: LaunchEmail[] = [
     preview: "We disappeared for a reason — and it's a good one.",
     body: `Hi *|FNAME|*,
 
-You haven't heard from us in a while. That was intentional.
+You haven't heard from us in a while.
 
-We've spent the last year heads-down building something we believe will fundamentally change how women understand their fertility. Not another tracking app. Not another ovulation predictor. Something deeper.
+That was on purpose. (I promise we weren't ghosting you.)
 
-We've been working with reproductive endocrinologists, data scientists, and AI researchers to build a system that sees what traditional fertility care misses — the connections between your sleep, your hormones, your stress, your nutrition, and your fertility outcomes.
+We've spent the last year doing something kind of crazy — locking ourselves in a room with reproductive endocrinologists, data scientists, and the smartest people we could find to build something I genuinely believe will change how women experience their fertility.
 
-Over the next few weeks, we're going to share what we've built. And we're going to invite a small group to be the first to experience it.
+And I don't say that lightly. I've been in this space for 20 years. I've seen every app, every tracker, every "fertility superfood" trend come and go.
 
-If you're still on this journey, stay tuned. The next email will explain exactly what's coming.
+This is different.
+
+Over the next few weeks, I'm going to tell you what we've been up to. Not a sales pitch — just the story. Why we built it, what we learned, and why I think it matters for you specifically.
+
+If you're still on this journey — stay with me. The next email is a good one.
 
 Sending you big love,
 Kirsten`,
@@ -93,23 +98,25 @@ Kirsten`,
     week: 1,
     sequence: 2,
     phase: "re-engagement",
-    subject: "Something is broken in fertility care",
-    preview: "You already know this. Here's what we're doing about it.",
+    subject: "Can I be honest with you for a second?",
+    preview: "Something nobody tells you about the fertility journey.",
     body: `Hi *|FNAME|*,
 
-Here's what most fertility care looks like today:
+I want to talk about something that doesn't get said enough.
 
-You get basic bloodwork. Maybe an ultrasound. Your doctor has 12 minutes to assess something as complex as your reproductive health. You leave with a prescription and a "let's see what happens."
+The fertility journey can be really, really lonely.
 
-Meanwhile, your body is sending hundreds of signals every day — through your temperature patterns, your sleep quality, your cycle variations, your stress response — and nobody is connecting the dots.
+You're Googling things at 2am. You're reading forums that make you more anxious. You're smiling at baby showers while your heart is doing something complicated. You're wondering if it's you, if it's timing, if it's something you ate, if you should try that supplement your friend's friend swears by.
 
-That's not your doctor's fault. They don't have the tools.
+And everyone around you — with the very best intentions — keeps saying things like "just relax" or "it'll happen when it stops trying."
 
-We built the tools.
+(If one more person says "just relax" I swear.)
 
-Conceivable's system analyzes the signals your body is already sending and maps them to what the clinical research actually shows about fertility outcomes. Not guesswork. Not generic advice. A personalized picture of what's happening in YOUR body and what to do about it.
+Here's what I want you to know: you are not broken. Your body is not failing you. In most cases, it's actually sending you incredibly useful signals about what's going on. The problem isn't your body — it's that nobody has given you the tools to understand what it's telling you.
 
-More on that in our next email. For now, we just wanted you to know: you're not imagining it. The system IS broken. And we're building the fix.
+That's what we've been building.
+
+More soon. But today I just wanted to say: I see you. This is hard. And you deserve better than "just relax."
 
 Sending you big love,
 Kirsten`,
@@ -125,23 +132,25 @@ Kirsten`,
     week: 1,
     sequence: 3,
     phase: "re-engagement",
-    subject: "What if your body was trying to tell you something?",
-    preview: "The signals are there. You just need someone to translate them.",
+    subject: "Why I did 120 podcasts in 4 months",
+    preview: "I was a little unhinged. But I learned something important.",
     body: `Hi *|FNAME|*,
 
-Every morning, your body tells a story through your temperature.
+OK so here's a fun fact about me: I did 120 podcast interviews in 4 months.
 
-Not just "did I ovulate?" — that's the basic reading. The deeper story is in the patterns: the variability, the rise speed, the luteal phase stability, the relationship between your temperature and your sleep, your stress, your cycle length.
+Yes, my voice was shot. Yes, my family thought I'd lost it. But I had this feeling — this nagging, won't-let-me-sleep feeling — that the answers were out there, just scattered across a hundred different experts who weren't talking to each other.
 
-Most tools read chapter one and stop. We read the whole book.
+So I talked to all of them. Reproductive endocrinologists. Naturopaths. Traditional Chinese Medicine practitioners. Sleep researchers. Nutritionists. Data scientists. Women who'd been through every protocol imaginable.
 
-When our founder Kirsten started Conceivable, she'd already spent years in the fertility space. She'd done 120 podcast interviews with the world's leading reproductive scientists. And she kept hearing the same thing: "We have the data. We just don't have the system to connect it all."
+And you know what I kept hearing?
 
-So she built the system.
+The same thing, over and over: "We know what works. We just can't personalize it at scale."
 
-Next week, we'll show you how the CON Score works — a single number that captures what all those signals mean together. It's unlike anything in fertility care today.
+The best fertility doctors in the world can create brilliant, customized protocols. But they have 12 minutes per patient and a waiting list six months long. The knowledge exists. The delivery system doesn't.
 
-Stay with us.
+That's the gap. That's what kept me up at night. And that's what we set out to fix.
+
+Next email: what's actually broken in fertility care (and why it's not your doctor's fault).
 
 Sending you big love,
 Kirsten`,
@@ -157,25 +166,25 @@ Kirsten`,
     week: 2,
     sequence: 1,
     phase: "re-engagement",
-    subject: "The data your doctor isn't looking at",
-    preview: "It's not their fault. They just don't have the tools yet.",
+    subject: "Something is broken in fertility care",
+    preview: "It's not your doctor's fault. Here's what's actually going on.",
     body: `Hi *|FNAME|*,
 
-Here's a question most fertility doctors don't ask:
+Can we be honest for a second?
 
-"How's your sleep?"
+Here's what fertility care looks like for most women: You go in. You get blood drawn. Maybe an ultrasound. Your doctor — who is almost certainly brilliant but completely overworked — has about 12 minutes. You leave with a prescription and a "let's see what happens."
 
-Not because they don't care. Because they don't have a system that connects sleep disruption patterns to hormonal cascades to cycle regularity to fertility outcomes.
+Meanwhile, your body is sending hundreds of signals every single day. Your temperature patterns. Your sleep. Your cycle variations. Your stress response. Your digestion. How you feel on day 14 versus day 21. Hundreds of data points that are genuinely relevant to your fertility.
 
-But the research is clear: sleep architecture directly impacts LH surge timing, progesterone production, and endometrial receptivity. Your Apple Watch is capturing data that's clinically relevant to your fertility — and nobody is reading it.
+And nobody is connecting them.
 
-Until now.
+Here's the thing: that's not your doctor's fault. They literally don't have the tools. The system wasn't built for this kind of whole-body, connected analysis. It was built for isolated snapshots — one blood draw, one appointment, one intervention at a time.
 
-Conceivable integrates data from wearables, cycle tracking, and lifestyle inputs to build a picture of your fertility health that goes far beyond what a single blood draw can show.
+Your body doesn't work in isolation. Your fertility is connected to everything — your sleep, your stress, what you eat, how you move, your hormones, your gut health. Everything is talking to everything else.
 
-We're not replacing your doctor. We're giving both of you better information to work with.
+We need a system that listens to all of it. (Spoiler: that's what we built.)
 
-Coming this week: how the CON Score synthesizes all of this into one actionable number.
+More coming this week.
 
 Sending you big love,
 Kirsten`,
@@ -191,23 +200,25 @@ Kirsten`,
     week: 2,
     sequence: 2,
     phase: "re-engagement",
-    subject: "120 podcasts. One breakthrough.",
-    preview: "Our founder talked to everyone. Then she built something new.",
+    subject: "The thing that changed everything for me",
+    preview: "After 20 years in fertility, this was the breakthrough.",
     body: `Hi *|FNAME|*,
 
-Over 4 months, Kirsten Karchmer did 120 podcast interviews.
+I've been a board-certified reproductive health expert for 20 years.
 
-Not as a guest — as a student. She talked to reproductive endocrinologists, naturopathic doctors, TCM practitioners, data scientists, sleep researchers, nutritionists, and women who'd been through every protocol imaginable.
+I've worked with thousands of women. I've read the studies. I've sat across from patients and watched the light come on when they finally understood what was happening in their bodies.
 
-The pattern she kept hearing: "We know what works. We just can't scale the personalization."
+And the thing that changed everything for me was this realization:
 
-A doctor can spend hours with one patient and create a brilliant, personalized protocol. But they can't do that for thousands of women. The knowledge exists. The delivery system doesn't.
+We've been treating fertility like it's one thing. It's not. It's the OUTPUT of a whole system working together — hormones, sleep, nutrition, stress, movement, metabolic health, cycle dynamics. When something isn't working, the answer almost never lives in just one place.
 
-That's what AI changes.
+It's like trying to fix a garden by only looking at one plant. You have to look at the soil, the water, the sunlight, the whole ecosystem.
 
-Conceivable's AI doesn't replace clinical expertise — it scales it. It takes the decision frameworks that the best practitioners use and applies them to YOUR data, YOUR patterns, YOUR body.
+The women I've seen have the best outcomes? They're not the ones who found one magic protocol. They're the ones who understood the WHOLE picture and addressed the right things in the right order.
 
-The next email will introduce you to Kai, the AI coach at the heart of this system. You're going to want to meet her.
+That's the approach we've built into everything we're doing. And I'm going to share the details with you over the next couple of weeks.
+
+But first — my next email is about the specific things your body is telling you right now that nobody is translating. That one's going to be an eye-opener.
 
 Sending you big love,
 Kirsten`,
@@ -223,28 +234,25 @@ Kirsten`,
     week: 2,
     sequence: 3,
     phase: "re-engagement",
-    subject: "We built something. Want to see it first?",
-    preview: "Early access opens in 3 weeks. Here's how to get in.",
+    subject: "Your body is already talking to you",
+    preview: "The signals are there. You just need someone to translate them.",
     body: `Hi *|FNAME|*,
 
-Quick update:
+Every morning, your body tells a story through your temperature.
 
-In 3 weeks, we're opening early access to Conceivable for a limited group.
+And no, I don't just mean "did I ovulate?" That's the first sentence of a very long book. Most apps read that first sentence and close the cover.
 
-We're capping it at 5,000 members for the initial launch. Not as a marketing tactic — because we want to ensure everyone who joins gets the full experience with real support.
+The real story is in the patterns. How fast your temperature rises after ovulation (clinically significant, almost never tracked). How stable your luteal phase temperatures are (tells you about progesterone). What happens to your temps when you had terrible sleep. The relationship between your cycle length variability and your stress levels.
 
-Over the next few weeks, we'll walk you through:
-• How the CON Score works (and what yours might look like)
-• Meet Kai, your AI fertility coach
-• The 7 drivers of fertility health our system tracks
-• Real data showing how the system identifies patterns
-• Exactly what happens when you join
+There is SO much information in there. And that's just temperature.
 
-You're on this list because you've already shown you care about this. When early access opens, you'll be the first to know.
+Your sleep patterns correlate with your hormonal production in ways most doctors don't have time to analyze. Your HRV (heart rate variability) reflects your body's stress load — which directly impacts implantation and hormone balance. Even your digestion and energy patterns across your cycle are telling a story.
 
-No pressure. No gimmicks. Just a system we believe in, built for the people who need it most.
+Your body is not a mystery. It's a system. And systems send signals.
 
-More coming soon.
+The problem has never been the signals. It's that nobody built a way to read them all together.
+
+(Until now. But I'm getting ahead of myself.)
 
 Sending you big love,
 Kirsten`,
@@ -257,34 +265,40 @@ Kirsten`,
   },
 
   // ============================================================
-  // PHASE 2: EDUCATION (Week 3–4) — 6 emails
+  // PHASE 2: EDUCATION (Week 3–4) — THEM & SUPPLEMENTS
   // ============================================================
   {
     id: "email-07",
     week: 3,
     sequence: 1,
     phase: "education",
-    subject: "Your CON Score: the number that changes everything",
-    preview: "One score that captures what dozens of tests miss.",
+    subject: "The 7 things that actually matter for fertility",
+    preview: "Not 47 things. Not 3. Exactly 7 — and the order matters.",
     body: `Hi *|FNAME|*,
 
-Let's talk about the CON Score.
+After 20 years, 120 podcast interviews, thousands of patients, and a probably-unhealthy amount of research papers, I've narrowed it down.
 
-In traditional fertility care, you get individual data points: FSH levels, AMH, thyroid panel, cycle length. Each tells you something. None tells you the whole story.
+There are 7 drivers that matter most for fertility health. Not 47. Not 3. Seven — and the ORDER you address them matters more than most people realize.
 
-The CON Score is different. It's a composite metric that weighs multiple physiological signals against each other — temperature patterns, cycle regularity, lifestyle factors, wearable data — and produces a single number that represents your overall fertility readiness.
+Here they are:
 
-Think of it like a credit score for your fertility health. It's not a diagnosis. It's a dynamic, personalized assessment that changes as your body changes.
+1. HORMONAL BALANCE — Not just estrogen and progesterone. The full cascade: thyroid, cortisol, insulin, and how they dance together across your cycle.
 
-Here's what makes it powerful:
-• It tracks over time, so you can see the impact of interventions
-• It identifies which specific drivers are holding your score back
-• It recommends exactly what to address first for maximum impact
-• It learns from your data and gets more precise over time
+2. CYCLE DYNAMICS — Way beyond "is it 28 days?" The variability patterns, luteal phase quality, and follicular phase signals that reveal what's happening underneath.
 
-When early access opens, the first thing you'll see is your initial CON Score and a personalized breakdown of what's driving it.
+3. SLEEP & RECOVERY — This is the one everyone underestimates. Your sleep architecture directly impacts LH surge timing, progesterone production, and endometrial receptivity. (I'll do a whole email on this.)
 
-Next: the 7 drivers behind the score.
+4. STRESS PHYSIOLOGY — Not "are you stressed" but what your body's actual stress load looks like at a physiological level. HRV, cortisol patterns, nervous system regulation.
+
+5. NUTRITION & METABOLIC HEALTH — Blood sugar stability, micronutrient status, gut health. The foundation everything else is built on.
+
+6. MOVEMENT & CIRCULATION — Not "exercise more." Specific types and timing that support hormonal signaling and pelvic blood flow.
+
+7. TEMPERATURE DYNAMICS — The deep BBT analysis I talked about last time. A goldmine of information when you know how to read it.
+
+Here's the crucial part: these 7 don't exist in isolation. They interact. And knowing which one to address FIRST — for YOUR body — is the difference between spinning your wheels and making real progress.
+
+Next email: the one thing most fertility supplements get wrong.
 
 Sending you big love,
 Kirsten`,
@@ -300,27 +314,33 @@ Kirsten`,
     week: 3,
     sequence: 2,
     phase: "education",
-    subject: "Why temperature isn't just about ovulation",
-    preview: "Your BBT data contains 10x more information than you're using.",
+    subject: "Most fertility supplements are a waste of money",
+    preview: "I know that's bold. Let me explain.",
     body: `Hi *|FNAME|*,
 
-Most apps use your basal body temperature (BBT) for one thing: confirming ovulation.
+I'm going to say something that might surprise you coming from someone in this industry:
 
-That's like using a telescope to look at your shoes.
+Most fertility supplements are a waste of money.
 
-Your temperature pattern contains vastly more information. The research shows that BBT data — when analyzed properly — can reveal:
+Not because the ingredients don't work. Many of them do — there's solid research behind things like CoQ10, folate, vitamin D, omega-3s, and inositol for specific situations.
 
-• Progesterone sufficiency (or insufficiency) in the luteal phase
-• Thyroid function patterns that standard blood tests miss in early stages
-• Stress-cortisol interactions that affect implantation windows
-• Sleep quality correlations with hormonal rhythmicity
-• The speed and stability of your post-ovulatory rise (clinically significant, rarely tracked)
+The problem is the APPROACH. You walk into a store (or scroll through Instagram), see a bottle that says "fertility support," and take it because... it says fertility on the label?
 
-The problem isn't the data. It's that no one has built a system sophisticated enough to read it all.
+That's like walking into a pharmacy and grabbing random prescriptions because they're in the "health" aisle.
 
-Conceivable's AI analyzes your temperature data against these clinical patterns — and cross-references it with your other health signals to build a picture that single-variable tracking can't match.
+Here's what actually matters with supplements:
 
-This is just one of the 7 drivers. Coming next: the full framework.
+DO YOU ACTUALLY NEED IT? Taking CoQ10 when your issue is a thyroid imbalance is like putting premium gas in a car with a flat tire. Not wrong, just irrelevant to your actual problem.
+
+WHAT'S YOUR BASELINE? Without knowing your starting point, you can't know what's working. "I feel better" is not a measurement strategy.
+
+IS IT WORKING? This is the big one. Most women take supplements for months with zero way to verify they're producing the expected physiological response. That's not a protocol — it's hope.
+
+WHAT'S THE QUALITY? Supplement regulation is... let's say "relaxed." What's on the label and what's in the bottle are not always the same thing.
+
+The right supplements, for the right person, at the right time, with actual verification that they're working — that's powerful. Random supplementation based on Instagram ads is not.
+
+I'll share our evidence-based framework for supplementation in the next email. It might save you a lot of money.
 
 Sending you big love,
 Kirsten`,
@@ -336,30 +356,28 @@ Kirsten`,
     week: 3,
     sequence: 3,
     phase: "education",
-    subject: "The closed-loop system your body needs",
-    preview: "Measure. Intervene. Verify. Adjust. Repeat.",
+    subject: "The supplement protocol that actually works",
+    preview: "Evidence-based. Personalized. And you can verify it's working.",
     body: `Hi *|FNAME|*,
 
-Here's the fundamental problem with most health interventions:
+OK, I ranted about bad supplements last time. Now let me tell you what good supplementation looks like.
 
-You try something. You wait. You hope.
+After reviewing hundreds of clinical studies and working with thousands of women, here's what I know to be true:
 
-There's no systematic way to know if the intervention actually corrected the underlying issue, or if your body needs something different.
+THE FOUNDATION (most women benefit from these):
+Methylated folate (not folic acid — there's a meaningful difference), vitamin D (most women are deficient and don't know it), and omega-3s (specifically EPA/DHA for inflammation and hormonal signaling).
 
-We call our approach the Closed-Loop System:
+THE TARGETED LAYER (depends on YOUR drivers):
+CoQ10 — powerful for egg quality, but not everyone needs it. Inositol — excellent for insulin sensitivity and PCOS-related issues. Vitamin E — supports endometrial lining. Iron — but only if you're actually deficient, because excess iron is inflammatory. Magnesium — the unsung hero of hormonal balance and sleep quality.
 
-1. MEASURE: Identify what's actually happening in your body through multi-signal analysis
-2. INTERVENE: Recommend specific, evidence-based protocols targeting the root driver
-3. VERIFY: Track whether the intervention produced the expected physiological response
-4. ADJUST: If the response isn't what we expected, escalate or modify the protocol
+THE VERIFICATION PIECE (this is what nobody talks about):
+Any supplement protocol should be MEASURABLE. You should be able to track whether it's producing the expected changes in your cycle dynamics, your temperature patterns, your energy, your sleep quality.
 
-This isn't a diet plan. It's not a supplement recommendation. It's a dynamic system that adapts to YOUR body's actual responses.
+If you've been taking something for 3 months and you have no objective way to know if it's working? That's a problem.
 
-The AI doesn't guess. It measures, recommends, verifies, and adjusts — continuously.
+This "measure → intervene → verify → adjust" approach is the foundation of everything we've built. It applies to supplements, to lifestyle changes, to everything.
 
-This approach is so novel, we're filing patents on it. It represents a fundamental shift in how fertility interventions work.
-
-Early access: 2 weeks away.
+Speaking of which — my next email is about the system we built to do exactly this. I think you're going to like it.
 
 Sending you big love,
 Kirsten`,
@@ -375,32 +393,31 @@ Kirsten`,
     week: 4,
     sequence: 1,
     phase: "education",
-    subject: "Meet Kai: your AI fertility coach",
-    preview: "She's not a chatbot. She's a system that understands your body.",
+    subject: "Why sleep is the fertility hack nobody talks about",
+    preview: "Your Apple Watch knows something your doctor doesn't.",
     body: `Hi *|FNAME|*,
 
-Kai is not a chatbot that Googles your symptoms.
+Here's a question most fertility doctors don't ask:
 
-Kai is the AI coach at the heart of Conceivable. She's built on a knowledge base of thousands of clinical studies, trained on reproductive endocrinology frameworks, and designed to understand the specific nuances of YOUR data.
+"How's your sleep?"
 
-What Kai does:
+Not because they don't care. Because they don't have a system that connects sleep disruption patterns to hormonal cascades to cycle regularity to fertility outcomes.
 
-• Reads your daily inputs and wearable data to track your CON Score
-• Identifies which of the 7 fertility drivers need attention right now
-• Recommends specific protocols — nutrition, supplements, lifestyle changes, when to talk to your doctor — based on YOUR patterns
-• Explains the science behind every recommendation in plain language
-• Tracks whether interventions are working and adjusts in real-time
+But the research is wild. Sleep architecture directly impacts:
+— LH surge timing (ovulation)
+— Progesterone production (luteal phase support)
+— Endometrial receptivity (implantation)
+— Cortisol regulation (which impacts... basically everything)
 
-What Kai doesn't do:
+That thing where you wake up at 3am and can't fall back asleep? That's not random. It's often a cortisol spike — and depending on WHERE you are in your cycle, it can have a real downstream effect on your hormonal balance.
 
-• Diagnose medical conditions
-• Replace your doctor
-• Make promises about outcomes
-• Give generic advice
+Your Apple Watch or Oura ring is capturing this data every single night. Sleep stages, HRV, resting heart rate, respiratory rate. Data that is genuinely clinically relevant to your fertility health.
 
-Think of Kai as the most knowledgeable, most patient, most data-literate fertility health guide you could imagine — available 24/7, learning your body every day.
+And right now, nobody is reading it. It's just sitting there in your Health app, being pretty charts.
 
-You'll meet her when early access opens. Soon.
+What if someone could actually connect that data to what's happening with your cycle, your hormones, and your fertility? What if the patterns in your sleep could tell you which of those 7 drivers needs attention first?
+
+(This is one of my favorite parts of what we built. I'll tell you more soon.)
 
 Sending you big love,
 Kirsten`,
@@ -416,29 +433,27 @@ Kirsten`,
     week: 4,
     sequence: 2,
     phase: "education",
-    subject: "The 7 drivers of fertility health",
-    preview: "Your body is a system. We finally treat it like one.",
+    subject: "Your body is a system, not a symptom",
+    preview: "This is the shift that changes everything.",
     body: `Hi *|FNAME|*,
 
-Conceivable tracks 7 interconnected drivers of fertility health:
+I want to share the single most important thing I've learned in 20 years:
 
-1. HORMONAL BALANCE — Not just estrogen and progesterone. The full cascade: thyroid, cortisol, insulin, and how they interact across your cycle.
+Your fertility is not a single thing to fix. It's the OUTPUT of your whole system working together.
 
-2. CYCLE REGULARITY — Beyond "is it 28 days?" The variability, the luteal phase length, the follicular phase patterns that reveal what's happening underneath.
+This is why the traditional approach — test one hormone, prescribe one intervention, wait and see — is so frustrating. It treats your body like a machine with one broken part. Just find the broken part, replace it, done.
 
-3. TEMPERATURE DYNAMICS — The deep BBT analysis we talked about. Speed of rise, stability, pre-ovulatory patterns, and their clinical significance.
+But you're not a machine with a broken part. You're an ecosystem.
 
-4. SLEEP ARCHITECTURE — How your sleep stages correlate with hormonal production. Poor sleep isn't just fatigue — it directly impacts fertility.
+When your sleep is off, it affects your cortisol. When your cortisol is off, it affects your progesterone. When your progesterone is off, it affects your luteal phase. When your luteal phase is short, implantation becomes harder. And the thing that disrupted your sleep might have been blood sugar instability from a nutritional gap.
 
-5. STRESS & RECOVERY — HRV patterns, cortisol timing, and the physiological stress load that your body may not consciously register but absolutely affects fertility.
+Everything is connected. Nothing is an island.
 
-6. NUTRITION & METABOLIC HEALTH — Blood sugar stability, micronutrient status, and the dietary patterns that support (or hinder) reproductive function.
+The women I've worked with who've had the biggest breakthroughs? They didn't find one magic pill. They started understanding the WHOLE picture — which driver was most out of balance, what was causing it, and what to address first for the biggest ripple effect.
 
-7. MOVEMENT & CIRCULATION — Not "exercise more." The specific types, timing, and intensity of movement that optimize pelvic blood flow and hormonal signaling.
+That's the philosophy behind everything we're building. Systems thinking applied to fertility. Your whole body, not just your ovaries.
 
-These 7 drivers don't exist in isolation. They interact. Conceivable's system maps those interactions and identifies the highest-leverage driver to address first.
-
-One week until early access.
+Next week, I'm going to tell you about the specific tool we built to make this real — not just a philosophy, but an actual system you can use. I'm really excited about this one.
 
 Sending you big love,
 Kirsten`,
@@ -454,23 +469,29 @@ Kirsten`,
     week: 4,
     sequence: 3,
     phase: "education",
-    subject: "Real data. Real patterns. Real change.",
-    preview: "Here's what the system actually sees in your data.",
+    subject: "What if there was a better way?",
+    preview: "After everything I've shared — here's what we actually built.",
     body: `Hi *|FNAME|*,
 
-We've been sharing the theory. Now let's talk about what this looks like in practice.
+Over the past few weeks, I've shared a lot:
 
-When a user connects their wearable and starts tracking with Conceivable, the system begins identifying patterns within the first cycle. By the second cycle, the recommendations become highly personalized.
+The loneliness of the fertility journey. Why the current system is broken. The 120 podcasts that showed me the gap. The 7 drivers that actually matter. Why most supplements are a shot in the dark. How your sleep is connected to your hormones in ways nobody is tracking.
 
-Here's what the data actually shows:
+All of it comes down to one problem:
 
-The system identifies patterns that would take a human practitioner multiple appointments and extensive testing to detect. Cross-signal correlations — like the relationship between a user's sleep disruption on specific cycle days and their luteal phase progesterone patterns — that aren't visible in any single data stream.
+The knowledge exists. The personalization doesn't scale.
 
-This is the power of AI applied to fertility: not replacing human judgment, but processing a volume and complexity of data that no human could track manually.
+The best practitioners in the world can sit with one patient for an hour, analyze everything, and create a brilliant protocol. But there are millions of women who need that level of care and will never get it.
 
-When you join early access, you'll start seeing your own patterns within weeks.
+What if you could?
 
-Early access opens next week. 5,000 spots. You'll hear from us first.
+What if there was a system that could look at YOUR sleep, YOUR cycle, YOUR nutrition, YOUR stress patterns, YOUR temperature data — all of it, together — and tell you exactly which of those 7 drivers to address first? And then verify it's actually working?
+
+Not generic advice. Not "reduce stress." Not random supplements. A real, personalized, evidence-based approach that adapts to YOUR body.
+
+That's what we built. And next week, I'm going to show it to you.
+
+Stay with me?
 
 Sending you big love,
 Kirsten`,
@@ -483,39 +504,34 @@ Kirsten`,
   },
 
   // ============================================================
-  // PHASE 3: LAUNCH (Week 5–6) — 6 emails
+  // PHASE 3: LAUNCH (Week 5–6) — APP & RING
   // ============================================================
   {
     id: "email-13",
     week: 5,
     sequence: 1,
     phase: "launch",
-    subject: "Early access is open. 5,000 spots.",
-    preview: "This is what we've been building toward. Join now.",
+    subject: "OK, here's what we built",
+    preview: "No more teasing. Let me show you the whole thing.",
     body: `Hi *|FNAME|*,
 
-It's here.
+It's time.
 
-Early access to Conceivable is now open.
+I've been telling you the story for 4 weeks. The problem, the philosophy, the research. Now let me show you what we actually made.
 
-We're accepting 5,000 members for our initial launch. This isn't a beta test — it's the full system, live, with real AI coaching from Kai and real-time analysis of your fertility health data.
+Conceivable is a system — app + smart ring + AI coaching — that does what I've been describing:
 
-What you get with early access:
+It reads the signals your body is already sending (through the ring, your cycle tracking, and daily inputs). It analyzes them against the 7 drivers of fertility health. And it tells you exactly what to focus on, in what order, with evidence-based protocols personalized to YOUR body.
 
-• Your personalized CON Score with full driver breakdown
-• Kai AI coaching — unlimited conversations, personalized to your data
-• Multi-signal tracking (wearable integration, cycle data, lifestyle inputs)
-• The closed-loop system: measure → intervene → verify → adjust
-• Founding member pricing (locked in permanently)
-• Direct input into the product roadmap
+The ring tracks your temperature, sleep, HRV, and activity continuously — so you don't have to remember to take your BBT every morning. It just... does it. All day, all night.
 
-What it costs: [pricing details on the signup page]
+The app is where Kai lives — your AI fertility coach. Kai isn't a chatbot. She's built on the clinical frameworks from those 120 podcast interviews and thousands of research papers. She understands YOUR data and gives you recommendations that are specific to what YOUR body is doing right now.
 
-We built this for you. Seriously. Every feature, every recommendation framework, every piece of the AI — it was built because women on this list told us what they needed.
+And the key piece: the closed loop. Measure → intervene → verify → adjust. The system doesn't just give you advice and walk away. It tracks whether the intervention is working and adapts if it's not.
 
-Join early access →
+We're opening early access to 5,000 founding members. Not as a marketing tactic — because we want to make sure everyone who joins gets real support.
 
-5,000 spots. When they're gone, the next cohort won't open for months.
+More details in my next email. But I wanted you to see the full picture first.
 
 Sending you big love,
 Kirsten`,
@@ -531,29 +547,31 @@ Kirsten`,
     week: 5,
     sequence: 2,
     phase: "launch",
-    subject: "What happens when you join",
-    preview: "Your first 14 days inside Conceivable, step by step.",
+    subject: "Meet Kai (she's not what you think)",
+    preview: "She's not a chatbot. She's the coach I wish every woman had.",
     body: `Hi *|FNAME|*,
 
-Wondering what happens after you sign up?
+Let me introduce you to someone.
 
-Here's your first 14 days inside Conceivable:
+Kai is the AI coach at the heart of Conceivable. And I need to tell you right away what she's NOT, because I know what you're picturing.
 
-DAY 1: Connect your wearable and complete your health profile. Takes about 10 minutes.
+She's not a chatbot that Googles your symptoms. She's not a generic wellness app that tells you to drink water and meditate. She doesn't give you the same advice she gives everyone else.
 
-DAY 2-3: The system begins ingesting your data. Kai introduces herself and asks a few targeted questions to calibrate your experience.
+Here's what Kai actually does:
 
-DAY 7: Your initial CON Score is generated. You'll see a full breakdown of all 7 drivers and which ones are your highest priority.
+She reads your ring data and daily inputs to understand what's happening in YOUR body right now. She identifies which of the 7 fertility drivers need attention — and in what order. She recommends specific protocols — supplements, nutrition changes, sleep adjustments, stress management techniques — based on YOUR patterns, not generic guidelines.
 
-DAY 7-10: Kai delivers your first personalized protocol — specific, evidence-based recommendations for the top 1-2 drivers that will have the most impact.
+And then — this is the part I'm proudest of — she tracks whether it's working.
 
-DAY 14: First progress check. The system verifies whether the initial recommendations are producing the expected physiological responses. If yes, you continue. If not, Kai adjusts.
+Did your luteal phase temperature stabilize after that supplement recommendation? Did your sleep improve after the protocol adjustment? Is your cycle variability decreasing?
 
-From there, it's an ongoing cycle of measurement, recommendation, and adjustment — getting more precise as the system learns your body.
+If yes, she builds on what's working. If not, she adjusts. That's the closed loop.
 
-No guesswork. No "try this and see." A systematic approach to something that deserves to be treated systematically.
+Think of her as the most knowledgeable, most patient, most data-literate fertility health guide you could imagine. Available 24/7. Learning your body every day. Never rushing you out of a 12-minute appointment.
 
-Join early access →
+She's who I'd want in my corner if I were on this journey.
+
+Early access opens soon. I'll send you the details.
 
 Sending you big love,
 Kirsten`,
@@ -569,31 +587,29 @@ Kirsten`,
     week: 5,
     sequence: 3,
     phase: "launch",
-    subject: "The science behind your personalized protocol",
-    preview: "This isn't generic wellness advice. Here's why.",
+    subject: "The ring that reads what your doctor can't",
+    preview: "Continuous data. Not just one snapshot at one appointment.",
     body: `Hi *|FNAME|*,
 
-Let's be clear about something:
+Let's talk about the ring for a second.
 
-Conceivable doesn't give generic advice.
+You know how your doctor gets a snapshot of your health — one blood draw, one moment in time? And then makes decisions based on that single frame?
 
-"Reduce stress" is not a recommendation. "Take this supplement" without knowing why is not personalized care. "Exercise more" is not a protocol.
+The Conceivable ring is like having a movie instead of a photograph.
 
-Here's how Conceivable's personalization actually works:
+It tracks your temperature continuously (not just one morning reading — ALL day and night). It captures your sleep stages, your HRV, your resting heart rate, your activity patterns. Every night, every cycle, every day.
 
-STEP 1: The system identifies your specific driver hierarchy — which of the 7 fertility drivers are most impacting YOUR fertility health, in order of priority.
+Why does this matter?
 
-STEP 2: For each driver, the AI references a clinical knowledge base to identify evidence-based interventions specific to your pattern.
+Because the patterns BETWEEN your data points are where the real insights live. The relationship between your sleep quality on cycle day 20 and your temperature stability on cycle day 22. The connection between an HRV dip and a cortisol-driven sleep disruption three days before your period.
 
-STEP 3: The recommendation is contextualized to your life — your schedule, your preferences, your existing health conditions, your current cycle phase.
+These cross-signal patterns are invisible in a single doctor's appointment. They're invisible in most apps. They're even invisible to you unless someone is connecting the dots continuously.
 
-STEP 4: The system tracks biomarkers and self-reported data to VERIFY the intervention is working. If it's not producing the expected response within the expected timeframe, Kai escalates to a different approach.
+The ring does the capturing. Kai does the connecting. And together, they give you a picture of your fertility health that simply hasn't been possible before.
 
-This closed-loop, adaptive approach is what makes Conceivable different from every other tool in the space. It's not a content library. It's a system that responds to your body.
+No more wondering. No more guessing. Just your body's actual story, told in data.
 
-Early access is open. Limited to 5,000 founding members.
-
-Join now →
+Early access: 5,000 spots. Details coming this week.
 
 Sending you big love,
 Kirsten`,
@@ -609,26 +625,31 @@ Kirsten`,
     week: 6,
     sequence: 1,
     phase: "launch",
-    subject: "2,500 spots remaining",
-    preview: "Half of early access is already claimed.",
+    subject: "Early access is open. 5,000 spots.",
+    preview: "This is what we've been building toward.",
     body: `Hi *|FNAME|*,
 
-Quick update: we're halfway there.
+It's here.
 
-Since opening early access last week, 2,500 founding members have joined Conceivable. That means 2,500 spots remain.
+Early access to Conceivable is now open — app, ring, Kai, the whole system.
 
-We're not going to extend this or add more spots. When the 5,000 founding member slots are filled, early access closes and the next cohort opens at a later date at standard pricing.
+We're accepting 5,000 founding members. Here's what you get:
 
-If you've been thinking about it, here's what founding members are already experiencing:
+Your personalized CON Score — one number that captures your overall fertility readiness across all 7 drivers, with a full breakdown of what's driving it and what to address first.
 
-• Initial CON Scores generated within the first week
-• Kai delivering personalized driver breakdowns
-• Wearable data integration producing insights they've never seen before
-• A community of women who are serious about understanding their fertility health
+The Conceivable ring — continuous tracking of temperature, sleep, HRV, and activity. No more morning BBT alarms. No more single-snapshot data.
 
-This is the most important thing we've ever built. We built it for people like you.
+Kai AI coaching — unlimited, personalized to YOUR data. Evidence-based protocols that adapt as your body responds.
 
-Join the remaining 2,500 spots →
+The closed-loop system — measure, intervene, verify, adjust. Real accountability for whether interventions are working.
+
+Founding member pricing — locked in permanently.
+
+And direct input into what we build next. You're not just a user — you're helping shape this.
+
+I built this for women like you. Women who are smart enough to know the current system isn't good enough, and ready for something better.
+
+Join early access →
 
 Sending you big love,
 Kirsten`,
@@ -644,31 +665,27 @@ Kirsten`,
     week: 6,
     sequence: 2,
     phase: "launch",
-    subject: "From confusion to clarity in 14 days",
-    preview: "What changes when someone actually connects the dots.",
+    subject: "What happens when you actually join",
+    preview: "Your first 14 days inside Conceivable, step by step.",
     body: `Hi *|FNAME|*,
 
-The number one thing we hear from women in the fertility space:
+Wondering what actually happens after you sign up? Let me walk you through it.
 
-"I feel lost."
+DAY 1: Your ring ships. While you wait, you set up the app and complete your health profile. Takes about 10 minutes. (We ask smart questions — the kind your doctor should ask but doesn't have time to.)
 
-Lost in conflicting advice. Lost in test results that don't tell the full story. Lost in a process that feels like it's happening TO them rather than WITH them.
+DAY 3-5: Ring arrives. Put it on. That's it. It starts capturing data immediately.
 
-Here's what Conceivable changes:
+DAY 7: Your initial CON Score is generated. This is the moment. You'll see a full breakdown of all 7 drivers — which ones are strong, which ones need attention, and which one to address FIRST for the biggest impact.
 
-INSTEAD OF scattered data points → A UNIFIED picture of your fertility health
-INSTEAD OF generic advice → PERSONALIZED protocols based on YOUR body
-INSTEAD OF "wait and see" → ACTIVE monitoring with closed-loop feedback
-INSTEAD OF isolation → AN AI COACH that understands your data and is available 24/7
-INSTEAD OF confusion → CLARITY about what's happening and what to do next
+DAY 7-10: Kai delivers your first personalized protocol. Not "eat more vegetables." Specific, evidence-based recommendations targeting YOUR top priority driver. Supplements if needed, lifestyle adjustments, things you can actually do.
 
-Within 14 days of joining, you'll have more insight into your fertility health than most women get in months of traditional care.
+DAY 14: First progress check. The system looks at whether your data is shifting in the expected direction. If yes — great, keep going. If not — Kai adjusts the protocol.
 
-This isn't about replacing your doctor. It's about showing up to your next appointment with data, patterns, and questions that lead to better care.
+From there, it's an ongoing conversation between you, your body, and a system that's actually paying attention.
 
-Early access: 2,500 spots remain.
+No more guesswork. No more "let's see what happens." A real plan that adapts to you.
 
-Join now →
+5,000 founding member spots. Join now →
 
 Sending you big love,
 Kirsten`,
@@ -684,30 +701,33 @@ Kirsten`,
     week: 6,
     sequence: 3,
     phase: "launch",
-    subject: "Your questions, answered",
-    preview: "Everything you want to know before joining.",
+    subject: "Your questions, answered honestly",
+    preview: "No spin. Just straight answers to the things you're wondering.",
     body: `Hi *|FNAME|*,
 
-We've received hundreds of replies over the past few weeks. Here are the most common questions:
+You've had questions. (I love that you've had questions.) Here are the honest answers:
 
-Q: "Is this a replacement for my doctor?"
-A: No. Conceivable is a complement to clinical care. We help you understand your body better so you can have more productive conversations with your healthcare provider.
+"Is this replacing my doctor?"
+No. And I'd be worried about anyone who says it does. Conceivable is a complement to clinical care. We give you better data so you can have better conversations with your provider. Bring your CON Score to your next appointment — your doctor will thank you.
 
-Q: "What data do I need to get started?"
-A: At minimum, cycle tracking data. For the full experience, a wearable (Apple Watch, Oura, etc.) adds sleep and HRV data. The more signals, the more precise the analysis — but you can start simple.
+"Do I need the ring?"
+It makes a huge difference, but you can start with the app alone using cycle tracking and daily inputs. The ring adds continuous temperature, sleep, and HRV data — which makes the analysis dramatically more precise.
 
-Q: "How is this different from other fertility apps?"
-A: Most apps track single variables. Conceivable analyzes the CONNECTIONS between multiple signals. The closed-loop system (measure → intervene → verify → adjust) is unique in the space. We're not a tracker. We're an adaptive system.
+"How is this different from Clue / Flo / Natural Cycles?"
+Those are trackers. They record what you tell them and show you patterns. Conceivable is a system. It analyzes the CONNECTIONS between signals, recommends interventions, verifies they're working, and adjusts if they're not. Tracker vs. closed-loop adaptive system.
 
-Q: "What if I'm already working with a fertility specialist?"
-A: Even better. Conceivable's insights can inform and enhance the work you're doing with your doctor. Bring your CON Score breakdown to your next appointment.
+"What about my data?"
+Encrypted. Never sold. HIPAA-compliant. Non-negotiable. Your health data is yours.
 
-Q: "Is my data safe?"
-A: Your health data is encrypted, never sold, and handled in compliance with HIPAA guidelines. Privacy is non-negotiable.
+"What if I'm already doing IVF?"
+Conceivable can complement IVF protocols by optimizing the underlying health factors that support outcomes — sleep, stress, nutrition, supplementation. Several of our early testers were actively in treatment.
 
-Still have questions? Reply to this email. We read every response.
+"Is this too good to be true?"
+I've been in this space for 20 years. I wouldn't put my name on something I didn't believe in. Come see for yourself.
 
-Early access: spots are filling. Join now →
+Still have questions? Reply to this email. I read every one.
+
+Join early access →
 
 Sending you big love,
 Kirsten`,
@@ -727,23 +747,25 @@ Kirsten`,
     week: 7,
     sequence: 1,
     phase: "final-push",
-    subject: "48 hours. Last chance for early access.",
+    subject: "48 hours left for early access",
     preview: "After Friday, founding member pricing is gone.",
     body: `Hi *|FNAME|*,
 
-Early access closes in 48 hours.
+Quick one today.
 
-After Friday at midnight, the founding member window closes. The next cohort will open at a later date at standard pricing, and without the founding member benefits.
+Early access closes in 48 hours. After Friday at midnight, founding member pricing goes away and the next cohort won't open for a while.
 
-Here's what you're deciding:
+I'm not going to re-pitch you. You've been reading these emails for 6 weeks — you know what this is and whether it's right for you.
 
-OPTION A: Join now. Get your CON Score within a week. Start working with Kai on personalized protocols. Lock in founding member pricing permanently. Be part of the group that shapes the product.
+I'll just say this:
 
-OPTION B: Wait. Pay more later. Miss the founding member community. Start later on a journey you could start this week.
+If you've been on the fence, the thing you're waiting for — more information, more proof, more certainty — is on the other side of trying it. Your CON Score will tell you more about your fertility health in one week than months of wondering.
 
-We're not trying to pressure you. We're trying to be honest: if you've been thinking about this for the past 6 weeks, the only thing between you and clarity about your fertility health is clicking one button.
+And if now isn't the right time, that's completely OK too. I mean that. This journey is yours and there's no wrong timeline.
 
-Join early access before Friday →
+But if you've been thinking about it... 48 hours.
+
+Join early access →
 
 Sending you big love,
 Kirsten`,
@@ -759,23 +781,29 @@ Kirsten`,
     week: 7,
     sequence: 2,
     phase: "final-push",
-    subject: "A letter from our founder",
-    preview: "Kirsten on why she built this and what it means.",
+    subject: "A personal note from me",
+    preview: "Why I built this. The real reason.",
     body: `Hi *|FNAME|*,
 
-It's Kirsten. I want to tell you why I built Conceivable, because it wasn't a business plan. It was personal.
+I want to tell you why I really built Conceivable.
 
-I spent years in the fertility space — first as a practitioner, then as a researcher, then as someone who talked to hundreds of experts through 120 podcast interviews in 4 months. And the same frustration kept coming up: the knowledge exists. The personalization doesn't scale.
+The professional answer is: I saw a gap in fertility care and I had the expertise to fill it. That's true.
 
-The best practitioners in the world can look at a patient's complete picture — hormones, sleep, stress, nutrition, cycle patterns — and create a brilliant protocol. But they can do that for maybe 20 patients a day. There are millions of women who need that level of care.
+But the real reason is more personal than that.
 
-That's what AI changes. Not by replacing those brilliant practitioners, but by encoding their decision frameworks into a system that can serve thousands of women with the same depth and personalization.
+I've spent 20 years sitting across from women who are confused, frustrated, and scared. Women who are doing everything "right" and it's not working. Women who feel like their bodies are failing them. Women who've been dismissed by a system that doesn't have time for them.
 
-Conceivable is my life's work. The CON Score, the closed-loop system, the 7 drivers framework, Kai — all of it represents the best of what I've learned from the most brilliant minds in reproductive science, scaled by the most powerful technology we've ever had access to.
+And every single time, when I could actually sit with someone and connect the dots — show them the whole picture, explain what their body was doing and WHY — I watched something shift. Not just understanding. Hope. Real, informed, grounded hope.
 
-I built it for you. And I'd love for you to try it.
+I can't sit with millions of women. But I could build a system that does what I do in those moments — connect the dots, explain the why, create a real plan, and actually follow through.
+
+That's Conceivable. That's Kai. That's the ring and the app and the closed loop and all of it.
+
+It's my life's work. And I'd love for you to try it.
 
 Early access closes tomorrow.
+
+Join now →
 
 Sending you big love,
 Kirsten`,
@@ -791,33 +819,28 @@ Kirsten`,
     week: 7,
     sequence: 3,
     phase: "final-push",
-    subject: "Last call: early access closes tonight",
-    preview: "Midnight. Then it's over.",
+    subject: "Last call — early access closes tonight",
+    preview: "Midnight. Then we close the doors.",
     body: `Hi *|FNAME|*,
 
 This is the last email about early access.
 
-Tonight at midnight, the founding member window closes.
+Tonight at midnight, the founding member window closes. I won't extend it or add more spots — that wouldn't be fair to the people who already joined.
 
-If you join today:
-✓ Your CON Score generated within 7 days
-✓ Kai AI coaching — personalized to your body
-✓ Founding member pricing locked in permanently
-✓ Direct influence on the product roadmap
-✓ The full closed-loop fertility health system
+If you're in, here's what's waiting for you:
+— Your CON Score within 7 days
+— The Conceivable ring shipped to your door
+— Kai AI coaching, personalized to your body
+— Founding member pricing locked in forever
+— A real, adaptive system that actually follows through
 
-If you don't join today:
-→ The next opportunity will be at a later date
-→ Standard pricing (higher than founding member rate)
-→ No founding member benefits
+If now isn't your time, I completely understand. You'll be the first to know when the next cohort opens.
 
-We've shared the science. We've shown you the system. We've answered your questions.
+But if you've been reading these emails and thinking "this is what I've been looking for" — trust that feeling. You're not wrong.
 
-The only thing left is the decision.
+Join before midnight →
 
-Join early access before midnight →
-
-Thank you for being on this journey with us, regardless of what you decide. We're here when you're ready.
+Thank you for being on this journey with me, no matter what you decide. I'm here when you're ready.
 
 Sending you big love,
 Kirsten`,
@@ -837,30 +860,31 @@ Kirsten`,
     week: 8,
     sequence: 1,
     phase: "post-close",
-    subject: "Welcome to the journey",
-    preview: "You're in. Here's what happens now.",
+    subject: "Welcome. Let's do this.",
+    preview: "You're in. Here's exactly what happens now.",
     body: `Hi *|FNAME|*,
 
-Welcome to Conceivable. You made a powerful decision.
+You're in. And I'm genuinely thrilled.
 
-Here's exactly what happens next:
+Here's exactly what happens now:
 
-TODAY: Check your inbox for your onboarding email with login credentials and setup instructions.
+TODAY: Check your inbox for your onboarding email with login details and ring shipping confirmation.
 
-THIS WEEK: Complete your health profile and connect your wearable. This takes about 10 minutes and is the foundation for everything that follows.
+THIS WEEK: Set up the app, complete your health profile. When your ring arrives, put it on. That's it — it starts working immediately.
 
-WITHIN 7 DAYS: Your initial CON Score will be generated. Kai will walk you through what each driver means and what your priorities are.
+WITHIN 7 DAYS: Your initial CON Score drops. This is the good stuff — a full breakdown of all 7 drivers, what's strong, what needs attention, and where to start.
 
-WITHIN 14 DAYS: Your first personalized protocol will be delivered. Specific, evidence-based recommendations for the top drivers that will have the most impact on your fertility health.
-
-FROM THERE: The closed-loop system begins. Measure, intervene, verify, adjust. Your protocols evolve as your body responds.
+WITHIN 14 DAYS: Kai delivers your first personalized protocol. Real recommendations, based on your actual data.
 
 A few things to know:
-• Reply to any email if you need help. We read everything.
-• Kai is available 24/7 inside the app. Ask her anything.
-• You're part of a community of 5,000 women who are taking control of their fertility health. You're not alone in this.
 
-Welcome to the journey.
+Reply to any email if you need help. I read everything. (OK, my team reads everything. But they're wonderful and I trained them personally.)
+
+Kai is available 24/7 in the app. Don't be shy — she literally never gets tired of your questions.
+
+You're part of a founding group of 5,000 women. You're not alone in this — even though it can feel that way sometimes.
+
+Welcome to the journey. I'm so glad you're here.
 
 Sending you big love,
 Kirsten`,
@@ -876,35 +900,36 @@ Kirsten`,
     week: 8,
     sequence: 2,
     phase: "post-close",
-    subject: "What happens next (and what we're building)",
-    preview: "Your roadmap as a founding member.",
+    subject: "You're a founding member. Here's what that means.",
+    preview: "You're not just a user — you're shaping what comes next.",
     body: `Hi *|FNAME|*,
 
-You're one of 5,000 founding members. That means something.
+You're one of 5,000 founding members. I want you to know what that actually means.
 
-As a founding member, you're not just a user — you're a co-creator. Here's what that looks like:
+It means you're not just using Conceivable — you're helping build it. Your feedback, your experience, your "this is confusing" and "I wish it did this" — that's gold to us. We're listening. Actively.
 
 WHAT'S LIVE NOW:
-• CON Score with full 7-driver breakdown
-• Kai AI coaching (personalized, unlimited)
-• Wearable integration (Apple Watch, Oura)
-• Closed-loop recommendation system
-• Cycle and lifestyle tracking
+— CON Score with full 7-driver breakdown
+— Conceivable ring (continuous temp, sleep, HRV, activity)
+— Kai AI coaching (personalized, unlimited)
+— Closed-loop recommendation system
+— Supplement protocol guidance
+— Cycle and lifestyle tracking
 
-COMING SOON (and you'll help shape it):
-• Advanced hormone integration (at-home test kit partnerships)
-• Partner/co-parent dashboard
-• Community features (moderated, science-first)
-• Provider portal (share your data with your doctor)
-• Pregnancy monitoring transition (when you're ready)
+WHAT'S COMING (and you'll help shape):
+— Advanced hormone integration (at-home test kit partnerships)
+— Partner/co-parent features
+— Community (moderated, science-first — not another anxiety forum)
+— Provider portal (share your data with your doctor seamlessly)
+— Pregnancy monitoring transition (when you're ready — and we'll be SO happy for you)
 
-We'll be asking for your feedback regularly. Your experience directly shapes what we build next.
+We'll ask for your feedback regularly. Don't hold back. The whole point of a founding member group is that you make this better for every woman who comes after you.
 
-For now, focus on your onboarding. Get your CON Score. Start the conversation with Kai. The journey has begun.
+For now: focus on getting your CON Score. Start the conversation with Kai. Wear the ring. Let the system learn your body.
 
-And if you know someone who should be on the waitlist for the next cohort — forward them this link. The best thing you can do for a friend going through this is give them access to better information.
+And if you know someone who should be on the waitlist for the next cohort — forward them this link. The best thing you can do for a friend going through this is give them access to better tools.
 
-Here for you, always.
+Here for you. Always.
 
 Sending you big love,
 Kirsten`,

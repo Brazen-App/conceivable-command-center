@@ -3,9 +3,9 @@ import { GoogleGenAI } from "@google/genai";
 let genaiClient: GoogleGenAI | null = null;
 
 function getClient(): GoogleGenAI {
-  const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("GOOGLE_GEMINI_API_KEY is not set");
+    throw new Error("GEMINI_API_KEY is not set");
   }
   if (!genaiClient) {
     genaiClient = new GoogleGenAI({ apiKey });

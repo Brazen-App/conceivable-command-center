@@ -7,7 +7,6 @@ import {
   MessageCircle,
   ChevronDown,
   ChevronRight,
-  Mic,
   ExternalLink,
   TrendingUp,
   AlertTriangle,
@@ -18,7 +17,6 @@ import {
   Shield,
 } from "lucide-react";
 import type { NewsItem, ResearchItem, RedditPost } from "@/lib/data/content-engine";
-import POVRecorder from "./POVRecorder";
 
 interface Props {
   newsItems: NewsItem[];
@@ -66,7 +64,6 @@ function NewsCard({
   onContentCreate: (sourceId: string, transcript: string) => void;
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const [showPOV, setShowPOV] = useState(false);
   const tag = TAG_CONFIG[item.tag];
 
   return (
@@ -118,14 +115,6 @@ function NewsCard({
           </p>
         </div>
 
-        {item.povTranscript && (
-          <div
-            className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: "#1EAA5520" }}
-          >
-            <Mic size={11} style={{ color: "#1EAA55" }} />
-          </div>
-        )}
       </div>
 
       {/* Summary view */}
@@ -202,25 +191,15 @@ function NewsCard({
             </div>
           )}
 
-          {/* POV section */}
+          {/* Create Drafts */}
           <div className="mt-4">
-            {showPOV ? (
-              <POVRecorder
-                onTranscriptReady={(transcript) => {
-                  setShowPOV(false);
-                  onContentCreate(item.id, transcript);
-                }}
-                onClose={() => setShowPOV(false)}
-              />
-            ) : (
-              <button
-                onClick={() => setShowPOV(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-[1.02]"
-                style={{ backgroundColor: "#F1C028", color: "white" }}
-              >
-                <Mic size={14} /> Record Your POV
-              </button>
-            )}
+            <button
+              onClick={() => onContentCreate(item.id, item.coverageAngle || item.agentRecommendation)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-[1.02]"
+              style={{ backgroundColor: "#F1C028", color: "white" }}
+            >
+              <Sparkles size={14} /> Create Drafts
+            </button>
           </div>
         </div>
       )}
@@ -240,7 +219,6 @@ function ResearchCard({
   onContentCreate: (sourceId: string, transcript: string) => void;
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const [showPOV, setShowPOV] = useState(false);
 
   return (
     <div
@@ -372,23 +350,13 @@ function ResearchCard({
           )}
 
           <div className="mt-4">
-            {showPOV ? (
-              <POVRecorder
-                onTranscriptReady={(transcript) => {
-                  setShowPOV(false);
-                  onContentCreate(item.id, transcript);
-                }}
-                onClose={() => setShowPOV(false)}
-              />
-            ) : (
-              <button
-                onClick={() => setShowPOV(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-[1.02]"
-                style={{ backgroundColor: "#F1C028", color: "white" }}
-              >
-                <Mic size={14} /> Record Your POV
-              </button>
-            )}
+            <button
+              onClick={() => onContentCreate(item.id, item.summary.conceivableRelevance)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-[1.02]"
+              style={{ backgroundColor: "#F1C028", color: "white" }}
+            >
+              <Sparkles size={14} /> Create Drafts
+            </button>
           </div>
         </div>
       )}

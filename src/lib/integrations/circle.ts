@@ -20,14 +20,18 @@ interface CircleCommunity {
 }
 
 export async function getCommunity(): Promise<CircleCommunity> {
-  const res = await fetch(`${CIRCLE_BASE_URL}/me`, {
+  const res = await fetch(`${CIRCLE_BASE_URL}/communities`, {
     headers: { Authorization: `Token ${getToken()}` },
   });
   if (!res.ok) {
     throw new Error(`Circle API error (${res.status}): ${await res.text()}`);
   }
   const data = await res.json();
-  return { id: data.community_id ?? data.id, name: data.name };
+  const community = Array.isArray(data) ? data[0] : data;
+  if (!community) {
+    throw new Error("No Circle community found for this API token");
+  }
+  return { id: community.id, name: community.name };
 }
 
 export async function getSpaces(communityId: number): Promise<CircleSpace[]> {
@@ -44,7 +48,7 @@ export async function getSpaces(communityId: number): Promise<CircleSpace[]> {
 export async function findGeneralSpace(communityId: number): Promise<CircleSpace> {
   const spaces = await getSpaces(communityId);
   const general = spaces.find(
-    (s) => s.name.toLowerCase() === "general" || s.slug === "general"
+    (s) => s.name.toLowerCase().startsWith("general") || s.slug.startsWith("general")
   );
   if (!general) {
     throw new Error(

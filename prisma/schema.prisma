@@ -314,6 +314,8 @@ model PatentClaim {
   id              String   @id @default(cuid())
   claimNumber     Int
   claimText       String   @db.Text
+  claimType       String   @default("independent") // independent, dependent
+  dependsOn       Int?     // claim number this depends on
   parentPatentId  String?  // references Patent.id
   parentPatentRef String?  // human-readable patent reference
   valueTier       String   @default("MEDIUM") // HIGH, MEDIUM, LOW
@@ -325,6 +327,7 @@ model PatentClaim {
   category        String?  // wearable, software_ai, supplement, data_privacy, method, design
   urgency         String?  // file_now, monitor, exploratory
   priorArtRisk    String?  // low, medium, high
+  followOnNote    String?  @db.Text // notes on needed improvements/expansions
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

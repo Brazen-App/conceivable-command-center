@@ -119,17 +119,18 @@ export async function POST() {
       reviewCount++;
     }
 
-    // Seed Patent Claims
+    // Seed Patent Claims — delete old and re-seed with complete data
     const { PATENT_CLAIMS } = await import("@/lib/data/patent-claims-data");
+    await prisma.patentClaim.deleteMany({});
     let patentClaimCount = 0;
     for (const pc of PATENT_CLAIMS) {
-      await prisma.patentClaim.upsert({
-        where: { id: pc.id },
-        update: {},
-        create: {
+      await prisma.patentClaim.create({
+        data: {
           id: pc.id,
           claimNumber: pc.claimNumber,
           claimText: pc.claimText,
+          claimType: pc.claimType,
+          dependsOn: pc.dependsOn,
           parentPatentId: pc.parentPatentId,
           parentPatentRef: pc.parentPatentRef,
           valueTier: pc.valueTier,
@@ -141,6 +142,7 @@ export async function POST() {
           category: pc.category,
           urgency: pc.urgency,
           priorArtRisk: pc.priorArtRisk,
+          followOnNote: pc.followOnNote,
         },
       });
       patentClaimCount++;

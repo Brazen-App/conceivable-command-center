@@ -47,7 +47,8 @@ export type ContentPlatform =
   | "pinterest"
   | "tiktok"
   | "youtube"
-  | "blog";
+  | "blog"
+  | "circle";
 
 export type BriefStatus = "pending" | "reviewed" | "selected" | "dismissed";
 

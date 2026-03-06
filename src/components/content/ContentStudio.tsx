@@ -60,6 +60,7 @@ const PLATFORM_IMAGE_DEFAULTS: Record<ContentPlatform, { style: string; aspectRa
   tiktok: { style: "photography", aspectRatio: "9:16" },
   youtube: { style: "photography", aspectRatio: "16:9" },
   blog: { style: "photography", aspectRatio: "16:9" },
+  circle: { style: "photography", aspectRatio: "1:1" },
 };
 
 function generateDemoContent(topic: string, angle: string): GeneratedPiece[] {
@@ -177,6 +178,7 @@ const PLATFORM_CONFIG: Record<
   tiktok: { label: "TikTok", icon: PenTool, color: "#000000" },
   youtube: { label: "YouTube", icon: Youtube, color: "#FF0000" },
   blog: { label: "Blog", icon: Edit3, color: "#7C3AED" },
+  circle: { label: "Circle", icon: PenTool, color: "#7C3AED" },
 };
 
 export default function ContentStudio() {

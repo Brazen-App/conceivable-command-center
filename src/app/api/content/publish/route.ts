@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import getLate from "@/lib/late";
+import { publishToGeneral } from "@/lib/integrations/circle";
 
 interface PublishPiece {
   platform: string;
   copy: string;
   hashtags: string[];
+  title?: string;
 }
 
 // Map our platform names to Late platform names
@@ -29,13 +31,6 @@ async function getAccounts() {
 }
 
 export async function POST(request: Request) {
-  if (!process.env.LATE_API_KEY) {
-    return NextResponse.json(
-      { error: "LATE_API_KEY is not configured. Add it to .env.local to enable publishing." },
-      { status: 503 }
-    );
-  }
-
   const body = await request.json();
   const pieces: PublishPiece[] = body.pieces;
 
@@ -46,11 +41,27 @@ export async function POST(request: Request) {
     );
   }
 
+  // Check if Late is needed for any non-Circle pieces
+  const needsLate = pieces.some((p) => p.platform !== "circle");
+  if (needsLate && !process.env.LATE_API_KEY) {
+    return NextResponse.json(
+      { error: "LATE_API_KEY is not configured. Add it to .env.local to enable publishing." },
+      { status: 503 }
+    );
+  }
+
   // Reset cache for each request
   accountsCache = null;
 
   const results = await Promise.allSettled(
     pieces.map(async (piece) => {
+      // Circle posts go through the Circle API, not Late
+      if (piece.platform === "circle") {
+        const title = piece.title || "New Post";
+        const result = await publishToGeneral(title, piece.copy);
+        return { platform: "circle", data: result };
+      }
+
       const latePlatform = PLATFORM_MAP[piece.platform] ?? piece.platform;
 
       // Resolve the accountId for this platform

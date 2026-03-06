@@ -10,6 +10,7 @@ const PLATFORMS: ContentPlatform[] = [
   "tiktok",
   "youtube",
   "blog",
+  "circle",
 ];
 
 const IMAGE_PROMPT_INSTRUCTION = `
@@ -88,6 +89,16 @@ Include:
 - Conclusion with CTA
 - Focus keywords and secondary keywords
 Target 1500-2500 words.${IMAGE_PROMPT_INSTRUCTION}`,
+
+  circle: `Write a community post for our Circle community (founding members, early adopters, fertility-curious women).
+Tone: warm, insider-y, like you're talking to friends who get it. More casual than LinkedIn, more substantive than Instagram.
+This is a private community — you can be more candid, share behind-the-scenes, ask for input.
+Include:
+- A conversational opening that pulls people in
+- The key insight or update from this topic
+- A question or prompt at the end to spark discussion
+- Keep it 200-400 words — long enough to be valuable, short enough to read on a phone
+Do NOT include hashtags. This is a community, not social media.${IMAGE_PROMPT_INSTRUCTION}`,
 };
 
 /**

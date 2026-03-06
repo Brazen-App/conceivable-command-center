@@ -18,6 +18,7 @@ import {
   BookOpen,
   AlertCircle,
   RotateCcw,
+  Users,
 } from "lucide-react";
 
 interface ContentPieceProps {
@@ -95,6 +96,12 @@ const PLATFORM_META: Record<
     icon: BookOpen,
     color: "#1EAA55",
     gradient: "linear-gradient(135deg, #1EAA55, #0D7A3E)",
+  },
+  circle: {
+    label: "Circle",
+    icon: Users,
+    color: "#7C3AED",
+    gradient: "linear-gradient(135deg, #7C3AED, #5B21B6)",
   },
 };
 
@@ -573,7 +580,7 @@ export default function ContentPipeline({ queue }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pieces: [
-            { platform: card.platform, copy: card.body, hashtags: [] },
+            { platform: card.platform, copy: card.body, hashtags: [], title: card.title },
           ],
         }),
       });
@@ -735,7 +742,7 @@ export default function ContentPipeline({ queue }: Props) {
             {/* Cards grid */}
             {sourceItem.genStatus === "generating" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Array.from({ length: 7 }).map((_, i) => (
+                {Array.from({ length: 8 }).map((_, i) => (
                   <SkeletonCard key={i} />
                 ))}
               </div>

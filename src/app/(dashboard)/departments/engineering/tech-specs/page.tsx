@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, ExternalLink, Calendar, Hash, Layers } from "lucide-react";
+import { FileText, ExternalLink, Calendar, Hash, Layers, Pin } from "lucide-react";
 import Link from "next/link";
 
 /* ─── Spec Registry ───
@@ -23,6 +23,41 @@ interface SpecEntry {
 }
 
 const SPECS: SpecEntry[] = [
+  {
+    id: "engineering-brief",
+    title: "Engineering Brief — Platform Architecture, Mission & Technical Specification",
+    experience: "All Experiences",
+    experienceSlug: "engineering-brief",
+    accentColor: "#5A6FFF",
+    icon: "📐",
+    href: "/departments/engineering/tech-specs/engineering-brief",
+    status: "complete",
+    wordCount: 4000,
+    lastUpdated: "2026-03-12",
+    components: [
+      "Tiered Scoring Engine (3-tier architecture)",
+      "AI Care Team (agent-per-experience)",
+      "Halo Ring Integration",
+      "PPD Detection Algorithm",
+      "Voice-First Input System",
+      "COPPA/GDPR-K Compliance Layer",
+      "Parent Bridge Architecture",
+      "Supplement Recommendation Engine",
+    ],
+    sections: [
+      "Mission & Core Purpose",
+      "Lifecycle Intelligence Model (5 experiences)",
+      "AI Care Team Architecture",
+      "Core Engineering Principle — Tiered Scoring",
+      "Experience Specifications (First Period → Postpartum)",
+      "Foundational Engineering Systems",
+      "Patent Portfolio (20 patents)",
+      "Tech Stack",
+      "Brand System Integration",
+      "Clinical Validation Requirements",
+      "Why This Matters",
+    ],
+  },
   {
     id: "pregnancy-wellness",
     title: "Pregnancy Wellness Scoring Specification",
@@ -156,10 +191,22 @@ export default function TechSpecsPage() {
               className="rounded-2xl overflow-hidden"
               style={{
                 backgroundColor: "var(--surface)",
-                border: "1px solid var(--border)",
+                border: spec.id === "engineering-brief" ? `2px solid ${spec.accentColor}40` : "1px solid var(--border)",
                 borderLeft: `4px solid ${spec.accentColor}`,
               }}
             >
+              {/* Pinned Banner */}
+              {spec.id === "engineering-brief" && (
+                <div
+                  className="flex items-center gap-2 px-5 py-2"
+                  style={{ backgroundColor: `${spec.accentColor}10`, borderBottom: `1px solid ${spec.accentColor}20` }}
+                >
+                  <Pin size={10} style={{ color: spec.accentColor }} />
+                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: spec.accentColor }}>
+                    Pinned — Master Reference Document
+                  </span>
+                </div>
+              )}
               {/* Card Header */}
               <div className="p-5">
                 <div className="flex items-start gap-4">
@@ -253,12 +300,12 @@ export default function TechSpecsPage() {
                 style={{ backgroundColor: "var(--background)", borderTop: "1px solid var(--border)" }}
               >
                 <Link
-                  href={`/departments/product/experiences/${spec.experienceSlug}`}
+                  href={spec.id === "engineering-brief" ? "/departments/product/experiences" : `/departments/product/experiences/${spec.experienceSlug}`}
                   className="flex items-center gap-1 text-[10px] font-medium"
                   style={{ color: spec.accentColor }}
                 >
                   <ExternalLink size={10} />
-                  {spec.experience} Experience Page
+                  {spec.id === "engineering-brief" ? "All Experiences" : `${spec.experience} Experience Page`}
                 </Link>
                 <Link
                   href="/departments/engineering/kanban"

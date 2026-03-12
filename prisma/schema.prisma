@@ -430,3 +430,39 @@ model DepartmentData {
 
   @@unique([department, key])
 }
+
+// ============================================================
+// Product Experiences & Features
+// ============================================================
+
+model Experience {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  slug          String    @unique
+  tagline       String
+  accentColor   String
+  status        String    @default("not_started") // not_started, in_design, in_development, live
+  description   String?   @db.Text
+  targetPersona String?   @db.Text
+  features      Feature[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Feature {
+  id              String     @id @default(cuid())
+  experienceId    String
+  experience      Experience @relation(fields: [experienceId], references: [id])
+  name            String
+  description     String?    @db.Text
+  userStory       String?    @db.Text
+  priority        String     @default("should_have") // must_have, should_have, nice_to_have
+  complexity      String     @default("medium") // small, medium, large
+  status          String     @default("idea") // idea, designing, wireframed, coded, shipped
+  careTeamMembers Json?      // string[]
+  uxSpec          String?    @db.Text
+  generatedCode   String?    @db.Text
+  notes           String?    @db.Text
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}

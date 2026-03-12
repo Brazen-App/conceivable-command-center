@@ -7,7 +7,7 @@ import { Boxes } from "lucide-react";
 const TABS = [
   { href: "/departments/product", label: "Dashboard" },
   { href: "/departments/product/roadmap", label: "Roadmap" },
-  { href: "/departments/product/verticals", label: "Experiences" },
+  { href: "/departments/product/experiences", label: "Experiences" },
   { href: "/departments/product/user-research", label: "User Research" },
   { href: "/departments/product/design", label: "Design" },
 ];

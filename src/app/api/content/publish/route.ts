@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getLate from "@/lib/late";
 import { publishToGeneral } from "@/lib/integrations/circle";
+import { publishBlogToShopify, isShopifyConfigured } from "@/lib/integrations/shopify-blog";
 
 interface PublishPiece {
   platform: string;
@@ -44,10 +45,14 @@ export async function POST(request: Request) {
   // Check if Late is needed for any non-Circle pieces
   const needsLate = pieces.some((p) => p.platform !== "circle");
   if (needsLate && !process.env.LATE_API_KEY) {
-    return NextResponse.json(
-      { error: "LATE_API_KEY is not configured. Add it to .env.local to enable publishing." },
-      { status: 503 }
-    );
+    // No Late API key — mark all posts as queued
+    const results = pieces.map((p) => ({
+      platform: p.platform,
+      ok: true,
+      queued: true,
+      message: `Content ready. Connect your ${p.platform} account in Settings to auto-publish.`,
+    }));
+    return NextResponse.json({ results });
   }
 
   // Reset cache for each request
@@ -60,6 +65,26 @@ export async function POST(request: Request) {
         const title = piece.title || "New Post";
         const result = await publishToGeneral(title, piece.copy);
         return { platform: "circle", data: result };
+      }
+
+      // Blog posts go to Shopify
+      if (piece.platform === "blog") {
+        if (!isShopifyConfigured()) {
+          return {
+            platform: "blog",
+            data: { queued: true, message: "Shopify not configured. Add SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN to publish blogs." },
+          };
+        }
+        const result = await publishBlogToShopify({
+          title: piece.title || "New Blog Post",
+          body: piece.copy,
+          tags: piece.hashtags,
+          publishNow: true,
+        });
+        if (!result.success) {
+          throw new Error(result.error || "Shopify publish failed");
+        }
+        return { platform: "blog", data: { published: true, article: result.article } };
       }
 
       const latePlatform = PLATFORM_MAP[piece.platform] ?? piece.platform;

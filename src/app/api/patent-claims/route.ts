@@ -1,6 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * POST /api/patent-claims
+ * Create a new patent claim (e.g., from Joy's suggestions).
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      claimText, category, valueTier, estimatedValue, rationale,
+      urgency, priorArtRisk, parentPatentRef, claimType, followOnNote,
+    } = body;
+
+    if (!claimText) {
+      return NextResponse.json({ error: "claimText is required" }, { status: 400 });
+    }
+
+    // Get the next claim number
+    const maxClaim = await prisma.patentClaim.findFirst({
+      orderBy: { claimNumber: "desc" },
+      select: { claimNumber: true },
+    });
+    const nextNumber = (maxClaim?.claimNumber || 0) + 1;
+
+    const claim = await prisma.patentClaim.create({
+      data: {
+        claimNumber: nextNumber,
+        claimText,
+        claimType: claimType || "independent",
+        parentPatentRef: parentPatentRef || "New Filing — Joy Recommendation",
+        valueTier: valueTier || "MEDIUM",
+        estimatedValue: estimatedValue || 0,
+        rationale: rationale || "",
+        status: "not_drafted",
+        priority: urgency === "file_now",
+        archived: false,
+        category: category || "software_ai",
+        urgency: urgency || "monitor",
+        priorArtRisk: priorArtRisk || "medium",
+        followOnNote: followOnNote || null,
+      },
+    });
+
+    return NextResponse.json(claim);
+  } catch (err) {
+    console.error("POST /api/patent-claims error:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Database error" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

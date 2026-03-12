@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClient } from "@/lib/mailchimp";
 
+function textToHtml(text: string): string {
+  const paragraphs = text.split(/\n\n+/);
+  const htmlParagraphs = paragraphs.map((para) => {
+    const withBreaks = para.split("\n").map((l) => l.trim()).filter((l) => l.length > 0).join("<br>\n");
+    return `<p style="margin: 0 0 16px 0; line-height: 1.6;">${withBreaks}</p>`;
+  });
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:16px;line-height:1.6;color:#2A2828;background-color:#F9F7F0;margin:0;padding:0}.container{max-width:600px;margin:0 auto;padding:40px 24px;background-color:#fff}p{margin:0 0 16px 0;line-height:1.6}a{color:#5A6FFF}</style></head><body><div class="container">${htmlParagraphs.join("")}</div></body></html>`;
+}
+
 interface ScheduleBody {
   emailIds: string[];
   segment: string;
@@ -114,9 +123,10 @@ export async function POST(req: NextRequest) {
       const campaign = await mc.campaigns.create(campaignData);
       const campaignId = (campaign as { id: string }).id;
 
-      // Set campaign content
+      // Set campaign content — convert plain text to formatted HTML
+      const htmlBody = textToHtml(email.body);
       await mc.campaigns.setContent(campaignId, {
-        plain_text: email.body,
+        html: htmlBody,
       });
 
       // Schedule or send

@@ -9,6 +9,7 @@ const ACCENT = "#356FB6";
 const TABS = [
   { href: "/departments/fundraising", label: "Dashboard" },
   { href: "/departments/fundraising/movement-board", label: "Movement Board" },
+  { href: "/departments/fundraising/angel-investors", label: "Angel Investors" },
   { href: "/departments/fundraising/venture", label: "Venture" },
   { href: "/departments/fundraising/strategic", label: "Strategic" },
   { href: "/departments/fundraising/materials", label: "Materials" },

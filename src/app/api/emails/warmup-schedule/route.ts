@@ -3,16 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 // ── Warmup Schedule Strategy ──────────────────────────────────────
 //
-// 29K cold list → 8-week warmup with expanding audience segments
+// 29K cold list → gradual warmup with expanding audience segments
 //
-// Week 1-2 (Re-engagement): Start with most engaged 10%, expand to 25%, then full
-// Week 3-4 (Education): Engaged openers from W1-2, then broader
-// Week 5-6 (Launch): Full list (warmed up by now)
-// Week 7 (Final Push): Non-converters only
-// Week 8 (Post-Close): Converted members only
+// Send cadence: 3x per week (Mon / Wed / Fri) at 10am EST
+// Audience ramp: 3K → 5K → 7K → 10K → 15K → 25K → full list (29K)
+// Watch open rates at each tier before expanding
 //
-// Send cadence: 2-3 emails per week, Tue/Thu/Sat at 10am EST
-// Never blast the full list on day 1
 
 export const dynamic = "force-dynamic";
 
@@ -29,9 +25,45 @@ interface ScheduleEntry {
   sendTime: string;
   status: "pending" | "approved" | "scheduled" | "sent";
   warmupNote: string;
+  audienceTier: number;
 }
 
-// Calculate the schedule based on a start date
+// Audience ramp tiers — each tier stays until open rates look good
+const AUDIENCE_TIERS = [
+  { size: 3000, label: "~3,000", segment: "Top 10% — highest openers", note: "Start small. Best openers first to build sender reputation. Watch for 30%+ open rate before expanding." },
+  { size: 5000, label: "~5,000", segment: "Top 17% — recent openers + clickers", note: "Expanding slowly. Need 25%+ open rate here to continue." },
+  { size: 7000, label: "~7,000", segment: "Top 25% — engaged quarter", note: "Quarter of list. ISPs should trust us by now. Target 22%+ open rate." },
+  { size: 10000, label: "~10,000", segment: "Top 35% — engaged third", note: "Expanding to a third. Watch deliverability closely." },
+  { size: 15000, label: "~15,000", segment: "Top 50% — engaged half", note: "Half the list. If open rates hold above 18%, we're golden." },
+  { size: 25000, label: "~25,000", segment: "Most of list — minus hard bounces + long-dormant", note: "Nearly full list. Skip only addresses that have never opened anything." },
+  { size: 29000, label: "~29,000", segment: "Full list", note: "Full list is warm. Sender reputation established." },
+];
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+// Send days: Monday (1), Wednesday (3), Friday (5)
+const SEND_DAYS = [1, 3, 5];
+
+/**
+ * Find the next send date on or after the given date (Mon/Wed/Fri).
+ */
+function nextSendDay(from: Date): Date {
+  const d = new Date(from);
+  while (!SEND_DAYS.includes(d.getDay())) {
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
+/**
+ * Advance to the following send day after the given date.
+ */
+function advanceToNextSendDay(from: Date): Date {
+  const d = new Date(from);
+  d.setDate(d.getDate() + 1);
+  return nextSendDay(d);
+}
+
 function buildWarmupSchedule(
   startDate: Date,
   emails: Array<{
@@ -45,97 +77,20 @@ function buildWarmupSchedule(
   }>
 ): ScheduleEntry[] {
   const schedule: ScheduleEntry[] = [];
-  const start = new Date(startDate);
-
-  // Ensure start is a Monday
-  const dayOfWeek = start.getDay();
-  const daysToMonday = dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 8 - dayOfWeek;
-  start.setDate(start.getDate() + daysToMonday);
-
-  // Send days within each week: Tuesday (1), Thursday (3), Saturday (5)
-  const sendDayOffsets = [1, 3, 5]; // days after Monday
-  const sendDayNames = ["Tuesday", "Thursday", "Saturday"];
-
-  // Warmup audience progression
-  const warmupSegments: Record<
-    string,
-    { segment: string; size: string; note: string }[]
-  > = {
-    "re-engagement": [
-      { segment: "Most engaged 10% (3K highest openers)", size: "~3,000", note: "Warmup: Start small. Best openers first to build sender reputation." },
-      { segment: "Engaged 25% (7K recent openers)", size: "~7,000", note: "Warmup: Expand to quarter of list. Good open rates here build trust with ISPs." },
-      { segment: "Full list minus hard bounces", size: "~28,000", note: "Warmup: Full list send. Sender reputation established from prior sends." },
-      { segment: "Full list minus hard bounces", size: "~28,000", note: "List is warming. Continue full sends." },
-      { segment: "Engaged + new openers from W1", size: "~15,000", note: "Re-engage openers from first sends. Skip persistent non-openers." },
-      { segment: "Full list — re-engagement complete", size: "~28,000", note: "Final re-engagement push. After this, non-openers get sunset sequence." },
-    ],
-    education: [
-      { segment: "Opened 1+ email in W1-2", size: "~12,000", note: "Education goes to proven engagers only. Higher open rates protect reputation." },
-      { segment: "Opened 1+ email in W1-2", size: "~12,000", note: "Continue with engaged segment." },
-      { segment: "Opened 1+ email in W1-2 + clicked any link", size: "~8,000", note: "Science-forward content to highest-intent subscribers." },
-      { segment: "Opened 1+ email in W1-2", size: "~12,000", note: "Broader education push to all openers." },
-      { segment: "All openers + new signups", size: "~14,000", note: "Educational content to all engaged + any new list additions." },
-      { segment: "Clicked any previous email", size: "~6,000", note: "High-intent segment. Transition toward launch." },
-    ],
-    launch: [
-      { segment: "Full list — launch announcement", size: "~28,000", note: "Launch day. Full list. Reputation is warm by now." },
-      { segment: "Full list minus already-signed-up", size: "~27,000", note: "Onboarding walkthrough to everyone not yet converted." },
-      { segment: "Openers who haven't converted", size: "~10,000", note: "Science-forward messaging to engaged non-converters." },
-      { segment: "Full list minus signed-up", size: "~26,000", note: "Social proof. Half of early access claimed." },
-      { segment: "Engaged but unconverted", size: "~8,000", note: "Emotional/transformation messaging for fence-sitters." },
-      { segment: "Engaged but unconverted", size: "~8,000", note: "Objection handling. Answer their questions directly." },
-    ],
-    "final-push": [
-      { segment: "Engaged non-converters only", size: "~6,000", note: "Urgency. Only to people who have engaged but not converted." },
-      { segment: "Full remaining list", size: "~24,000", note: "Founder letter. Personal. Full remaining list." },
-      { segment: "All non-converters — last chance", size: "~24,000", note: "Final send. After this, early access closes." },
-    ],
-    "post-close": [
-      { segment: "Converted members only", size: "~500", note: "Onboarding. Only goes to people who signed up." },
-      { segment: "Converted members only", size: "~500", note: "Founding member roadmap + referral ask." },
-    ],
-  };
 
   // Sort emails by week and sequence
   const sorted = [...emails].sort((a, b) => a.week - b.week || a.sequence - b.sequence);
 
-  let currentWeekStart = new Date(start);
-
-  // Track which calendar week we're in
-  let lastEmailWeek = 0;
+  // Start on the first Mon/Wed/Fri on or after startDate
+  let sendDate = nextSendDay(new Date(startDate));
 
   sorted.forEach((email, index) => {
-    // Advance calendar week when email week changes
-    if (email.week > lastEmailWeek) {
-      if (lastEmailWeek > 0) {
-        // Advance by the difference in weeks
-        const weekDiff = email.week - lastEmailWeek;
-        currentWeekStart.setDate(currentWeekStart.getDate() + 7 * weekDiff);
-      }
-      lastEmailWeek = email.week;
-    }
+    // 1 email per tier, then full list for the rest
+    const tierIndex = Math.min(index, AUDIENCE_TIERS.length - 1);
+    const tier = AUDIENCE_TIERS[tierIndex];
 
-    // Which send slot within this week (0, 1, or 2)
-    const slotInWeek = email.sequence - 1;
-    const dayOffset = sendDayOffsets[Math.min(slotInWeek, 2)];
-    const dayName = sendDayNames[Math.min(slotInWeek, 2)];
-
-    const sendDate = new Date(currentWeekStart);
-    sendDate.setDate(sendDate.getDate() + dayOffset);
-
-    // Get warmup segment info
-    const phaseSegments = warmupSegments[email.phase] || [];
-    const segmentIndex = Math.min(index, phaseSegments.length - 1);
-    const segmentInfo = phaseSegments[segmentIndex] || {
-      segment: email.segment || "Full list",
-      size: "TBD",
-      note: "",
-    };
-
-    // Use the warmup segment data for re-engagement (indexed by position within phase)
-    const phaseEmails = sorted.filter((e) => e.phase === email.phase);
-    const posInPhase = phaseEmails.indexOf(email);
-    const warmup = phaseSegments[posInPhase] || segmentInfo;
+    const dateStr = sendDate.toISOString().split("T")[0];
+    const dayName = DAY_NAMES[sendDate.getDay()];
 
     schedule.push({
       emailId: email.id,
@@ -143,14 +98,18 @@ function buildWarmupSchedule(
       sequence: email.sequence,
       subject: email.subject,
       phase: email.phase,
-      segment: warmup.segment,
-      audienceSize: warmup.size,
-      scheduledDate: sendDate.toISOString().split("T")[0],
+      segment: tier.segment,
+      audienceSize: tier.label,
+      scheduledDate: dateStr,
       scheduledDay: dayName,
       sendTime: "10:00 AM EST",
       status: email.status as ScheduleEntry["status"],
-      warmupNote: warmup.note,
+      warmupNote: tier.note,
+      audienceTier: tierIndex + 1,
     });
+
+    // Advance to next Mon/Wed/Fri
+    sendDate = advanceToNextSendDay(sendDate);
   });
 
   return schedule;
@@ -161,12 +120,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const startDateParam = searchParams.get("startDate");
 
-  // Default start: next Monday
-  const now = new Date();
-  const defaultStart = new Date(now);
-  const daysToMonday = (8 - now.getDay()) % 7 || 7;
-  defaultStart.setDate(now.getDate() + daysToMonday);
-
+  // Default start: tomorrow
+  const defaultStart = new Date();
+  defaultStart.setDate(defaultStart.getDate() + 1);
   const startDate = startDateParam ? new Date(startDateParam) : defaultStart;
 
   const emails = await prisma.email.findMany({
@@ -184,41 +140,43 @@ export async function GET(req: NextRequest) {
 
   const schedule = buildWarmupSchedule(startDate, emails);
 
-  // Summary stats
   const totalEmails = schedule.length;
-  const weekSpan = Math.max(...schedule.map((s) => s.week)) - Math.min(...schedule.map((s) => s.week)) + 1;
   const firstSend = schedule[0]?.scheduledDate;
   const lastSend = schedule[schedule.length - 1]?.scheduledDate;
 
+  // Calculate how many weeks the schedule spans
+  const daySpan = schedule.length > 0
+    ? Math.ceil((new Date(lastSend).getTime() - new Date(firstSend).getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+  const weekSpan = Math.ceil(daySpan / 7);
+
   return NextResponse.json({
     strategy: {
-      name: "8-Week Warmup Sequence",
+      name: "Fast Warmup — 3x/Week, Audience Ramp-Up",
       description:
-        "Staggered sending starting with most engaged 10% of list, expanding to full list by week 3. Tue/Thu/Sat at 10am EST. No email fires until you confirm the full schedule.",
+        "Send Mon/Wed/Fri at 10am EST. First 6 emails ramp audience (3K → 5K → 7K → 10K → 15K → 25K), then full list for remaining emails. Watch open rates at each tier.",
       totalEmails,
+      daySpan,
       weekSpan,
       firstSend,
       lastSend,
       startDate: startDate.toISOString().split("T")[0],
-      maxPerWeek: 3,
-      sendDays: "Tuesday, Thursday, Saturday",
+      cadence: "3x per week (Mon / Wed / Fri)",
       sendTime: "10:00 AM EST",
     },
-    audienceProgression: [
-      { week: "1", audience: "~3,000 (top 10% openers)", purpose: "Build sender reputation" },
-      { week: "2", audience: "~7,000–28,000 (expanding)", purpose: "Grow reach as reputation improves" },
-      { week: "3-4", audience: "~8,000–14,000 (engaged openers)", purpose: "Education to proven engagers" },
-      { week: "5-6", audience: "~28,000 (full warmed list)", purpose: "Launch to everyone" },
-      { week: "7", audience: "~6,000–24,000 (non-converters)", purpose: "Final push" },
-      { week: "8", audience: "~500 (converted only)", purpose: "Onboarding" },
-    ],
+    audienceProgression: AUDIENCE_TIERS.map((tier, i) => ({
+      tier: i + 1,
+      audience: `${tier.label} (${tier.segment})`,
+      emails: i < AUDIENCE_TIERS.length - 1 ? "1 email" : `${Math.max(1, totalEmails - AUDIENCE_TIERS.length + 1)} emails`,
+      purpose: tier.note,
+    })),
     schedule,
     warning:
-      "This is a PREVIEW only. No emails will be sent until you confirm the schedule via POST. Approve emails in the Review Queue first, then confirm the schedule here.",
+      "This is a PREVIEW only. No emails will be sent until you confirm the schedule via POST. Watch open rates at each tier — if they drop below 15%, pause and clean the segment before expanding.",
   });
 }
 
-// POST — confirm and lock the schedule (still doesn't send — creates Mailchimp drafts)
+// POST — confirm and lock the schedule (still doesn't send — saves dates to DB)
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { confirmed, startDate } = body;
@@ -233,7 +191,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const start = startDate ? new Date(startDate) : new Date();
+  const start = startDate ? new Date(startDate) : (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d; })();
 
   const emails = await prisma.email.findMany({
     orderBy: [{ week: "asc" }, { sequence: "asc" }],
@@ -241,8 +199,6 @@ export async function POST(req: NextRequest) {
 
   const schedule = buildWarmupSchedule(start, emails);
 
-  // For now, just save the schedule dates to the DB
-  // When Mailchimp is connected on Vercel, this will create draft campaigns
   const updates = [];
   for (const entry of schedule) {
     const email = emails.find((e) => e.id === entry.emailId);
@@ -259,15 +215,16 @@ export async function POST(req: NextRequest) {
         subject: entry.subject,
         scheduledDate: entry.scheduledDate,
         segment: entry.segment,
+        audienceSize: entry.audienceSize,
       });
     }
   }
 
   return NextResponse.json({
     success: true,
-    message: `Schedule locked for ${updates.length} emails. No emails will send until Mailchimp is connected and campaigns are created.`,
+    message: `Schedule locked for ${updates.length} emails. 3x/week (Mon/Wed/Fri) starting ${start.toISOString().split("T")[0]}. Watch open rates at each audience tier.`,
     lockedSchedule: updates,
     nextStep:
-      "Connect Mailchimp on Vercel (add MAILCHIMP_API_KEY to env vars), then the schedule will auto-create draft campaigns for each send date.",
+      "Use POST /api/mailchimp/schedule-all with { confirmed: true } to create all campaigns in Mailchimp and schedule them.",
   });
 }

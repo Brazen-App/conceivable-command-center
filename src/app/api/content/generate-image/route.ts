@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
     }
 
     const prompt = `You are a creative director for Conceivable, a women's health brand.
-Brand colors: deep purple (#7C3AED), soft pink (#EC4899), warm white, sage green accents.
-Brand feel: Modern, clean, science-meets-warmth. Think Glossier meets medical journal.
+Brand colors: Blue (#5A6FFF), Baby Blue (#ACB7FF), Off White (#F9F7F0), Navy (#356FB6), Green (#1EAA55), Red (#E24D47), Yellow (#F1C028).
+Brand feel: Calm, intelligent, empathetic, empowering. Clean warmth, science meets human-centered care.
 Target audience: women 20-40.
 
 Generate a detailed image prompt for a ${platform} visual about: "${topic}"

@@ -157,12 +157,26 @@ export async function publishToPlatform(
       };
     }
 
-    // Blog — no direct publishing, just flag for manual use
+    // Blog — publish to Shopify
     if (base === "blog") {
+      const { publishBlogToShopify, isShopifyConfigured } = await import("./shopify-blog");
+      if (!isShopifyConfigured()) {
+        return {
+          platform: base,
+          success: false,
+          message: "Shopify not configured. Add SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN to publish blogs.",
+        };
+      }
+      const result = await publishBlogToShopify({
+        title: piece.meta?.title || "New Blog Post",
+        body: piece.text,
+        publishNow: true,
+      });
       return {
         platform: base,
-        success: false,
-        message: "Blog posts are for manual publishing — copy content to your CMS",
+        success: result.success,
+        message: result.success ? `Published to Shopify: ${result.article?.handle}` : (result.error ?? "Failed"),
+        postId: result.article?.id?.toString(),
       };
     }
 

@@ -191,6 +191,26 @@ export async function GET() {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown GA4 error";
+
+    // Detect "API not enabled" error and return actionable instructions
+    if (message.includes("has not been used in project") || message.includes("it is disabled")) {
+      const projectMatch = message.match(/project (\d+)/);
+      const projectId = projectMatch?.[1] ?? "YOUR_PROJECT_ID";
+      return NextResponse.json({
+        connected: false,
+        error: "GA4 Data API not enabled",
+        fixRequired: "enable_api",
+        instructions: [
+          `1. Go to: https://console.developers.google.com/apis/api/analyticsdata.googleapis.com/overview?project=${projectId}`,
+          "2. Click 'Enable' to activate the Google Analytics Data API",
+          "3. Wait 1-2 minutes for it to propagate",
+          "4. Refresh this page",
+        ],
+        enableUrl: `https://console.developers.google.com/apis/api/analyticsdata.googleapis.com/overview?project=${projectId}`,
+        demo: getDemoData(),
+      });
+    }
+
     return NextResponse.json(
       { connected: false, error: message },
       { status: 500 }

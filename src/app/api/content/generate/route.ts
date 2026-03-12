@@ -4,7 +4,7 @@ import { generateContentBatch } from "@/lib/pipelines/content-creation";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { topic, founderAngle, sourceStoryId } = body;
+    const { topic, founderAngle, sourceStoryId, templateId } = body;
 
     if (!topic || !founderAngle) {
       return NextResponse.json(
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const batch = await generateContentBatch(topic, founderAngle, sourceStoryId);
+    const batch = await generateContentBatch(topic, founderAngle, sourceStoryId, templateId);
 
     return NextResponse.json({
       id: batch.id,

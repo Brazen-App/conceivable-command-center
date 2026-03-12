@@ -8,7 +8,6 @@ const TABS = [
   { href: "/departments/marketing", label: "Dashboard" },
   { href: "/departments/marketing/content", label: "Content" },
   { href: "/departments/marketing/seo-geo", label: "SEO & GEO" },
-  { href: "/departments/marketing/email", label: "Email Strategy" },
   { href: "/departments/marketing/email-ops", label: "Email Ops" },
   { href: "/departments/marketing/analytics", label: "Analytics" },
   { href: "/departments/marketing/affiliates", label: "Affiliates" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PenTool, Newspaper, Sparkles, Calendar } from "lucide-react";
 import DailyBrief from "@/components/departments/content/DailyBrief";
 import ContentPipeline from "@/components/departments/content/ContentPipeline";
@@ -31,31 +31,63 @@ export default function ContentDepartmentPage() {
   const [calendarEntries, setCalendarEntries] = useState<CalendarEntry[]>([]);
   const [pipelineQueue, setPipelineQueue] = useState<PipelineItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<string | undefined>();
 
   // POV Knowledge Base stats
   const [povStats, setPovStats] = useState({ total: 0, topicCount: 0, topics: [] as string[] });
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/content-engine").then((r) => r.json()),
-      fetch("/api/pov").then((r) => r.json()),
-    ])
-      .then(([contentData, povData]) => {
-        setNewsItems(contentData.newsItems ?? []);
-        setResearchItems(contentData.researchItems ?? []);
-        setRedditPosts(contentData.redditPosts ?? []);
-        setCalendarEntries(contentData.calendarEntries ?? []);
-        if (povData.stats) {
-          setPovStats({
-            total: povData.stats.total,
-            topicCount: povData.stats.topicCount,
-            topics: povData.stats.topics,
-          });
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+  const fetchData = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true);
+    try {
+      const [contentData, povData] = await Promise.all([
+        fetch("/api/content-engine").then((r) => r.json()),
+        fetch("/api/pov").then((r) => r.json()),
+      ]);
+      setNewsItems(contentData.newsItems ?? []);
+      setResearchItems(contentData.researchItems ?? []);
+      setRedditPosts(contentData.redditPosts ?? []);
+      setCalendarEntries(contentData.calendarEntries ?? []);
+      if (povData.stats) {
+        setPovStats({
+          total: povData.stats.total,
+          topicCount: povData.stats.topicCount,
+          topics: povData.stats.topics,
+        });
+      }
+    } catch {
+      // fail silently
+    } finally {
+      if (isInitial) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData(true);
+  }, [fetchData]);
+
+  // Auto-refresh every 30s to pick up new content
+  useEffect(() => {
+    const interval = setInterval(() => fetchData(false), 30000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/briefs/refresh", { method: "POST" });
+      const data = await res.json();
+      if (data.ok) {
+        setLastRefreshed(data.refreshedAt);
+        // Re-fetch the content from the DB
+        await fetchData(false);
+      }
+    } catch {
+      // fail silently
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleContentCreate = (sourceId: string, transcript: string) => {
     // Find the source item to get its title
@@ -238,6 +270,9 @@ export default function ContentDepartmentPage() {
           redditPosts={redditPosts}
           onContentCreate={handleContentCreate}
           onRedditAction={handleRedditAction}
+          onRefresh={handleRefresh}
+          isRefreshing={isRefreshing}
+          lastRefreshed={lastRefreshed}
         />
       )}
       {activeTab === "pipeline" && (

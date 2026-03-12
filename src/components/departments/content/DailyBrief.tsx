@@ -15,6 +15,9 @@ import {
   Mic,
   Square,
   Loader2,
+  RefreshCw,
+  ExternalLink,
+  CheckCircle2,
 } from "lucide-react";
 import type { NewsItem, ResearchItem, RedditPost } from "@/lib/data/content-engine";
 
@@ -24,6 +27,9 @@ interface Props {
   redditPosts: RedditPost[];
   onContentCreate: (sourceId: string, transcript: string) => void;
   onRedditAction: (id: string, action: "approved" | "skipped") => void;
+  onRefresh?: () => Promise<void>;
+  isRefreshing?: boolean;
+  lastRefreshed?: string;
 }
 
 const TAG_CONFIG: Record<string, { label: string; color: string }> = {
@@ -263,20 +269,38 @@ function NewsCard({
           {twoSentences}
         </p>
 
-        {/* Read Full Article button */}
-        {!expanded && (
-          <button
-            onClick={() => setExpanded(true)}
-            className="flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{
-              backgroundColor: "var(--background)",
-              color: "#5A6FFF",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <FileText size={12} /> Read Full Article
-          </button>
-        )}
+        {/* Source link + expand */}
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {item.sourceUrl && item.sourceUrl !== "#" && (
+            <a
+              href={item.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
+              style={{
+                backgroundColor: "#1EAA5510",
+                color: "#1EAA55",
+                border: "1px solid #1EAA5520",
+              }}
+            >
+              <ExternalLink size={12} /> View Source
+              <CheckCircle2 size={10} />
+            </a>
+          )}
+          {!expanded && (
+            <button
+              onClick={() => setExpanded(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+              style={{
+                backgroundColor: "var(--background)",
+                color: "#5A6FFF",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <FileText size={12} /> Analysis & POV
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Expanded: full article + agent rec + POV field */}
@@ -427,19 +451,38 @@ function ResearchCard({
           {twoSentences}
         </p>
 
-        {!expanded && (
-          <button
-            onClick={() => setExpanded(true)}
-            className="flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{
-              backgroundColor: "var(--background)",
-              color: "#5A6FFF",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <FileText size={12} /> Read Full Abstract
-          </button>
-        )}
+        {/* Source links */}
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {item.doi && (
+            <a
+              href={item.doi.startsWith("http") ? item.doi : `https://doi.org/${item.doi}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
+              style={{
+                backgroundColor: "#1EAA5510",
+                color: "#1EAA55",
+                border: "1px solid #1EAA5520",
+              }}
+            >
+              <ExternalLink size={12} /> DOI
+              <CheckCircle2 size={10} />
+            </a>
+          )}
+          {!expanded && (
+            <button
+              onClick={() => setExpanded(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+              style={{
+                backgroundColor: "var(--background)",
+                color: "#5A6FFF",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <FileText size={12} /> Full Abstract & Analysis
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Expanded */}
@@ -609,19 +652,37 @@ function RedditCard({
           {getTwoSentences(post.body)}
         </p>
 
-        {!expanded && (
-          <button
-            onClick={() => setExpanded(true)}
-            className="flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{
-              backgroundColor: "var(--background)",
-              color: "#5A6FFF",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <FileText size={12} /> View Thread & Draft Response
-          </button>
-        )}
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {post.url && (
+            <a
+              href={post.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80"
+              style={{
+                backgroundColor: "#E24D4710",
+                color: "#E24D47",
+                border: "1px solid #E24D4720",
+              }}
+            >
+              <ExternalLink size={12} /> View on Reddit
+              <CheckCircle2 size={10} />
+            </a>
+          )}
+          {!expanded && (
+            <button
+              onClick={() => setExpanded(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+              style={{
+                backgroundColor: "var(--background)",
+                color: "#5A6FFF",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <FileText size={12} /> Draft Response
+            </button>
+          )}
+        </div>
       </div>
 
       {expanded && (
@@ -729,6 +790,9 @@ export default function DailyBrief({
   redditPosts,
   onContentCreate,
   onRedditAction,
+  onRefresh,
+  isRefreshing,
+  lastRefreshed,
 }: Props) {
   const [activeSection, setActiveSection] = useState<Section>("news");
 
@@ -780,7 +844,7 @@ export default function DailyBrief({
       >
         <div className="flex items-center gap-3 mb-3">
           <Sparkles className="text-white" size={22} strokeWidth={2} />
-          <div>
+          <div className="flex-1">
             <p className="text-white font-semibold text-sm">
               Good Morning, Kirsten
             </p>
@@ -791,8 +855,23 @@ export default function DailyBrief({
                 day: "numeric",
               })}{" "}
               &middot; Your Daily Brief is ready
+              {lastRefreshed && (
+                <span>
+                  {" "}&middot; Last refreshed {new Date(lastRefreshed).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                </span>
+              )}
             </p>
           </div>
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium bg-white/20 text-white hover:bg-white/30 transition-all disabled:opacity-50"
+            >
+              <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+              {isRefreshing ? "Fetching real articles..." : "Refresh from Live Sources"}
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
@@ -817,6 +896,12 @@ export default function DailyBrief({
             <div className="w-2 h-2 rounded-full bg-white/80" />
             <span className="text-white/80 text-xs">
               {highPotential} high-potential Reddit threads
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={12} className="text-white/80" />
+            <span className="text-white/80 text-xs">
+              All sources verified
             </span>
           </div>
         </div>

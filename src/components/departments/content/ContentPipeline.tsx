@@ -53,55 +53,63 @@ interface SourceItem {
 
 const PLATFORM_META: Record<
   string,
-  { label: string; icon: typeof Linkedin; color: string; gradient: string }
+  { label: string; icon: typeof Linkedin; color: string; gradient: string; aspect: string }
 > = {
   linkedin: {
     label: "LinkedIn",
     icon: Linkedin,
     color: "#0A66C2",
     gradient: "linear-gradient(135deg, #0A66C2, #004182)",
+    aspect: "1200/628",   // 1.91:1 landscape
   },
   "instagram-post": {
     label: "Instagram",
     icon: Instagram,
     color: "#E4405F",
     gradient: "linear-gradient(135deg, #E4405F, #833AB4)",
+    aspect: "1/1",         // square
   },
   "instagram-carousel": {
     label: "IG Carousel",
     icon: Instagram,
     color: "#833AB4",
     gradient: "linear-gradient(135deg, #833AB4, #E4405F)",
+    aspect: "1/1",         // square
   },
   pinterest: {
     label: "Pinterest",
     icon: Pin,
     color: "#BD081C",
     gradient: "linear-gradient(135deg, #BD081C, #8C0615)",
+    aspect: "2/3",         // tall portrait
   },
   tiktok: {
     label: "TikTok",
     icon: Video,
     color: "#25F4EE",
     gradient: "linear-gradient(135deg, #25F4EE, #FE2C55)",
+    aspect: "9/16",        // vertical
   },
   youtube: {
     label: "YouTube",
     icon: Youtube,
     color: "#FF0000",
     gradient: "linear-gradient(135deg, #FF0000, #CC0000)",
+    aspect: "16/9",        // landscape
   },
   blog: {
     label: "Blog",
     icon: BookOpen,
     color: "#1EAA55",
     gradient: "linear-gradient(135deg, #1EAA55, #0D7A3E)",
+    aspect: "1200/628",    // 1.91:1 landscape
   },
   circle: {
     label: "Circle",
     icon: Users,
     color: "#7C3AED",
     gradient: "linear-gradient(135deg, #7C3AED, #5B21B6)",
+    aspect: "1/1",         // square
   },
 };
 
@@ -120,6 +128,7 @@ function getDefaultMeta() {
     icon: PenTool,
     color: "#5A6FFF",
     gradient: "linear-gradient(135deg, #5A6FFF, #3B4FCC)",
+    aspect: "1/1",
   };
 }
 
@@ -157,11 +166,14 @@ function DraftCard({
       className="rounded-2xl border overflow-hidden flex flex-col"
       style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
     >
-      {/* Image area */}
+      {/* Image area — platform-specific aspect ratio */}
       <div
-        className="relative h-40 flex items-center justify-center cursor-pointer"
-        style={{ background: card.imageUrl ? undefined : meta.gradient }}
-        onClick={() => !card.imageUrl && !card.imageLoading && onGenerateImage()}
+        className="relative flex items-center justify-center cursor-pointer"
+        style={{
+          aspectRatio: meta.aspect,
+          background: card.imageUrl ? undefined : meta.gradient,
+        }}
+        onClick={() => !card.imageLoading && onGenerateImage()}
       >
         {card.imageUrl ? (
           <img
@@ -196,6 +208,20 @@ function DraftCard({
           <Icon size={11} />
           {meta.label}
         </div>
+
+        {/* Regenerate button (when image exists) */}
+        {card.imageUrl && !card.imageLoading && (
+          <button
+            className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-white text-[10px] font-medium"
+            style={{
+              backgroundColor: "rgba(0,0,0,0.55)",
+              backdropFilter: "blur(8px)",
+            }}
+            onClick={(e) => { e.stopPropagation(); onGenerateImage(); }}
+          >
+            <RotateCcw size={10} /> Regenerate
+          </button>
+        )}
 
         {card.status === "released" && (
           <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-green-500 text-white text-[10px] font-bold">
@@ -335,7 +361,7 @@ function SkeletonCard() {
       }}
     >
       <div
-        className="h-40 animate-pulse"
+        className="aspect-square animate-pulse"
         style={{ backgroundColor: "var(--background)" }}
       />
       <div className="p-4 space-y-3">
@@ -393,7 +419,8 @@ export default function ContentPipeline({ queue }: Props) {
       cardId: string,
       platform: string,
       topic: string,
-      body: string
+      _body: string,
+      _title?: string
     ) => {
       updateCards(sourceId, (cards) =>
         cards.map((c) =>
@@ -402,34 +429,21 @@ export default function ContentPipeline({ queue }: Props) {
       );
 
       try {
-        const promptRes = await fetch("/api/content/generate-image", {
+        // Branded image: instant generation with brand gradient + topic text + logo
+        const res = await fetch("/api/content/branded-image", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ platform, topic, contentBody: body }),
+          body: JSON.stringify({ topic, platform }),
         });
 
-        if (!promptRes.ok) throw new Error("Image prompt failed");
-        const promptData = await promptRes.json();
-        if (promptData.error) throw new Error(promptData.error);
-
-        const imageRes = await fetch("/api/content/generate-image-actual", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: promptData.prompt,
-            aspectRatio: promptData.aspectRatio || "1:1",
-            style: promptData.style || "photography",
-          }),
-        });
-
-        if (!imageRes.ok) throw new Error("Image generation failed");
-        const imageData = await imageRes.json();
-        if (imageData.error) throw new Error(imageData.error);
+        if (!res.ok) throw new Error("Image generation failed");
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
 
         updateCards(sourceId, (cards) =>
           cards.map((c) =>
             c.id === cardId
-              ? { ...c, imageUrl: imageData.imageData, imageLoading: false }
+              ? { ...c, imageUrl: data.imageData, imageLoading: false }
               : c
           )
         );
@@ -495,7 +509,8 @@ export default function ContentPipeline({ queue }: Props) {
             card.id,
             card.platform,
             item.sourceTitle,
-            card.body
+            card.body,
+            card.title
           );
         }
       } catch (err) {
@@ -787,7 +802,8 @@ export default function ContentPipeline({ queue }: Props) {
                         card.id,
                         card.platform,
                         sourceItem.source.sourceTitle,
-                        card.body
+                        card.body,
+                        card.title
                       )
                     }
                   />

@@ -206,6 +206,7 @@ export default function AnalyticsPage() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [setupInstructions, setSetupInstructions] = useState<string[]>([]);
   const [serviceAccountEmail, setServiceAccountEmail] = useState("");
+  const [enableUrl, setEnableUrl] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -228,8 +229,9 @@ export default function AnalyticsPage() {
         setConversionEvents(data.conversionEvents ?? []);
       }
       if (!isConnected) {
-        setSetupInstructions(overviewRes.setupInstructions ?? []);
+        setSetupInstructions(overviewRes.setupInstructions ?? overviewRes.instructions ?? []);
         setServiceAccountEmail(overviewRes.serviceAccountEmail ?? "");
+        setEnableUrl(overviewRes.enableUrl ?? null);
       }
       setLastUpdated(overviewRes.lastUpdated ?? new Date().toISOString());
 
@@ -315,6 +317,19 @@ export default function AnalyticsPage() {
                   <li key={i}>{step}</li>
                 ))}
               </ol>
+              {enableUrl && (
+                <div className="mt-3">
+                  <a
+                    href={enableUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: ACCENT }}
+                  >
+                    Enable GA4 Data API <ExternalLink size={12} />
+                  </a>
+                </div>
+              )}
               {serviceAccountEmail && (
                 <div className="mt-3 flex items-center gap-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>

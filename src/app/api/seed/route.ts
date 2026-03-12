@@ -42,6 +42,146 @@ export async function POST() {
       emailCount++;
     }
 
+    // Seed Content Engine data
+    const { NEWS_ITEMS, RESEARCH_ITEMS, REDDIT_POSTS, CALENDAR_ENTRIES } =
+      await import("@/lib/data/content-engine");
+
+    let newsCount = 0;
+    for (const n of NEWS_ITEMS) {
+      await prisma.newsItem.upsert({
+        where: { id: n.id },
+        update: {
+          title: n.title,
+          source: n.source,
+          sourceUrl: n.sourceUrl ?? null,
+          brief: n.brief,
+          tag: n.tag,
+          isViral: n.isViral,
+          viralReason: n.viralReason ?? null,
+          summary: n.summary,
+          fullArticle: n.fullArticle,
+          agentRecommendation: n.agentRecommendation,
+          coverageAngle: n.coverageAngle,
+          timestamp: n.timestamp,
+        },
+        create: {
+          id: n.id,
+          title: n.title,
+          source: n.source,
+          sourceUrl: n.sourceUrl ?? null,
+          brief: n.brief,
+          tag: n.tag,
+          isViral: n.isViral,
+          viralReason: n.viralReason ?? null,
+          summary: n.summary,
+          fullArticle: n.fullArticle,
+          agentRecommendation: n.agentRecommendation,
+          coverageAngle: n.coverageAngle,
+          timestamp: n.timestamp,
+        },
+      });
+      newsCount++;
+    }
+
+    let researchCount = 0;
+    for (const r of RESEARCH_ITEMS) {
+      await prisma.researchArticle.upsert({
+        where: { id: r.id },
+        update: {
+          title: r.title,
+          journal: r.journal,
+          authors: r.authors,
+          doi: r.doi ?? null,
+          brief: r.brief,
+          relevanceScore: r.relevanceScore,
+          fillsGap: r.fillsGap,
+          gapDescription: r.gapDescription ?? null,
+          summary: r.summary ? JSON.parse(JSON.stringify(r.summary)) : undefined,
+          fullAbstract: r.fullAbstract,
+          timestamp: r.timestamp,
+        },
+        create: {
+          id: r.id,
+          title: r.title,
+          journal: r.journal,
+          authors: r.authors,
+          doi: r.doi ?? null,
+          brief: r.brief,
+          relevanceScore: r.relevanceScore,
+          fillsGap: r.fillsGap,
+          gapDescription: r.gapDescription ?? null,
+          summary: r.summary ? JSON.parse(JSON.stringify(r.summary)) : undefined,
+          fullAbstract: r.fullAbstract,
+          timestamp: r.timestamp,
+        },
+      });
+      researchCount++;
+    }
+
+    let redditCount = 0;
+    for (const rp of REDDIT_POSTS) {
+      await prisma.redditPost.upsert({
+        where: { id: rp.id },
+        update: {
+          subreddit: rp.subreddit,
+          title: rp.title,
+          body: rp.body,
+          upvotes: rp.upvotes,
+          comments: rp.comments,
+          url: rp.url ?? null,
+          engagementPotential: String(rp.engagementPotential),
+          relevanceScore: rp.relevanceScore,
+          riskLevel: rp.riskLevel,
+          draftResponse: rp.draftResponse,
+          timestamp: rp.timestamp,
+        },
+        create: {
+          id: rp.id,
+          subreddit: rp.subreddit,
+          title: rp.title,
+          body: rp.body,
+          upvotes: rp.upvotes,
+          comments: rp.comments,
+          url: rp.url ?? null,
+          engagementPotential: String(rp.engagementPotential),
+          relevanceScore: rp.relevanceScore,
+          riskLevel: rp.riskLevel,
+          draftResponse: rp.draftResponse,
+          status: rp.status,
+          timestamp: rp.timestamp,
+        },
+      });
+      redditCount++;
+    }
+
+    let calendarCount = 0;
+    for (const ce of CALENDAR_ENTRIES) {
+      await prisma.calendarEntry.upsert({
+        where: { id: ce.id },
+        update: {
+          date: ce.date,
+          platform: ce.platform,
+          title: ce.title,
+          excerpt: ce.excerpt,
+          sourceType: ce.sourceType,
+          isMultiplier: ce.isMultiplier,
+          multiplierNote: ce.multiplierNote ?? null,
+        },
+        create: {
+          id: ce.id,
+          date: ce.date,
+          platform: ce.platform,
+          title: ce.title,
+          excerpt: ce.excerpt,
+          status: ce.status,
+          sourceType: ce.sourceType,
+          isMultiplier: ce.isMultiplier,
+          multiplierNote: ce.multiplierNote ?? null,
+        },
+      });
+      calendarCount++;
+    }
+
     // Also seed other critical data
     const { PATENTS, COMPLIANCE_CLAIMS, PENDING_REVIEWS } = await import(
       "@/lib/data/legal-data"
@@ -154,6 +294,10 @@ export async function POST() {
       success: true,
       seeded: {
         emails: emailCount,
+        newsItems: newsCount,
+        researchArticles: researchCount,
+        redditPosts: redditCount,
+        calendarEntries: calendarCount,
         patents: patentCount,
         claims: claimCount,
         reviews: reviewCount,
@@ -216,6 +360,10 @@ export async function PATCH() {
 export async function GET() {
   const counts = {
     emails: await prisma.email.count(),
+    newsItems: await prisma.newsItem.count(),
+    researchArticles: await prisma.researchArticle.count(),
+    redditPosts: await prisma.redditPost.count(),
+    calendarEntries: await prisma.calendarEntry.count(),
     patents: await prisma.patent.count(),
     claims: await prisma.complianceClaim.count(),
     reviews: await prisma.pendingReview.count(),

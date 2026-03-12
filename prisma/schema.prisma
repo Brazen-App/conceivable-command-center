@@ -82,6 +82,9 @@ model Email {
   week             Int
   sequence         Int
   phase            String   // re-engagement, education, launch, final-push, post-close
+  flow             String   @default("launch") // launch, post-purchase, abandoned-cart, post-download, post-download-nudge
+  delayDays        Int?     // days after trigger to send (for automation flows)
+  delayHours       Int?     // hours after trigger to send (for abandoned cart)
   subject          String
   preview          String
   body             String   @db.Text
@@ -347,6 +350,43 @@ model Rejection {
 }
 
 // ============================================================
+// Image Feedback (Content Engine Learning)
+// ============================================================
+
+model ImageFeedback {
+  id           String   @id @default(cuid())
+  platform     String
+  contentType  String
+  topic        String
+  prompt       String   @db.Text
+  feedback     String   // too_clinical, too_casual, wrong_vibe, wrong_demographics, doesnt_match, custom
+  customNote   String?  @db.Text
+  wasApproved  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+// ============================================================
+// Content Queue (Optimal Posting Times)
+// ============================================================
+
+model ContentQueue {
+  id           String    @id @default(cuid())
+  platform     String
+  title        String
+  body         String    @db.Text
+  imageData    String?   @db.Text // base64 data URI
+  imagePrompt  String?   @db.Text
+  hashtags     Json?     // string[]
+  scheduledFor DateTime?
+  status       String    @default("queued") // queued, posted, failed
+  postedAt     DateTime?
+  postUrl      String?
+  error        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ============================================================
 // Chat Logs (Joy Conversations)
 // ============================================================
 
@@ -358,6 +398,22 @@ model ChatLog {
   message     String   @db.Text
   createdAt   DateTime @default(now())
   sessionId   String   // groups messages in same conversation
+}
+
+// ============================================================
+// Patent Drafts (Persisted provisional applications)
+// ============================================================
+
+model PatentDraft {
+  id           String   @id @default(cuid())
+  claimId      String   // references PatentClaim.id
+  sessionId    String   // links to ChatLog sessionId
+  title        String?
+  sections     Json?    // array of { title: string, content: string }
+  phase        String   @default("discovery") // discovery, strategy, drafting
+  messageCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // ============================================================

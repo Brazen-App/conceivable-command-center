@@ -447,6 +447,64 @@ export const PATENT_DRAFTS: PatentDraftEntry[] = [
       }
     ],
     notes: "Placeholder entry. Full provisional patent application text to be added when submitted."
+  },
+
+  // ═══════════════════════════════════════════
+  // POSTPARTUM PATENTS (012-014)
+  // ═══════════════════════════════════════════
+  {
+    id: "patent-012",
+    title: "AI-Powered Postpartum Depression and Anxiety Detection System Using Multi-Signal Passive Biometric Monitoring with Anxiety-Calibrated Clinical Escalation",
+    shortTitle: "PPD Detection System",
+    status: "draft",
+    patentRef: "US-APP-2024-PENDING",
+    category: "software_ai",
+    filingPriority: "critical",
+    lastEdited: "2026-03-11",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "Multi-signal passive monitoring system for postpartum depression and anxiety detection. Combines continuous wearable biometric data (HRV changes, sleep architecture disruption beyond normal newborn patterns, heart rate recovery changes) with behavioral signals (app engagement patterns, voice tone analysis, response latency) and validated clinical instruments (Edinburgh Postnatal Depression Scale). The system distinguishes between 'normal hard' (exhaustion with coping) and 'concerning pattern' (physiological markers of clinical depression/anxiety). Uses sustained 5-7 day pattern recognition to avoid false positives from single bad days. Three-level clinical escalation with anxiety-calibrated messaging that never increases distress.\n\nKey innovation: Distinguishing newborn-related sleep disruption (voluntary wake for feeding) from involuntary sleep disruption (insomnia despite opportunity to sleep, early morning waking, inability to fall back asleep after feeds). This distinction is critical for accurate PPD detection and no existing system makes it.\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "Covers the novel multi-signal approach to PPD/PPA detection. Key differentiator: separating newborn-caused disruption from depression-caused disruption in biometric data. Critical filing — PPD affects 1 in 7 women and most are undiagnosed until severe."
+  },
+  {
+    id: "patent-013",
+    title: "Personalized Postpartum Recovery Trajectory Modeling System Using Pre-Delivery Baseline Data Integration and Dynamic Milestone Tracking",
+    shortTitle: "Recovery Trajectory Modeling",
+    status: "draft",
+    patentRef: "US-APP-2024-PENDING",
+    category: "software_ai",
+    filingPriority: "high",
+    lastEdited: "2026-03-11",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System for generating personalized postpartum recovery trajectories based on delivery type (vaginal, C-section, instrumental), complications (hemorrhage, tearing degree, infection), pre-pregnancy fitness baseline from wearable data, pregnancy wellness trajectory, breastfeeding status, and support system assessment. Generates expected recovery milestones with personalized timelines and tracks actual biometric recovery against personalized benchmarks rather than generic population averages.\n\nKey innovation: Integration of pre-pregnancy and pregnancy continuous monitoring data to create delivery-type-specific recovery models. A woman who maintained high fitness throughout pregnancy with an uncomplicated vaginal delivery gets a fundamentally different recovery trajectory than a woman who had gestational diabetes and an emergency C-section. No existing system personalizes recovery trajectories using continuous pre-delivery baseline data.\n\nTrajectory deviation detection: When actual recovery deviates from expected trajectory (slower healing, unexpected vital sign patterns, recovery plateau), the system automatically adjusts care team engagement, monitoring frequency, and clinical escalation thresholds.\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "Covers personalized recovery modeling using pre-delivery data. No competitor integrates pregnancy monitoring data into postpartum recovery expectations."
+  },
+  {
+    id: "patent-014",
+    title: "AI-Driven Secondary Infertility Prevention System Using Postpartum Recovery Optimization and Future Fertility Factor Monitoring",
+    shortTitle: "Secondary Infertility Prevention",
+    status: "draft",
+    patentRef: "US-APP-2024-PENDING",
+    category: "software_ai",
+    filingPriority: "high",
+    lastEdited: "2026-03-11",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System for identifying and addressing risk factors for secondary infertility during the postpartum recovery period. Uses pregnancy, delivery, and postpartum continuous monitoring data to detect thyroid dysfunction indicators, hormonal recovery pattern anomalies, nutritional deficiency patterns, chronic stress markers, and pelvic floor recovery issues that correlate with secondary infertility.\n\nKey innovation: Connecting postpartum recovery optimization to future fertility preservation. The system monitors interpregnancy interval biomarkers, hormonal axis recovery (HPO axis re-engagement), metabolic recovery patterns, and identifies when a woman's body has returned to fertility-ready baseline versus merely cycle-resumed-but-not-optimized state.\n\nProactive interventions through nutrition (Olive), supplements (Navi), and lifestyle guidance (Kai) to optimize recovery in ways that specifically preserve future fertility potential. Seamless transition back to Fertility experience when biometrics indicate hormonal recovery, with all postpartum and pregnancy data informing the new fertility optimization cycle.\n\nSecondary infertility affects 1 in 6 couples. Most don't discover the problem until actively trying to conceive again. This system aims to prevent it during the postpartum window when intervention is most effective.\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "Covers the novel connection between postpartum recovery and future fertility preservation. Powerful differentiator — nobody else in the market connects these two lifecycle phases for fertility optimization."
   }
 ];
 

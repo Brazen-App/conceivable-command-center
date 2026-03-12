@@ -71,7 +71,7 @@ export const EXPERIENCES: ExperienceSeed[] = [
     slug: "postpartum",
     tagline: "Recovery isn't just physical. We know that.",
     accentColor: "#7CAE7A",
-    status: "not_started",
+    status: "in_design",
     icon: "\u{1F343}",
   },
   {

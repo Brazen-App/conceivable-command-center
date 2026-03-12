@@ -15,7 +15,7 @@ export const EXPERIENCES: ExperienceSeed[] = [
     slug: "first-period",
     tagline: "Her first introduction to her body's power",
     accentColor: "#F4A7B9",
-    status: "not_started",
+    status: "in_design",
     icon: "\u{1F338}",
   },
   {

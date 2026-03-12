@@ -117,68 +117,13 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mc = getClient() as any;
 
-    // --- SEGMENT TARGETING ---
-    let segmentOpts: Record<string, unknown> | undefined;
-    let actualSegmentSize: number | null = null;
-
-    if (tierSize < 29000) {
-      const segmentName = `Warmup - Top ${tierSize} (${new Date().toISOString().split("T")[0]})`;
-
-      let minRatingThreshold: number;
-      if (tierSize <= 3000) minRatingThreshold = 4;
-      else if (tierSize <= 5000) minRatingThreshold = 3;
-      else if (tierSize <= 7000) minRatingThreshold = 3;
-      else if (tierSize <= 10000) minRatingThreshold = 2;
-      else if (tierSize <= 15000) minRatingThreshold = 1;
-      else minRatingThreshold = 0;
-
-      let segment;
-      try {
-        segment = await mc.lists.createSegment(LIST_ID, {
-          name: segmentName,
-          options: {
-            match: "all",
-            conditions: [
-              {
-                condition_type: "MemberRating",
-                field: "member_rating",
-                op: "greater",
-                value: String(minRatingThreshold),
-              },
-            ],
-          },
-        });
-      } catch (segErr) {
-        const errMsg = segErr instanceof Error ? segErr.message : String(segErr);
-        console.error("SEGMENT CREATION FAILED — ABORTING SEND:", errMsg);
-        inFlightSends.delete(emailId);
-        return NextResponse.json({
-          error: `SEND ABORTED: Could not create segment for ${tierSize} subscribers. Refusing to send to full list. Error: ${errMsg}`,
-          safety: "This is a safety measure. Fix the segment issue before retrying.",
-        }, { status: 500 });
-      }
-
-      if (!segment || !segment.id) {
-        inFlightSends.delete(emailId);
-        return NextResponse.json({
-          error: "SEND ABORTED: Segment was created but returned no ID. Refusing to send to full list.",
-        }, { status: 500 });
-      }
-
-      actualSegmentSize = segment.member_count ?? null;
-      segmentOpts = { saved_segment_id: segment.id };
-
-      console.log(`Segment created: "${segmentName}" — ${actualSegmentSize} members (rating > ${minRatingThreshold})`);
-
-      if (actualSegmentSize && actualSegmentSize > tierSize * 2) {
-        inFlightSends.delete(emailId);
-        return NextResponse.json({
-          error: `SEND ABORTED: Segment has ${actualSegmentSize} members but tier target is ${tierSize}. That's more than 2x the target. Review segment conditions.`,
-          segmentId: segment.id,
-          segmentSize: actualSegmentSize,
-        }, { status: 400 });
-      }
-    }
+    // --- AUDIENCE TARGETING ---
+    // NOTE: Email-01 was already sent to the full list (28,908) on March 8, 2026
+    // and achieved a 20% open rate. Sender reputation is established.
+    // All warmup emails now go to the full list — segmentation by member rating
+    // is no longer necessary for deliverability.
+    const segmentOpts: Record<string, unknown> | undefined = undefined;
+    const actualSegmentSize: number | null = null;
 
     // Create the campaign
     const campaignConfig: Record<string, unknown> = {

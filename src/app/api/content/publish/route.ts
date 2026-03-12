@@ -8,6 +8,7 @@ interface PublishPiece {
   copy: string;
   hashtags: string[];
   title?: string;
+  imageData?: string; // base64 data URL (data:image/png;base64,...)
 }
 
 // Map our platform names to Late platform names
@@ -16,6 +17,7 @@ const PLATFORM_MAP: Record<string, string> = {
   x: "twitter",
   facebook: "facebook",
   instagram: "instagram",
+  "instagram-post": "instagram",
   pinterest: "pinterest",
   tiktok: "tiktok",
   youtube: "youtube",
@@ -31,6 +33,43 @@ async function getAccounts() {
   return accountsCache;
 }
 
+/**
+ * Upload a base64 image to Late.dev via presigned URL and return the public URL.
+ */
+async function uploadImageToLate(imageDataUrl: string): Promise<string | null> {
+  try {
+    // Extract base64 and mime type from data URL
+    const match = imageDataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
+    if (!match) return null;
+
+    const mimeType = match[1];
+    const base64 = match[2];
+    const ext = mimeType.split("/")[1] || "png";
+    const fileName = `conceivable-${Date.now()}.${ext}`;
+
+    // Get presigned upload URL from Late
+    const presignRes = await getLate().media.getMediaPresignedUrl({
+      query: { fileName, contentType: mimeType },
+    });
+
+    const presignData = presignRes.data as { uploadUrl?: string; publicUrl?: string };
+    if (!presignData?.uploadUrl || !presignData?.publicUrl) return null;
+
+    // Upload the image binary to the presigned URL
+    const buffer = Buffer.from(base64, "base64");
+    await fetch(presignData.uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": mimeType },
+      body: buffer,
+    });
+
+    return presignData.publicUrl;
+  } catch (err) {
+    console.error("Failed to upload image to Late:", err);
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
   const body = await request.json();
   const pieces: PublishPiece[] = body.pieces;
@@ -43,9 +82,8 @@ export async function POST(request: Request) {
   }
 
   // Check if Late is needed for any non-Circle pieces
-  const needsLate = pieces.some((p) => p.platform !== "circle");
+  const needsLate = pieces.some((p) => p.platform !== "circle" && p.platform !== "blog");
   if (needsLate && !process.env.LATE_API_KEY) {
-    // No Late API key — mark all posts as queued
     const results = pieces.map((p) => ({
       platform: p.platform,
       ok: true,
@@ -87,6 +125,9 @@ export async function POST(request: Request) {
         return { platform: "blog", data: { published: true, article: result.article } };
       }
 
+      // Script-only platforms (no image publishing needed)
+      const scriptOnly = piece.platform === "youtube" || piece.platform === "tiktok";
+
       const latePlatform = PLATFORM_MAP[piece.platform] ?? piece.platform;
 
       // Resolve the accountId for this platform
@@ -101,9 +142,19 @@ export async function POST(request: Request) {
         ? `${piece.copy}\n\n${piece.hashtags.map((t) => `#${t}`).join(" ")}`
         : piece.copy;
 
+      // Upload image if we have one and it's not a script-only platform
+      let mediaUrls: string[] | undefined;
+      if (!scriptOnly && piece.imageData) {
+        const publicUrl = await uploadImageToLate(piece.imageData);
+        if (publicUrl) {
+          mediaUrls = [publicUrl];
+        }
+      }
+
       const res = await getLate().posts.createPost({
         body: {
           content: fullContent,
+          ...(mediaUrls ? { mediaUrls } : {}),
           platforms: [{ platform: latePlatform, accountId: account._id }],
           publishNow: true,
         },

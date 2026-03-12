@@ -23,10 +23,26 @@ import {
   BookOpen,
   Table2,
   ExternalLink,
+  Smartphone,
+  TrendingUp,
+  Target,
+  Zap,
+  ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
 import { PREGNANCY_IP_COVERAGE } from "@/lib/data/pregnancy-features-data";
 import { POSTPARTUM_IP_COVERAGE, POSTPARTUM_CARE_TEAM } from "@/lib/data/postpartum-features-data";
+import {
+  PERIOD_IP_COVERAGE,
+  PERIOD_CARE_TEAM,
+  PERIOD_COMPETITORS,
+  PERIOD_WHAT_THEY_DO,
+  PERIOD_WHAT_WE_DO,
+  PERIOD_MARKET_DATA,
+  PERIOD_ENGINEERING_COMPONENTS,
+  PERIOD_EXPERIENCE_TRANSITIONS,
+  PERIOD_ROADMAP,
+} from "@/lib/data/period-features-data";
 
 /* ─── Types ─── */
 interface Experience {
@@ -103,6 +119,10 @@ const PREGNANCY_TABS = [
 ];
 
 const POSTPARTUM_TABS = [
+  ...BASE_TABS,
+];
+
+const PERIOD_TABS = [
   ...BASE_TABS,
 ];
 
@@ -185,14 +205,30 @@ export default function ExperienceWorkspace() {
             {experience.tagline}
           </p>
         </div>
-        <div
-          className="px-3 py-1.5 rounded-full text-xs font-medium"
-          style={{
-            backgroundColor: `${experience.accentColor}18`,
-            color: experience.accentColor,
-          }}
-        >
-          {features.length} features
+        <div className="flex items-center gap-2">
+          {(slug === "postpartum" || slug === "pregnancy" || slug === "periods") && (
+            <Link
+              href={`/departments/product/experiences/${slug}/wireframes`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors hover:opacity-80"
+              style={{
+                backgroundColor: "#5A6FFF12",
+                color: "#5A6FFF",
+                border: "1px solid #5A6FFF20",
+              }}
+            >
+              <Smartphone size={12} />
+              Wireframes
+            </Link>
+          )}
+          <div
+            className="px-3 py-1.5 rounded-full text-xs font-medium"
+            style={{
+              backgroundColor: `${experience.accentColor}18`,
+              color: experience.accentColor,
+            }}
+          >
+            {features.length} features
+          </div>
         </div>
       </div>
 
@@ -201,7 +237,7 @@ export default function ExperienceWorkspace() {
         className="flex gap-1 mb-6 p-1 rounded-xl overflow-x-auto"
         style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
       >
-        {(slug === "pregnancy" ? PREGNANCY_TABS : slug === "postpartum" ? POSTPARTUM_TABS : BASE_TABS).map((tab) => {
+        {(slug === "pregnancy" ? PREGNANCY_TABS : slug === "postpartum" ? POSTPARTUM_TABS : slug === "periods" ? PERIOD_TABS : BASE_TABS).map((tab) => {
           const active = activeTab === tab.id;
           const Icon = tab.icon;
           return (
@@ -294,6 +330,7 @@ function OverviewTab({
 
   const isPregnancy = experience.slug === "pregnancy";
   const isPostpartum = experience.slug === "postpartum";
+  const isPeriods = experience.slug === "periods";
 
   return (
     <div className="space-y-6">
@@ -384,7 +421,7 @@ function OverviewTab({
       </div>
 
       {/* Lifecycle Cross-Links */}
-      {(isPregnancy || isPostpartum) && (
+      {(isPregnancy || isPostpartum || isPeriods) && (
         <div
           className="rounded-2xl p-6"
           style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
@@ -393,12 +430,18 @@ function OverviewTab({
             Lifecycle Flow
           </h3>
           <div className="flex items-center gap-2 flex-wrap">
-            {[
+            {(isPeriods ? [
+              { name: "First Period", slug: "first-period", color: "#F4A7B9", icon: "\u{1F338}" },
+              { name: "Periods", slug: "periods", color: "#E24D47", icon: "\u{1F4AB}" },
+              { name: "PCOS", slug: "pcos", color: "#9686B9", icon: "\u{1F52C}" },
+              { name: "Fertility", slug: "fertility", color: "#5A6FFF", icon: "\u2728" },
+              { name: "Perimenopause", slug: "perimenopause", color: "#D4944A", icon: "\u{1F525}" },
+            ] : [
               { name: "Fertility", slug: "fertility", color: "#5A6FFF", icon: "\u2728" },
               { name: "Pregnancy", slug: "pregnancy", color: "#D4A843", icon: "\u{1F31F}" },
               { name: "Postpartum", slug: "postpartum", color: "#7CAE7A", icon: "\u{1F343}" },
               { name: "Fertility / Wellness", slug: "fertility", color: "#5A6FFF", icon: "\u2728", label: "Return to Fertility" },
-            ].map((stage, i) => {
+            ]).map((stage, i) => {
               const isCurrent = stage.slug === experience.slug && !stage.label;
               return (
                 <div key={`${stage.slug}-${i}`} className="flex items-center gap-2">
@@ -427,7 +470,9 @@ function OverviewTab({
             })}
           </div>
           <p className="text-[10px] mt-3" style={{ color: "var(--muted)" }}>
-            The Conceivable lifecycle is continuous. Data flows forward — pregnancy data informs postpartum recovery, postpartum data optimizes future fertility. She never starts from scratch.
+            {isPeriods
+              ? "The Period experience is the central hub. Most women enter here. The system naturally identifies when she needs a specialized experience — PCOS, Endometriosis, Fertility, or Perimenopause. One entry point, decades of care."
+              : "The Conceivable lifecycle is continuous. Data flows forward — pregnancy data informs postpartum recovery, postpartum data optimizes future fertility. She never starts from scratch."}
           </p>
         </div>
       )}
@@ -980,6 +1025,371 @@ function OverviewTab({
           </div>
         </div>
       )}
+
+      {/* ═══════════════════════════════════════════════════
+         PERIOD EXPERIENCE SECTIONS
+         ═══════════════════════════════════════════════════ */}
+
+      {/* Period Care Team */}
+      {isPeriods && (
+        <div
+          className="rounded-2xl p-6"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#E24D47" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+              Period Care Team
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {PERIOD_CARE_TEAM.map((agent) => (
+              <div
+                key={agent.name}
+                className="rounded-xl p-4"
+                style={{
+                  backgroundColor: "var(--background)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white"
+                    style={{ backgroundColor: agent.color }}
+                  >
+                    {agent.name[0]}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                      {agent.name}
+                    </p>
+                    <p className="text-[10px]" style={{ color: agent.color }}>
+                      {agent.role}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[11px] leading-relaxed" style={{ color: "var(--muted)" }}>
+                  {agent.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Period Market Data Card */}
+      {isPeriods && (
+        <div
+          className="rounded-2xl p-6"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp size={14} style={{ color: "#E24D47" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+              Market Context
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            {[
+              { label: "Market Size (2025)", value: PERIOD_MARKET_DATA.marketSize, color: "#E24D47" },
+              { label: "Projected (2030)", value: PERIOD_MARKET_DATA.projected, color: "#5A6FFF" },
+              { label: "Growth Rate", value: PERIOD_MARKET_DATA.growth, color: "#1EAA55" },
+              { label: "Users Globally", value: "200M+", color: "#F1C028" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-lg p-3 text-center"
+                style={{ backgroundColor: `${stat.color}08` }}
+              >
+                <p className="text-lg font-bold" style={{ color: stat.color }}>
+                  {stat.value}
+                </p>
+                <p className="text-[9px] font-medium uppercase tracking-wider" style={{ color: stat.color }}>
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <div
+              className="rounded-lg p-3"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+            >
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--foreground)" }}>Flo benchmark</p>
+              <p className="text-[11px]" style={{ color: "var(--muted)" }}>{PERIOD_MARKET_DATA.floStats}</p>
+            </div>
+            <div
+              className="rounded-lg p-3"
+              style={{ backgroundColor: "#E24D4708", border: "1px solid #E24D4720" }}
+            >
+              <p className="text-xs font-medium mb-1" style={{ color: "#E24D47" }}>Key Insight</p>
+              <p className="text-[11px]" style={{ color: "var(--muted)" }}>{PERIOD_MARKET_DATA.keyInsight}</p>
+            </div>
+            <div
+              className="rounded-lg p-3"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+            >
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--foreground)" }}>Privacy Landscape</p>
+              <p className="text-[11px]" style={{ color: "var(--muted)" }}>{PERIOD_MARKET_DATA.privacyLandscape}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Period Competitive Analysis — "Why We Win" */}
+      {isPeriods && (
+        <div
+          className="rounded-2xl p-6"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Target size={14} style={{ color: "#E24D47" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+              Why We Win
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            {/* What they all do */}
+            <div className="rounded-xl p-4" style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}>
+              <h4 className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: "var(--muted)" }}>
+                What They All Do
+              </h4>
+              <div className="space-y-1.5">
+                {PERIOD_WHAT_THEY_DO.map((item) => (
+                  <div key={item} className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full mt-1 shrink-0" style={{ backgroundColor: "var(--muted)" }} />
+                    <p className="text-[11px]" style={{ color: "var(--muted)" }}>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* What none of them do */}
+            <div className="rounded-xl p-4" style={{ backgroundColor: "#E24D4706", border: "1px solid #E24D4720" }}>
+              <h4 className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: "#E24D47" }}>
+                What None of Them Do (Conceivable Does)
+              </h4>
+              <div className="space-y-1.5">
+                {PERIOD_WHAT_WE_DO.map((item) => (
+                  <div key={item} className="flex items-start gap-2">
+                    <Zap size={10} className="mt-0.5 shrink-0" style={{ color: "#E24D47" }} />
+                    <p className="text-[11px]" style={{ color: "var(--foreground)" }}>{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Competitor Cards */}
+          <h4 className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: "var(--foreground)" }}>
+            Competitor Landscape
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {PERIOD_COMPETITORS.map((comp) => (
+              <div
+                key={comp.name}
+                className="rounded-xl p-4"
+                style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: comp.color }}>
+                    {comp.name[0]}
+                  </div>
+                  <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{comp.name}</p>
+                </div>
+                <p className="text-[10px] font-medium mb-1" style={{ color: comp.color }}>{comp.stats}</p>
+                <p className="text-[11px] leading-relaxed" style={{ color: "var(--muted)" }}>{comp.weakness}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Differentiator Line */}
+          <div className="mt-4 rounded-lg p-3 text-center" style={{ backgroundColor: "#E24D4710", border: "1px solid #E24D4725" }}>
+            <p className="text-sm font-bold" style={{ color: "#E24D47" }}>
+              &ldquo;They show you what&apos;s happening. We fix what&apos;s wrong.&rdquo;
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Period Engineering Components */}
+      {isPeriods && (
+        <div
+          className="rounded-2xl p-6"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Wrench size={14} style={{ color: "#E24D47" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+              Engineering Components
+            </h3>
+          </div>
+          <div className="space-y-3">
+            {PERIOD_ENGINEERING_COMPONENTS.map((comp) => {
+              const priorityColors: Record<string, { bg: string; text: string }> = {
+                Critical: { bg: "#E24D4714", text: "#E24D47" },
+                High: { bg: "#F59E0B14", text: "#F59E0B" },
+                Medium: { bg: "#5A6FFF14", text: "#5A6FFF" },
+              };
+              const pc = priorityColors[comp.priority] || priorityColors.Medium;
+              return (
+                <div
+                  key={comp.name}
+                  className="rounded-xl p-4"
+                  style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="text-sm font-bold" style={{ color: "var(--foreground)" }}>{comp.name}</h4>
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: pc.bg, color: pc.text }}>
+                      {comp.priority}
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ml-auto" style={{ backgroundColor: "#1EAA5514", color: "#1EAA55" }}>
+                      {comp.status}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>{comp.description}</p>
+                  <p className="text-[10px] mt-2" style={{ color: "#E24D47" }}>
+                    <strong>Dependencies:</strong> {comp.dependencies}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Period Experience Transitions (Cross-Links) */}
+      {isPeriods && (
+        <div
+          className="rounded-2xl p-6"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <ArrowRight size={14} style={{ color: "#E24D47" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+              Experience Transitions — The Central Hub
+            </h3>
+          </div>
+          <p className="text-[11px] mb-4" style={{ color: "var(--muted)" }}>
+            The Period experience is the FRONT DOOR. Most women enter here. The system naturally identifies when she needs a specialized experience.
+          </p>
+          <div className="space-y-2">
+            {PERIOD_EXPERIENCE_TRANSITIONS.map((trans) => (
+              <Link
+                key={`${trans.from}-${trans.to}`}
+                href={`/departments/product/experiences/${trans.slug}`}
+                className="flex items-center gap-3 rounded-xl p-3 hover:shadow-sm transition-all"
+                style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+              >
+                <span className="text-lg">{trans.icon}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>{trans.from}</span>
+                    <ArrowRight size={10} style={{ color: "var(--muted)" }} />
+                    <span className="text-xs font-semibold" style={{ color: trans.color }}>{trans.to}</span>
+                  </div>
+                  <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>{trans.trigger}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Period Implementation Roadmap */}
+      {isPeriods && (
+        <div
+          className="rounded-2xl p-6"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#E24D47" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+              Implementation Roadmap
+            </h3>
+            <Link
+              href="/departments/product/experiences/periods/spec"
+              className="flex items-center gap-1 text-[10px] font-medium ml-auto"
+              style={{ color: "#E24D47" }}
+            >
+              <ExternalLink size={10} />
+              Full Spec
+            </Link>
+          </div>
+
+          <div className="relative">
+            <div className="absolute left-[19px] top-8 bottom-4 w-px" style={{ backgroundColor: "#E24D4730" }} />
+            <div className="space-y-4">
+              {PERIOD_ROADMAP.map((p, i) => (
+                <div key={p.phase} className="flex gap-4 relative">
+                  <div className="flex flex-col items-center shrink-0">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold z-10"
+                      style={{ backgroundColor: i === 0 ? "#E24D47" : "#E24D4718", color: i === 0 ? "white" : "#E24D47" }}
+                    >
+                      {i + 1}
+                    </div>
+                  </div>
+                  <div
+                    className="flex-1 rounded-xl p-4"
+                    style={{
+                      backgroundColor: "var(--background)",
+                      border: i === 0 ? "1px solid #E24D4740" : "1px solid var(--border)",
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-sm font-bold" style={{ color: "var(--foreground)" }}>{p.title}</h4>
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: "#F59E0B14", color: "#F59E0B" }}>
+                        {p.statusLabel}
+                      </span>
+                      <span className="text-[10px] ml-auto" style={{ color: "var(--muted)" }}>{p.timeline}</span>
+                    </div>
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>{p.description}</p>
+                    <p className="text-[10px] mt-2" style={{ color: "#E24D47" }}>
+                      <strong>Deps:</strong> {p.deps}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mt-6">
+            {[
+              { label: "Total Duration", value: "20-30 wks", color: "#E24D47" },
+              { label: "In Design", value: "3 phases", color: "#F59E0B" },
+              { label: "Care Team", value: "6 agents", color: "#5A6FFF" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-lg p-3 text-center"
+                style={{ backgroundColor: `${stat.color}08` }}
+              >
+                <p className="text-lg font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-[9px] font-medium uppercase tracking-wider" style={{ color: stat.color }}>{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-4 mt-4">
+            <Link
+              href="/departments/product/experiences/periods/spec"
+              className="flex items-center gap-1.5 text-xs font-medium"
+              style={{ color: "#E24D47" }}
+            >
+              View Full Spec →
+            </Link>
+            <Link
+              href="/departments/legal/patent-drafts/patent-015"
+              className="flex items-center gap-1.5 text-xs font-medium"
+              style={{ color: "#5A6FFF" }}
+            >
+              Period Root Cause Patent →
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1127,6 +1537,36 @@ function FeaturesTab({
           <span
             className="px-4 py-2 rounded-lg text-xs font-medium shrink-0 group-hover:shadow-sm"
             style={{ backgroundColor: "#7CAE7A", color: "white" }}
+          >
+            View Spec
+          </span>
+        </Link>
+      )}
+
+      {/* Spec Banner — Periods */}
+      {experience.slug === "periods" && (
+        <Link
+          href="/departments/product/experiences/periods/spec"
+          className="flex items-center gap-4 rounded-xl p-4 mb-4 group hover:shadow-sm transition-all"
+          style={{
+            backgroundColor: "#E24D4708",
+            border: "1px solid #E24D4730",
+          }}
+        >
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: "#E24D4718" }}>
+            <FileText size={18} style={{ color: "#E24D47" }} />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+              Period Experience Specification — In Design
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
+              Period Health Score architecture, cycle intelligence engine, root cause analysis framework, condition detection algorithms. Full specification being developed.
+            </p>
+          </div>
+          <span
+            className="px-4 py-2 rounded-lg text-xs font-medium shrink-0 group-hover:shadow-sm"
+            style={{ backgroundColor: "#E24D47", color: "white" }}
           >
             View Spec
           </span>
@@ -2356,7 +2796,8 @@ function SpecReferencePanel({ scorable }: { scorable: typeof SCORABLE_FEATURES[n
 function IPCoverageTab({ experience }: { experience: Experience }) {
   const isPregnancy = experience.slug === "pregnancy";
   const isPostpartum = experience.slug === "postpartum";
-  const ipCoverage = isPregnancy ? PREGNANCY_IP_COVERAGE : isPostpartum ? POSTPARTUM_IP_COVERAGE : null;
+  const isPeriods = experience.slug === "periods";
+  const ipCoverage = isPregnancy ? PREGNANCY_IP_COVERAGE : isPostpartum ? POSTPARTUM_IP_COVERAGE : isPeriods ? PERIOD_IP_COVERAGE : null;
 
   if (!ipCoverage) {
     return (
@@ -2478,6 +2919,49 @@ function IPCoverageTab({ experience }: { experience: Experience }) {
                   { id: "patent-012", number: "012", name: "PPD Detection System", priority: "Critical" },
                   { id: "patent-013", number: "013", name: "Recovery Trajectory Modeling", priority: "High" },
                   { id: "patent-014", number: "014", name: "Secondary Infertility Prevention", priority: "High" },
+                ].map((p) => (
+                  <Link
+                    key={p.id}
+                    href={`/departments/legal/patent-drafts/${p.id}`}
+                    className="flex items-center gap-2 text-xs"
+                    style={{ color: experience.accentColor }}
+                  >
+                    <span className="font-bold">Patent {p.number}:</span> {p.name}
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider" style={{
+                      backgroundColor: p.priority === "Critical" ? "#E24D4714" : "#F59E0B14",
+                      color: p.priority === "Critical" ? "#E24D47" : "#F59E0B",
+                    }}>
+                      {p.priority}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Period Patents Summary */}
+      {isPeriods && (
+        <div
+          className="rounded-xl p-5"
+          style={{
+            backgroundColor: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderLeft: `3px solid ${experience.accentColor}`,
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <Shield size={16} className="mt-0.5 shrink-0" style={{ color: experience.accentColor }} />
+            <div>
+              <p className="text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>
+                3 New Period Experience Patents
+              </p>
+              <div className="space-y-2 mt-2">
+                {[
+                  { id: "patent-015", number: "015", name: "Period Root Cause Resolution", priority: "Critical" },
+                  { id: "patent-016", number: "016", name: "Cycle-Synced Optimization", priority: "High" },
+                  { id: "patent-017", number: "017", name: "Condition Detection Engine", priority: "High" },
                 ].map((p) => (
                   <Link
                     key={p.id}

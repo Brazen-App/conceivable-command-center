@@ -1,50 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateImage } from "@/lib/integrations/nano-banana";
-import { overlayTitleOnImage } from "@/lib/integrations/image-overlay";
+import { generateBrandedImage } from "@/lib/integrations/branded-image";
 
-export const maxDuration = 120;
+export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { prompt, aspectRatio, style, title, skipOverlay } = body;
+    const { prompt, platform, topic, title } = body;
 
-    if (!prompt) {
-      return NextResponse.json(
-        { error: "prompt is required" },
-        { status: 400 }
-      );
-    }
+    // Use branded image generation (Satori + Sharp — no external API, on-brand)
+    const displayTitle = title || topic || prompt?.slice(0, 60) || "Conceivable";
 
-    const result = await generateImage({
-      prompt,
-      aspectRatio: aspectRatio ?? "1:1",
-      style: style ?? "photography",
+    const result = await generateBrandedImage({
+      topic: displayTitle,
+      platform: platform || "instagram-post",
     });
 
-    let finalBase64 = result.base64;
-    let finalMimeType = result.mimeType;
-
-    // Overlay title if provided
-    if (!skipOverlay && title) {
-      try {
-        const overlaid = await overlayTitleOnImage({
-          title,
-          imageBase64: result.base64,
-          imageMimeType: result.mimeType,
-          aspectRatio: aspectRatio ?? "1:1",
-        });
-        finalBase64 = overlaid.base64;
-        finalMimeType = overlaid.mimeType;
-      } catch (overlayErr) {
-        console.error("Text overlay failed, returning base image:", overlayErr);
-      }
-    }
-
     return NextResponse.json({
-      imageData: `data:${finalMimeType};base64,${finalBase64}`,
-      mimeType: finalMimeType,
-      alt: result.alt,
+      imageData: `data:${result.mimeType};base64,${result.base64}`,
+      mimeType: result.mimeType,
+      alt: `Branded image for ${displayTitle}`,
     });
   } catch (error) {
     const message =

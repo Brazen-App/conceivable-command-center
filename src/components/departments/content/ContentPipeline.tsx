@@ -595,7 +595,7 @@ export default function ContentPipeline({ queue }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           pieces: [
-            { platform: card.platform, copy: card.body, hashtags: [], title: card.title },
+            { platform: card.platform, copy: card.body, hashtags: [], title: card.title, imageData: card.imageUrl || undefined },
           ],
         }),
       });

@@ -5,7 +5,10 @@ import { applyTemplate } from "./content-templates";
 
 const PLATFORMS: ContentPlatform[] = [
   "linkedin",
+  "instagram-post",
   "pinterest",
+  "youtube",
+  "tiktok",
   "blog",
   "circle",
 ];

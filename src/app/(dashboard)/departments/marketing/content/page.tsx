@@ -411,7 +411,7 @@ export default function MarketingContentPage() {
       const res = await fetch("/api/content/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pieces: [{ platform: card.platform, copy: card.body, hashtags: [], title: card.title }] }),
+        body: JSON.stringify({ pieces: [{ platform: card.platform, copy: card.body, hashtags: [], title: card.title, imageData: card.imageUrl || undefined }] }),
       });
       const result = await res.json();
       if (result.error) {

@@ -1,65 +1,36 @@
 import { NextResponse } from "next/server";
-import { generateSmartImage } from "@/lib/integrations/nano-banana";
-import { overlayTitleOnImage } from "@/lib/integrations/image-overlay";
+import { generateBrandedImage } from "@/lib/integrations/branded-image";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { action, content, platform, topic, customPrompt, feedback, previousPrompt, title, skipOverlay } = body;
+    const { platform, topic, title } = body;
 
-    if (!content || !platform || !topic) {
+    if (!platform || !topic) {
       return NextResponse.json(
-        { error: "Missing required fields: content, platform, topic" },
+        { error: "Missing required fields: platform, topic" },
         { status: 400 }
       );
     }
 
-    const result = await generateSmartImage({
-      content,
-      topic,
+    // Use branded image generation (Satori + Sharp — no external API, instant, on-brand)
+    const result = await generateBrandedImage({
+      topic: title || topic,
       platform,
-      customPrompt: action === "regenerate" ? customPrompt : undefined,
-      feedback: action === "feedback" ? feedback : undefined,
-      previousPrompt: action === "feedback" ? previousPrompt : undefined,
     });
 
-    // Overlay title text on the image (unless explicitly skipped)
-    let finalBase64 = result.base64;
-    let finalMimeType = result.mimeType;
-    const overlayTitle = title || topic;
-
-    if (!skipOverlay && overlayTitle) {
-      try {
-        const aspectRatio = result.platformSpec?.aspectRatio || "1:1";
-        const overlaid = await overlayTitleOnImage({
-          title: overlayTitle,
-          imageBase64: result.base64,
-          imageMimeType: result.mimeType,
-          aspectRatio,
-        });
-        finalBase64 = overlaid.base64;
-        finalMimeType = overlaid.mimeType;
-      } catch (overlayErr) {
-        // If overlay fails, return the image without text rather than failing entirely
-        console.error("Text overlay failed, returning base image:", overlayErr);
-      }
-    }
-
     return NextResponse.json({
-      imageData: `data:${finalMimeType};base64,${finalBase64}`,
-      prompt: result.prompt,
-      contentType: result.contentType,
-      platformSpec: result.platformSpec,
-      mimeType: finalMimeType,
+      imageData: `data:${result.mimeType};base64,${result.base64}`,
+      mimeType: result.mimeType,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("Smart image generation error:", message);
+    console.error("Branded image generation error:", message);
     return NextResponse.json(
-      { error: message, details: err instanceof Error ? err.stack : undefined },
+      { error: message },
       { status: 500 }
     );
   }

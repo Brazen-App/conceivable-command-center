@@ -29,6 +29,7 @@ import {
   Globe,
   Code2,
 } from "lucide-react";
+import { FERTILITY_SUPPLEMENTS_POST_HTML } from "@/lib/data/blog-posts-data";
 
 /* ──────────────────────────── constants ──────────────────────────── */
 
@@ -76,7 +77,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 const BLOG_CALENDAR: BlogPost[] = [
   {
     id: "post-1",
-    title: "The Science-Backed Guide to Finding the Best Fertility Supplements in 2024",
+    title: "The Science-Backed Guide to Finding the Best Fertility Supplements in 2025",
     category: "Fertility & Health",
     primaryKeyword: "best fertility supplement",
     secondaryKeywords: ["fertility vitamins", "supplements for conception", "prenatal vitamins"],
@@ -226,7 +227,40 @@ Clinical data you can reference:
 
 SEO rules: Primary keyword in H1, first paragraph, at least one H2, meta description, URL slug. Natural density — never stuffed.
 
-GEO rules: Specific statistics, definitive statements, concise FAQ answers, structured tables, consistent comparison formats. Every post answers the question someone would ask an AI assistant.`;
+GEO rules: Specific statistics, definitive statements, concise FAQ answers, structured tables, consistent comparison formats. Every post answers the question someone would ask an AI assistant.
+
+Page head elements (generate per post):
+- Title tag: [Post Title] | Conceivable
+- Meta description: under 160 chars, contains primary keyword
+- Canonical URL
+- Open Graph tags (og:title, og:description, og:type=article, og:image)
+- Twitter card tags (summary_large_image)
+- Article schema markup (JSON-LD)
+- FAQ schema markup (JSON-LD) from FAQ section
+
+Brand typography in HTML:
+- H1: font-family: 'Georgia', serif; font-size: 38px; line-height: 1.2; color: #2A2828;
+- H2: font-family: 'Georgia', serif; font-size: 28px; color: #2A2828; margin-top: 48px;
+- H3: font-size: 22px; color: #2A2828; margin-top: 32px;
+- Body: font-size: 17px; line-height: 1.7; color: #444;
+- Background: #F9F7F0 for TOC, cards, About block
+
+Brand colors: Primary #5A6FFF, Background #F9F7F0, Text #2A2828, Secondary #555, Meta #888, Pink #E37FB1, Green #1EAA55, CTA gradient: linear-gradient(135deg, #5A6FFF 0%, #9686B9 100%)
+
+If Shopify theme uses custom fonts, replace Georgia with the actual theme font so posts look native.
+
+Required structural elements in every post:
+a) Breadcrumb: Home > Category > Title (14px, #888, links #5A6FFF)
+b) H1 with primary keyword front-loaded
+c) Last updated date below H1
+d) TOC box: bg #F9F7F0, border-radius 12px, numbered anchor links in #5A6FFF
+e) Heading hierarchy: H1 > H2 > H3 (never skip)
+f) Data tables: header bg #5A6FFF white text, alternating white/#F9F7F0 rows
+g) Comparison cards: bg #F9F7F0, border-radius 12px, Pros/Cons/Verdict
+h) FAQ section: min 5 questions as H3, 2-3 sentence answers, border-bottom 1px #eee
+i) CTA block: gradient bg, white text centered, white button with #5A6FFF text
+j) Disclaimer: italic, 13px, #999
+k) About Conceivable: bg #F9F7F0, company description + 240K data points + 150-260% improvement`;
 
 /* ──────────────────────────── helpers ──────────────────────────── */
 
@@ -321,6 +355,19 @@ function WorkspaceTab() {
   const [checklist, setChecklist] = useState<boolean[]>(CHECKLIST_ITEMS.map(() => false));
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Pre-load completed post HTML when selecting a ready/published post
+  const handlePostSelect = (postId: string) => {
+    setSelectedPost(postId);
+    if (postId === "post-1") {
+      setMessages([
+        { role: "user", content: "Load the completed fertility supplements blog post (Ready to Publish)" },
+        { role: "assistant", content: FERTILITY_SUPPLEMENTS_POST_HTML },
+      ]);
+    } else if (postId === "new") {
+      setMessages([]);
+    }
+  };
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -351,7 +398,7 @@ function WorkspaceTab() {
           }),
         });
         const data = await res.json();
-        setMessages([...next, { role: "assistant", content: data.content ?? data.message ?? "" }]);
+        setMessages([...next, { role: "assistant", content: data.response ?? data.content ?? data.message ?? "" }]);
       } catch {
         setMessages([
           ...next,
@@ -389,7 +436,7 @@ function WorkspaceTab() {
             <FileText size={14} style={{ color: ACCENT }} />
             <select
               value={selectedPost}
-              onChange={(e) => setSelectedPost(e.target.value)}
+              onChange={(e) => handlePostSelect(e.target.value)}
               className="text-sm rounded-md px-2 py-1 flex-1"
               style={{
                 backgroundColor: "var(--background)",
@@ -761,6 +808,32 @@ function TemplateTab() {
 
   return (
     <div className="space-y-6">
+      {/* Page Head Elements */}
+      <RuleCard title="Page Head Elements (Per Post)" icon={<Code2 size={16} />}>
+        <div className="space-y-2 text-sm" style={{ color: "var(--foreground)" }}>
+          {[
+            { el: "Title Tag", desc: "[Post Title] | Conceivable" },
+            { el: "Meta Description", desc: "Under 160 chars, contains primary keyword, compelling" },
+            { el: "Canonical URL", desc: "https://conceivable.com/blogs/[category]/[slug]" },
+            { el: "og:title", desc: "Same as title tag" },
+            { el: "og:description", desc: "Same as meta description" },
+            { el: "og:type", desc: "article" },
+            { el: "og:image", desc: "1200x630px hero image" },
+            { el: "twitter:card", desc: "summary_large_image" },
+            { el: "Article Schema", desc: "JSON-LD — author, datePublished, dateModified, publisher" },
+            { el: "FAQ Schema", desc: "JSON-LD — auto-generated from FAQ section questions/answers" },
+          ].map((item) => (
+            <div key={item.el} className="flex items-start gap-3 py-1.5" style={{ borderBottom: "1px solid var(--border)" }}>
+              <code className="text-xs font-semibold px-2 py-0.5 rounded shrink-0" style={{ backgroundColor: `${ACCENT}10`, color: ACCENT }}>{item.el}</code>
+              <span className="text-xs" style={{ color: "var(--muted)" }}>{item.desc}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>
+          The AI drafting workspace generates all schema markup automatically. Use &quot;Copy Schema&quot; to extract just the JSON-LD blocks for pasting into the Shopify page head.
+        </p>
+      </RuleCard>
+
       {/* Brand Typography */}
       <RuleCard title="Brand Typography" icon={<Type size={16} />}>
         <div className="overflow-x-auto">

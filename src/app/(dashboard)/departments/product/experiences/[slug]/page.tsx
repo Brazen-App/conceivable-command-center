@@ -17,8 +17,11 @@ import {
   LayoutList,
   FileText,
   ChevronDown,
+  Shield,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
+import { PREGNANCY_IP_COVERAGE } from "@/lib/data/pregnancy-features-data";
 
 /* ─── Types ─── */
 interface Experience {
@@ -85,6 +88,7 @@ const TABS = [
   { id: "coach", label: "Product Coach", icon: MessageSquare },
   { id: "ux", label: "UX Design", icon: Palette },
   { id: "code", label: "Code Gen", icon: Code2 },
+  { id: "ip", label: "IP Coverage", icon: Shield },
 ];
 
 export default function ExperienceWorkspace() {
@@ -228,6 +232,9 @@ export default function ExperienceWorkspace() {
           conversationType="code_gen"
           panelType="code"
         />
+      )}
+      {activeTab === "ip" && (
+        <IPCoverageTab experience={experience} />
       )}
     </div>
   );
@@ -1070,6 +1077,112 @@ function SplitPanelTab({
               </p>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   IP COVERAGE TAB
+   ───────────────────────────────────────────── */
+function IPCoverageTab({ experience }: { experience: Experience }) {
+  const isPregnancy = experience.slug === "pregnancy";
+
+  if (!isPregnancy) {
+    return (
+      <div
+        className="rounded-xl p-12 text-center"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <Shield size={32} className="mx-auto mb-3" style={{ color: "var(--muted)" }} />
+        <p className="text-sm" style={{ color: "var(--muted)" }}>
+          IP coverage mapping will be added as features are defined for this experience.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div
+        className="rounded-xl p-6"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <Shield size={16} style={{ color: experience.accentColor }} />
+          <h3 className="font-semibold" style={{ color: "var(--foreground)" }}>
+            Patent Protection Map
+          </h3>
+        </div>
+        <div className="space-y-2">
+          {PREGNANCY_IP_COVERAGE.map((item) => (
+            <div
+              key={item.feature}
+              className="flex items-start gap-4 rounded-lg p-3"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                  {item.feature}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-1.5 shrink-0">
+                {item.patents.length > 0 ? (
+                  item.patents.map((p) => (
+                    <Link
+                      key={p.id}
+                      href={`/departments/legal/patent-drafts/${p.id}`}
+                      className="px-2.5 py-1 rounded-md text-xs font-medium hover:shadow-sm transition-shadow"
+                      style={{
+                        backgroundColor: `${experience.accentColor}14`,
+                        color: experience.accentColor,
+                        border: `1px solid ${experience.accentColor}30`,
+                      }}
+                    >
+                      {p.number} — {p.name}
+                    </Link>
+                  ))
+                ) : (
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium" style={{ backgroundColor: "#F59E0B14", color: "#F59E0B" }}>
+                    <AlertTriangle size={10} />
+                    New patent opportunity
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recommended New Patent */}
+      <div
+        className="rounded-xl p-5"
+        style={{
+          backgroundColor: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderLeft: `3px solid ${experience.accentColor}`,
+        }}
+      >
+        <div className="flex items-start gap-3">
+          <Shield size={16} className="mt-0.5 shrink-0" style={{ color: experience.accentColor }} />
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>
+              Recommended new patent filed
+            </p>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
+              Continuous AI-Powered Pregnancy Monitoring System (Patent 011) — covers the novel
+              combination of pre-conception data integration with continuous pregnancy monitoring
+              and automated care coordination.
+            </p>
+            <Link
+              href="/departments/legal/patent-drafts/patent-011"
+              className="inline-flex items-center gap-1 text-xs font-medium mt-2"
+              style={{ color: experience.accentColor }}
+            >
+              View in Patent Drafts →
+            </Link>
+          </div>
         </div>
       </div>
     </div>

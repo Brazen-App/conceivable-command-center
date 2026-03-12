@@ -63,7 +63,7 @@ export const EXPERIENCES: ExperienceSeed[] = [
     slug: "pregnancy",
     tagline: "Nine months of the smartest care she's ever had",
     accentColor: "#D4A843",
-    status: "not_started",
+    status: "in_design",
     icon: "\u{1F31F}",
   },
   {

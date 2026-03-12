@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useCallback } from "react";
-import { Download, Shield, Zap, Eye, Brain, Activity, Smartphone, Baby, BarChart3 } from "lucide-react";
+import { Download, Shield, Zap, Eye, Brain, Activity, Smartphone, Baby, BarChart3, Heart, Search } from "lucide-react";
 
 /* ──────────────────────────────────────────────
    Color Palette
@@ -43,8 +43,8 @@ function HeroHeader() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { value: "10 Patents", label: "Foundational portfolio" },
-            { value: "$18-30M", label: "Estimated licensing potential" },
+            { value: "12 Patents", label: "Foundational portfolio" },
+            { value: "$20-35M", label: "Estimated licensing potential" },
             { value: "3 Layers", label: "Core Platform \u00b7 Real-Time \u00b7 Predictive" },
           ].map((stat) => (
             <div
@@ -221,7 +221,7 @@ function PortfolioArchitecture() {
             Predictive Analytics &amp; Emerging Tech
           </h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <PatentCard
             number={9}
             title="Pregnancy Risk Assessment"
@@ -235,6 +235,13 @@ function PortfolioArchitecture() {
             description="Facial analysis + voice patterns for comprehensive health assessment"
             accent={PURPLE}
             icon={<Smartphone size={16} style={{ color: PURPLE }} />}
+          />
+          <PatentCard
+            number={11}
+            title="Pregnancy Monitoring System"
+            description="Continuous AI monitoring with pre-conception data integration, early GD detection, first trimester viability assessment, and automated multi-specialist care coordination"
+            accent={PURPLE}
+            icon={<Heart size={16} style={{ color: PURPLE }} />}
           />
         </div>
       </div>
@@ -317,7 +324,7 @@ function CompetitiveMoat() {
             <div className="w-px h-6" style={{ backgroundColor: "rgba(249,247,240,0.2)" }} />
           </div>
           <p className="text-xs" style={{ color: "rgba(249,247,240,0.4)" }}>
-            10 patents blocking all competitive vectors
+            12 patents blocking all competitive vectors
           </p>
         </div>
 
@@ -644,8 +651,8 @@ export default function ExecutiveSummaryPage() {
             <h1>Conceivable IP Portfolio</h1>
             <div class="subtitle">Comprehensive Patent Protection for AI-Powered Fertility Health Platform</div>
             <div class="stat-row">
-              <div class="stat-card"><div class="val">10 Patents</div><div class="lbl">Foundational portfolio</div></div>
-              <div class="stat-card"><div class="val">$18-30M</div><div class="lbl">Estimated licensing potential</div></div>
+              <div class="stat-card"><div class="val">12 Patents</div><div class="lbl">Foundational portfolio</div></div>
+              <div class="stat-card"><div class="val">$20-35M</div><div class="lbl">Estimated licensing potential</div></div>
               <div class="stat-card"><div class="val">3 Layers</div><div class="lbl">Core Platform \u00b7 Real-Time \u00b7 Predictive</div></div>
             </div>
           </div>
@@ -669,8 +676,9 @@ export default function ExecutiveSummaryPage() {
             </div>
             <div class="tier-label" style="color:#9686B9">Predictive Analytics & Emerging Tech</div>
             <div class="card-grid">
-              <div class="card" style="flex:1"><div class="num" style="color:#9686B9">Patent 9</div><h4>Pregnancy Risk Assessment</h4><p>Predictive analytics for adverse outcomes using pre-conception + wearable data</p></div>
-              <div class="card" style="flex:1"><div class="num" style="color:#9686B9">Patent 10</div><h4>Smartphone Multi-Modal Assessment</h4><p>Facial analysis + voice patterns for comprehensive health assessment</p></div>
+              <div class="card"><div class="num" style="color:#9686B9">Patent 9</div><h4>Pregnancy Risk Assessment</h4><p>Predictive analytics for adverse outcomes using pre-conception + wearable data</p></div>
+              <div class="card"><div class="num" style="color:#9686B9">Patent 10</div><h4>Smartphone Multi-Modal Assessment</h4><p>Facial analysis + voice patterns for comprehensive health assessment</p></div>
+              <div class="card"><div class="num" style="color:#9686B9">Patent 11</div><h4>Pregnancy Monitoring System</h4><p>Continuous AI monitoring with pre-conception data integration, early GD detection, first trimester viability assessment, and automated multi-specialist care coordination</p></div>
             </div>
           </div>
 

@@ -46,7 +46,7 @@ const VERTICALS_MINI = [
   { name: "PCOS", score: 0, status: "planned" },
   { name: "Endometriosis", score: 0, status: "future" },
   { name: "Infertility", score: 72, status: "active" },
-  { name: "Pregnancy", score: 0, status: "research" },
+  { name: "Pregnancy", score: 11, status: "active" },
   { name: "Postpartum", score: 0, status: "future" },
   { name: "Perimenopause", score: 0, status: "planned" },
   { name: "Menopause", score: 0, status: "future" },
@@ -257,7 +257,7 @@ export default function ProductDashboardPage() {
             return (
               <Link
                 key={v.name}
-                href={`/departments/product/verticals?v=${encodeURIComponent(v.name)}`}
+                href={`/departments/product/experiences/${v.name === "Infertility" ? "fertility" : v.name === "Pregnancy" ? "pregnancy" : ""}`}
                 className="rounded-xl border p-3 text-left transition-all hover:shadow-sm block"
                 style={{
                   borderColor: "var(--border)",
@@ -291,6 +291,64 @@ export default function ProductDashboardPage() {
               </Link>
             );
           })}
+        </div>
+      </div>
+
+      {/* Build Priority / Roadmap */}
+      <div
+        className="rounded-2xl border p-5 mb-6"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <Zap size={16} style={{ color: "#D4A843" }} />
+          <h3
+            className="text-xs font-bold uppercase tracking-wider"
+            style={{ color: "var(--foreground)" }}
+          >
+            Build Priority
+          </h3>
+        </div>
+        <div className="space-y-2">
+          <Link
+            href="/departments/product/experiences/fertility"
+            className="flex items-center gap-3 rounded-xl border p-3 hover:shadow-sm transition-all block"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
+          >
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base" style={{ backgroundColor: "#5A6FFF18" }}>
+              ✨
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                Phase 1: Fertility (Flagship)
+              </p>
+              <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+                Launching April 30, 2026 — Core AI engine, Halo Ring integration, Conceivable Score
+              </p>
+            </div>
+            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full" style={{ backgroundColor: "#1EAA5514", color: "#1EAA55" }}>
+              Live
+            </span>
+          </Link>
+          <Link
+            href="/departments/product/experiences/pregnancy"
+            className="flex items-center gap-3 rounded-xl border p-3 hover:shadow-sm transition-all block"
+            style={{ borderColor: "#D4A84330", backgroundColor: "#D4A84308" }}
+          >
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base" style={{ backgroundColor: "#D4A84318" }}>
+              🌟
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                Phase 2: Pregnancy
+              </p>
+              <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+                11 features defined — Continuous monitoring, GD screening, First Trimester Guardian, OB Bridge Reports
+              </p>
+            </div>
+            <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full" style={{ backgroundColor: "#F59E0B14", color: "#F59E0B" }}>
+              In Design
+            </span>
+          </Link>
         </div>
       </div>
 

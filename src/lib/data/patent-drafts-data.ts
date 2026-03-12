@@ -429,6 +429,24 @@ export const PATENT_DRAFTS: PatentDraftEntry[] = [
         content: "Claim 1: A method for physiological pattern attribution comprising: collecting user-reported physiological data indicating dysfunction symptoms across multiple physiological systems; initiating iterative questioning protocols that drill down through increasingly specific queries guided by encoded clinical knowledge until identifying probable causation factors for reported dysfunctions; implementing targeted interventions designed to address the identified probable causation factors; measuring intervention outcomes on subsequent assessment cycles to validate or invalidate the causal attributions through systematic outcome tracking; continuing iterative questioning to identify additional or alternative causation factors when initial interventions fail to resolve dysfunction symptoms within predetermined assessment windows; incorporating intervention outcome data across the user population into machine learning algorithms that strengthen pattern recognition capabilities for similar dysfunction presentations; and selecting intervention recommendations based on difficulty weighting algorithms that prioritize simpler interventions before escalating to more complex treatment approaches to maximize user compliance and systematic intervention testing.\n\nClaim 2: The method of claim 1, wherein the iterative questioning protocols employ dynamic question generation based on previous user responses, continuing the investigation process until reaching actionable causation factors that can be addressed through specific interventions, and wherein the questioning is guided by encoded clinical knowledge derived from peer-reviewed research and clinical practice patterns that understand physiological relationships between symptoms and potential causation factors.\n\nClaim 3: The method of claim 1, wherein the intervention outcome validation comprises tracking both subjective symptom improvements and objective physiological metrics from wearable devices to confirm whether implemented interventions successfully addressed the identified causation factors, and wherein failed interventions trigger continued iterative investigation to identify alternative causation factors.\n\nClaim 4: The method of claim 1, wherein the population learning algorithm analyzes successful intervention patterns across users with similar physiological presentations and incorporates these patterns into recommendation algorithms for future users with comparable dysfunction patterns, and wherein the learning algorithm accounts for individual variability by tracking user characteristics that correlate with intervention success.\n\nClaim 5: The method of claim 1, wherein the difficulty weighting for intervention selection incorporates user compliance patterns, intervention complexity assessments, and systematic testing protocols that determine whether simpler approaches can resolve dysfunction patterns before recommending more intensive interventions."
       }
     ]
+  },
+  {
+    id: "patent-011",
+    title: "Continuous AI-Powered Pregnancy Monitoring System with Pre-Conception Data Integration and Automated Multi-Specialist Care Coordination",
+    shortTitle: "Pregnancy Monitoring System",
+    status: "draft",
+    patentRef: "US-APP-2024-PENDING",
+    category: "software_ai",
+    filingPriority: "high",
+    lastEdited: "2026-03-11",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "Continuous pregnancy monitoring integrating pre-conception baseline data with real-time wearable measurements, automated multi-specialist care team coordination, continuous GD screening before standard testing, first trimester viability monitoring, perinatal mental health surveillance, and clinical bridge report generation.\n\nFull patent text being submitted separately. Do not generate content — wait for the complete document."
+      }
+    ],
+    notes: "Placeholder entry. Full provisional patent application text to be added when submitted."
   }
 ];
 

@@ -45,7 +45,7 @@ export const PATENT_DRAFTS: PatentDraftEntry[] = [
     id: "draft-01",
     title: "Composite Fertility Health Scoring System Using Multi-Signal Physiological Data Aggregation and Dynamic Recalibration Architecture",
     shortTitle: "Conceivable Score System",
-    status: "filed",
+    status: "draft",
     patentRef: "US-APP-2024-PENDING",
     category: "software_ai",
     filingPriority: "critical",

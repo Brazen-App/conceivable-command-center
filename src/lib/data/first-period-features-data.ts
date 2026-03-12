@@ -57,7 +57,7 @@ export const FIRST_PERIOD_FEATURES: FirstPeriodFeatureSeed[] = [
   },
   {
     name: "Period Education Hub",
-    description: "Graphic novel style education. NOT textbooks. Categories: anatomy, product guide, first day prep, period pack, myths vs facts, why periods are amazing, period and you. New content regularly. 75 languages.",
+    description: "Graphic novel style education. NOT textbooks. Categories: anatomy, product guide, first day prep, period pack, myths vs facts, why periods are amazing, period and you, 'Your Body Your Rules' (age-tiered health & body education), 'Growing Up Is Hard' (life navigation support). New content regularly. 75 languages. Includes age-appropriate body autonomy, consent, online safety, relationship education, and reproductive health — all delivered as conversations through Seren and Kai, not curriculum.",
     userStory: "As a girl learning about periods, I want education that's fun and relatable — like a show I follow — not a boring health class textbook.",
     priority: "must_have",
     complexity: "large",
@@ -69,7 +69,7 @@ export const FIRST_PERIOD_FEATURES: FirstPeriodFeatureSeed[] = [
   },
   {
     name: "Seren's Safe Space",
-    description: "Emotional core. Listen, validate, normalize, educate, empower, bridge. Handles: body embarrassment, peer comparison, product fears, family communication gaps, body image, social/emotional challenges. CHILD SAFETY: detect/escalate abuse, self-harm, eating disorders. Crisis resources.",
+    description: "Emotional core. Listen, validate, normalize, educate, empower, bridge. Handles: body embarrassment, peer comparison, product fears, family communication gaps, body image, social/emotional challenges, friendship dynamics, bullying, school struggles, family issues, social media pressure, self-esteem, identity, big emotions. Full 'Growing Up Is Hard' support woven into conversations. CHILD SAFETY: detect/escalate abuse, self-harm, eating disorders. Crisis resources. This makes Conceivable not just a period app but the support system every girl wishes she had — it's why she opens the app every day even when she's not thinking about her period.",
     userStory: "As a girl going through puberty, I need someone I can talk to about anything without judgment — someone who actually understands and doesn't just say 'go ask your mom.'",
     priority: "must_have",
     complexity: "large",
@@ -121,13 +121,13 @@ export const FIRST_PERIOD_FEATURES: FirstPeriodFeatureSeed[] = [
   },
   {
     name: "Period Poverty Resources",
-    description: "Free supply programs, local resource finder via Navi, reusable product education, hygiene/safety education. 75 languages. Global crisis.",
+    description: "Free supply programs, local resource finder via Navi, reusable product education (menstrual cups at ~$2 at scale, period underwear), hygiene/safety education. 75 languages. Global crisis. Phase 1: Connect to existing orgs. Phase 2: Partner with cup manufacturers for at-cost/free distribution. Phase 3: Direct supply program — free menstrual cups shipped to girls who need them. Luna provides age-appropriate product education including cups (step-by-step, zero pressure, alternatives if cups aren't right). Environmental benefits angle resonates with Gen Z/Alpha.",
     userStory: "As a girl whose family can't afford period products, I need help finding free supplies without feeling ashamed.",
     priority: "should_have",
     complexity: "medium",
     status: "idea",
-    careTeamMembers: ["Navi", "Kai"],
-    notes: "Phase 2. Period poverty is a global crisis. 75 languages critical.",
+    careTeamMembers: ["Navi", "Kai", "Luna"],
+    notes: "Phase 2. Period poverty is a global crisis. 75 languages critical. Long-term vision: 'When Conceivable is printing money, every girl who can't afford supplies gets them free. Period poverty ends with us.' Also a major PR story.",
     tier: 2,
     phase: "Phase 2: Engagement & Support",
   },
@@ -430,6 +430,141 @@ export const FIRST_PERIOD_ENGINEERING = [
     dependencies: "Illustration pipeline, Zhen translation integration",
   },
 ];
+
+// ═══════════════════════════════════════════════════
+// ITEM 1: AGE-APPROPRIATE HEALTH & BODY EDUCATION
+// "Your Body, Your Rules" — age-tiered curriculum
+// ═══════════════════════════════════════════════════
+
+export interface EducationTier {
+  ageRange: string;
+  label: string;
+  color: string;
+  topics: { title: string; description: string }[];
+  regulatoryNote?: string;
+}
+
+export const FIRST_PERIOD_EDUCATION_CURRICULUM: EducationTier[] = [
+  {
+    ageRange: "Ages 7-9",
+    label: "Body Basics",
+    color: "#F4A7B9",
+    topics: [
+      { title: "Your body belongs to you", description: "Body autonomy basics — your body is yours, always" },
+      { title: "Safe vs unsafe touch", description: "Identifying trusted adults to tell. Clear, simple frameworks" },
+      { title: "Nobody gets to make you uncomfortable", description: "Validating the feeling that something is 'wrong' — trust that instinct" },
+      { title: "Real names for body parts", description: "Clinical terms, not euphemisms — research shows correct terminology protects children" },
+    ],
+  },
+  {
+    ageRange: "Ages 10-12",
+    label: "Growing & Knowing",
+    color: "#E37FB1",
+    topics: [
+      { title: "How bodies change during puberty", description: "Cross-links to Body Decoder — frame as exciting progress signals" },
+      { title: "What consent means", description: "In friendships, with family, with anyone — saying no is always okay" },
+      { title: "Online safety basics", description: "What to share, what never to share, who to tell if something feels wrong" },
+      { title: "Feelings and crushes are normal", description: "Normalizing without instructing — every feeling is valid" },
+      { title: "Hygiene and self-care during puberty", description: "Practical, shame-free guidance for a changing body" },
+      { title: "Boundaries", description: "How to set them, how to respect them, how to recognize when someone crosses them" },
+    ],
+  },
+  {
+    ageRange: "Ages 13-15",
+    label: "Real Talk",
+    color: "#E24D47",
+    topics: [
+      { title: "How reproduction works", description: "Clinical, accurate, non-judgmental. 'This is how pregnancy happens.'" },
+      { title: "Consent in relationships", description: "What it is, what it isn't, how to recognize pressure" },
+      { title: "Healthy vs unhealthy relationships", description: "Red flags, green flags — concrete examples, not abstract concepts" },
+      { title: "STI awareness", description: "What they are, how they spread, how to prevent them — factual, not fear-based" },
+      { title: "Online safety — advanced", description: "Sexting risks, pressure for images, digital consent, what to do if something happens" },
+      { title: "Your legal rights", description: "In most states, minors can access confidential reproductive health services" },
+      { title: "If something happened to you", description: "Sexual assault resources, how to get help. It's never your fault. Ever." },
+    ],
+    regulatoryNote: "All content medically accurate, age-appropriate, framed as health education. Always provides pathways to trusted adults and professional resources.",
+  },
+  {
+    ageRange: "Ages 16+",
+    label: "Full Knowledge",
+    color: "#5A6FFF",
+    topics: [
+      { title: "Contraception options", description: "Medically accurate overview of ALL methods — not advocacy, information" },
+      { title: "Accessing reproductive healthcare", description: "How to find a provider, what to expect, your rights as a patient" },
+      { title: "Deeper relationship education", description: "Communication, boundaries, recognizing manipulation and coercion" },
+      { title: "Decision-making frameworks", description: "Not telling her what to do — giving her tools to make informed decisions for herself" },
+    ],
+  },
+];
+
+export const EDUCATION_FRAMING = "This is HEALTH EDUCATION delivered through a care team she trusts (Seren and Kai). Not a curriculum. Not health class. Conversations that happen naturally when she needs them — triggered by her questions, her age, her life circumstances. If she asks Seren 'is it normal to like someone,' Seren doesn't panic — she has an age-appropriate, warm, helpful response ready.";
+
+export const EDUCATION_REGULATORY_NOTE = "All content must be medically accurate, age-appropriate, and framed as health education (which it is). No instructional sexual content. Always provide pathways to trusted adults and professional resources. COPPA compliance for data collection is separate from content — the educational content itself is legally protected as health information. Legal must review all content before launch.";
+
+// ═══════════════════════════════════════════════════
+// ITEM 2: LIFE NAVIGATION SUPPORT
+// "Growing Up Is Hard" — Seren's expanded capabilities
+// ═══════════════════════════════════════════════════
+
+export const FIRST_PERIOD_LIFE_NAVIGATION = [
+  { topic: "Friendship dynamics", description: "Making friends, losing friends, group dynamics, being left out, mean girls — the stuff that hurts most at this age", icon: "👥", color: "#E37FB1" },
+  { topic: "Bullying", description: "What it is, what to do, how to get help. Online bullying. When adults don't help. When YOU are the bully.", icon: "🛡️", color: "#E24D47" },
+  { topic: "School struggles", description: "Academic pressure, test anxiety, feeling dumb, learning differently — your grades don't define you", icon: "📚", color: "#F59E0B" },
+  { topic: "Family stuff", description: "Divorce, fighting parents, sibling rivalry, feeling misunderstood. Every family is complicated.", icon: "🏠", color: "#7CAE7A" },
+  { topic: "Body image", description: "Reinforced from body positivity curriculum. Instagram vs reality. What 'healthy' actually means.", icon: "🪞", color: "#F4A7B9" },
+  { topic: "Social media pressure", description: "Comparison, FOMO, curated vs real life. When to put the phone down. When online interactions become harmful.", icon: "📱", color: "#5A6FFF" },
+  { topic: "Self-esteem", description: "Building it, losing it, rebuilding it. It's a skill, not a personality trait. And it gets easier.", icon: "💪", color: "#1EAA55" },
+  { topic: "Feeling different", description: "For any reason — body, family, interests, identity. Different isn't wrong. Different is just different.", icon: "🌈", color: "#9686B9" },
+  { topic: "Big emotions", description: "Anger, sadness, anxiety, feeling overwhelmed. Every emotion is valid. Here's what to do with them.", icon: "🌊", color: "#356FB6" },
+  { topic: "Identity", description: "Who am I? Who do I want to be? It's okay to not know yet. Most adults are still figuring it out too.", icon: "✨", color: "#D4A843" },
+];
+
+export const LIFE_NAVIGATION_FRAMING = "Seren handles all of this. She doesn't have all the answers but she ALWAYS listens, validates, normalizes, and helps the girl figure out her next step. Seren knows when to just be present and when to suggest resources or trusted adults. This makes Conceivable not just a period app but the support system every girl wishes she had. It's why she opens the app every day even when she's not thinking about her period.";
+
+// ═══════════════════════════════════════════════════
+// ITEM 3: PERIOD SUPPLY ACCESS PROGRAM
+// Strategic initiative
+// ═══════════════════════════════════════════════════
+
+export const FIRST_PERIOD_SUPPLY_PROGRAM = {
+  title: "Period Supply Access Program",
+  subtitle: "Strategic Initiative — When Conceivable is printing money, period poverty ends with us.",
+  phases: [
+    {
+      phase: "Phase 1",
+      title: "Connect",
+      timeline: "Launch",
+      description: "Connect girls to existing free supply organizations via Navi's location-based resource finder. Already planned as part of Feature 9 (Period Poverty Resources).",
+      status: "In Feature Spec",
+      color: "#1EAA55",
+    },
+    {
+      phase: "Phase 2",
+      title: "Partner",
+      timeline: "6-12 months post-launch",
+      description: "Partner with menstrual cup manufacturers to provide cups at cost or free through the app. Menstrual cups can be sourced for approximately $2 at scale. Include period underwear as alternative reusable option.",
+      status: "Strategic Planning",
+      color: "#5A6FFF",
+    },
+    {
+      phase: "Phase 3",
+      title: "Direct Supply",
+      timeline: "Revenue milestone",
+      description: "Fund a direct supply program — free menstrual cups shipped to girls who need them worldwide. 'AI health company provides free menstrual cups to girls worldwide' — that's front-page material.",
+      status: "Long-Term Vision",
+      color: "#F4A7B9",
+    },
+  ],
+  cupEducation: [
+    "What menstrual cups are and how they work",
+    "That they're safe and medically approved",
+    "That they can be intimidating at first, especially if you've never inserted anything — and that's completely normal",
+    "Step-by-step guidance (Luna handles this — age-appropriate, patient, zero pressure)",
+    "Alternative options if cups aren't right for her (period underwear, reusable pads)",
+    "Environmental benefits — sustainability matters to Gen Z/Alpha",
+  ],
+  prNote: "This is also a massive PR and press story. 'AI health company provides free menstrual cups to girls worldwide.' Front-page material. Aligns with brand mission and creates extraordinary earned media.",
+};
 
 // Content pipeline for First Period experience
 export const FIRST_PERIOD_CONTENT_PIPELINE = {

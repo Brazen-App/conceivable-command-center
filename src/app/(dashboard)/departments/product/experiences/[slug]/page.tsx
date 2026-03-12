@@ -51,6 +51,12 @@ import {
   FIRST_PERIOD_ROADMAP,
   FIRST_PERIOD_ENGINEERING,
   FIRST_PERIOD_CONTENT_PIPELINE,
+  FIRST_PERIOD_EDUCATION_CURRICULUM,
+  EDUCATION_FRAMING,
+  EDUCATION_REGULATORY_NOTE,
+  FIRST_PERIOD_LIFE_NAVIGATION,
+  LIFE_NAVIGATION_FRAMING,
+  FIRST_PERIOD_SUPPLY_PROGRAM,
 } from "@/lib/data/first-period-features-data";
 
 /* ─── Types ─── */
@@ -1521,6 +1527,174 @@ function OverviewTab({
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* First Period Education Curriculum — "Your Body, Your Rules" */}
+      {isFirstPeriod && (
+        <div
+          className="rounded-2xl p-6"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <BookOpen size={14} style={{ color: "#F4A7B9" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+              Your Body, Your Rules — Age-Tiered Education
+            </h3>
+            <span className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: "#E24D4714", color: "#E24D47" }}>
+              Legal Review Required
+            </span>
+          </div>
+          <p className="text-[11px] mb-4" style={{ color: "var(--muted)" }}>
+            {EDUCATION_FRAMING}
+          </p>
+
+          <div className="space-y-4">
+            {FIRST_PERIOD_EDUCATION_CURRICULUM.map((tier) => (
+              <div
+                key={tier.ageRange}
+                className="rounded-xl p-4"
+                style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span
+                    className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: `${tier.color}18`, color: tier.color }}
+                  >
+                    {tier.ageRange}
+                  </span>
+                  <span className="text-xs font-bold" style={{ color: "var(--foreground)" }}>
+                    {tier.label}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {tier.topics.map((topic) => (
+                    <div key={topic.title} className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: tier.color }} />
+                      <div>
+                        <span className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>{topic.title}</span>
+                        <span className="text-[11px] ml-1" style={{ color: "var(--muted)" }}>— {topic.description}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {tier.regulatoryNote && (
+                  <p className="text-[10px] mt-2 px-2 py-1.5 rounded-lg" style={{ backgroundColor: "#F59E0B08", color: "#F59E0B", border: "1px solid #F59E0B20" }}>
+                    {tier.regulatoryNote}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 rounded-lg p-3" style={{ backgroundColor: "#E24D4708", border: "1px solid #E24D4720" }}>
+            <p className="text-[10px] font-medium" style={{ color: "#E24D47" }}>
+              <strong>Regulatory:</strong> {EDUCATION_REGULATORY_NOTE}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* First Period Life Navigation — "Growing Up Is Hard" */}
+      {isFirstPeriod && (
+        <div
+          className="rounded-2xl p-6"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles size={14} style={{ color: "#E37FB1" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+              Growing Up Is Hard — Life Navigation
+            </h3>
+            <span className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: "#E37FB114", color: "#E37FB1" }}>
+              Seren-Powered
+            </span>
+          </div>
+          <p className="text-[11px] mb-4" style={{ color: "var(--muted)" }}>
+            {LIFE_NAVIGATION_FRAMING}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {FIRST_PERIOD_LIFE_NAVIGATION.map((item) => (
+              <div
+                key={item.topic}
+                className="flex items-start gap-3 rounded-lg p-3"
+                style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
+              >
+                <span className="text-lg shrink-0">{item.icon}</span>
+                <div>
+                  <p className="text-xs font-semibold" style={{ color: item.color }}>{item.topic}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>{item.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* First Period Supply Program — Strategic Initiative */}
+      {isFirstPeriod && (
+        <div
+          className="rounded-2xl p-6"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Target size={14} style={{ color: "#F4A7B9" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+              {FIRST_PERIOD_SUPPLY_PROGRAM.title}
+            </h3>
+            <span className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: "#1EAA5514", color: "#1EAA55" }}>
+              Strategic Initiative
+            </span>
+          </div>
+          <p className="text-xs mb-4 italic" style={{ color: "#F4A7B9" }}>
+            &ldquo;{FIRST_PERIOD_SUPPLY_PROGRAM.subtitle.split(" — ")[1]}&rdquo;
+          </p>
+
+          <div className="space-y-3 mb-4">
+            {FIRST_PERIOD_SUPPLY_PROGRAM.phases.map((p, i) => (
+              <div
+                key={p.phase}
+                className="flex items-start gap-3 rounded-lg p-3"
+                style={{ backgroundColor: "var(--background)", border: i === 0 ? `1px solid ${p.color}40` : "1px solid var(--border)" }}
+              >
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0"
+                  style={{ backgroundColor: `${p.color}18`, color: p.color }}
+                >
+                  {i + 1}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold" style={{ color: "var(--foreground)" }}>{p.title}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: `${p.color}14`, color: p.color }}>
+                      {p.timeline}
+                    </span>
+                  </div>
+                  <p className="text-[11px]" style={{ color: "var(--muted)" }}>{p.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-lg p-3" style={{ backgroundColor: "#F4A7B908", border: "1px solid #F4A7B920" }}>
+            <p className="text-[10px] font-medium mb-2" style={{ color: "#F4A7B9" }}>
+              <strong>Cup Education (via Luna):</strong>
+            </p>
+            <div className="space-y-1">
+              {FIRST_PERIOD_SUPPLY_PROGRAM.cupEducation.map((item) => (
+                <div key={item} className="flex items-start gap-2">
+                  <div className="w-1 h-1 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: "#F4A7B9" }} />
+                  <p className="text-[10px]" style={{ color: "var(--muted)" }}>{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-lg p-2 text-center" style={{ backgroundColor: "#5A6FFF08" }}>
+            <p className="text-[10px]" style={{ color: "#5A6FFF" }}>
+              <strong>PR angle:</strong> {FIRST_PERIOD_SUPPLY_PROGRAM.prNote}
+            </p>
           </div>
         </div>
       )}

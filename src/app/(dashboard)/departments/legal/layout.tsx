@@ -11,6 +11,7 @@ const TABS = [
   { href: "/departments/legal/executive-summary", label: "Executive Summary" },
   { href: "/departments/legal/patents", label: "Patents" },
   { href: "/departments/legal/patent-drafts", label: "Patent Drafts" },
+  { href: "/departments/legal/coverage-review", label: "Coverage Review" },
   { href: "/departments/legal/compliance", label: "Compliance" },
   { href: "/departments/legal/testimonials", label: "Testimonials" },
 ];

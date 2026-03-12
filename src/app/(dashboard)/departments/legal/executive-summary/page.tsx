@@ -43,8 +43,8 @@ function HeroHeader() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { value: "9 Patents", label: "Foundational portfolio" },
-            { value: "$15-25M", label: "Estimated licensing potential" },
+            { value: "10 Patents", label: "Foundational portfolio" },
+            { value: "$18-30M", label: "Estimated licensing potential" },
             { value: "3 Layers", label: "Core Platform \u00b7 Real-Time \u00b7 Predictive" },
           ].map((stat) => (
             <div
@@ -140,7 +140,7 @@ function PortfolioArchitecture() {
             Core Platform Protection
           </h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <PatentCard
             number={1}
             title="Conceivable Score System"
@@ -170,6 +170,13 @@ function PortfolioArchitecture() {
             accent={BLUE}
             icon={<Activity size={16} style={{ color: BLUE }} />}
           />
+          <PatentCard
+            number={5}
+            title="AI-Driven Physiological Pattern Attribution"
+            description="Iterative causal analysis that drills down to root causes through dynamic questioning, validates attributions through outcome tracking, and learns from population-level intervention success patterns"
+            accent={BLUE}
+            icon={<Eye size={16} style={{ color: BLUE }} />}
+          />
         </div>
       </div>
 
@@ -183,21 +190,21 @@ function PortfolioArchitecture() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <PatentCard
-            number={5}
+            number={6}
             title="Real-Time Monitoring & Care Team Coordination"
             description="Continuous wearable monitoring triggers automated specialist interventions"
             accent={GREEN}
             icon={<Activity size={16} style={{ color: GREEN }} />}
           />
           <PatentCard
-            number={6}
+            number={7}
             title="Cycle-Based AI Recalibration"
             description="Monthly AI learning cycles differentiating clinical vs behavioral barriers"
             accent={GREEN}
             icon={<Zap size={16} style={{ color: GREEN }} />}
           />
           <PatentCard
-            number={7}
+            number={8}
             title="Objective Data Validation"
             description="Cross-validates self-reported symptoms against wearable data"
             accent={GREEN}
@@ -216,14 +223,14 @@ function PortfolioArchitecture() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <PatentCard
-            number={8}
+            number={9}
             title="Pregnancy Risk Assessment"
             description="Predictive analytics for adverse outcomes using pre-conception + wearable data"
             accent={PURPLE}
             icon={<Baby size={16} style={{ color: PURPLE }} />}
           />
           <PatentCard
-            number={9}
+            number={10}
             title="Smartphone Multi-Modal Assessment"
             description="Facial analysis + voice patterns for comprehensive health assessment"
             accent={PURPLE}
@@ -310,7 +317,7 @@ function CompetitiveMoat() {
             <div className="w-px h-6" style={{ backgroundColor: "rgba(249,247,240,0.2)" }} />
           </div>
           <p className="text-xs" style={{ color: "rgba(249,247,240,0.4)" }}>
-            9 patents blocking all competitive vectors
+            10 patents blocking all competitive vectors
           </p>
         </div>
 
@@ -325,7 +332,7 @@ function CompetitiveMoat() {
               <p className="text-xs font-bold" style={{ color: OFF_WHITE }}>Oura Ring</p>
             </div>
             <p className="text-[10px] font-semibold tracking-wider uppercase mb-1.5" style={{ color: "#E24D47" }}>
-              Blocked by: Patent 8 (Pregnancy Risk Assessment)
+              Blocked by: Patent 9 (Pregnancy Risk Assessment)
             </p>
             <p className="text-xs leading-relaxed" style={{ color: "rgba(249,247,240,0.6)" }}>
               Limited to basic tracking. We control intervention-based pregnancy health optimization.
@@ -341,7 +348,7 @@ function CompetitiveMoat() {
               <p className="text-xs font-bold" style={{ color: OFF_WHITE }}>Fertility Apps (Flo, Clue, Ava)</p>
             </div>
             <p className="text-[10px] font-semibold tracking-wider uppercase mb-1.5" style={{ color: "#F59E0B" }}>
-              Blocked by: Patents 2, 3 (Root Cause + Population Learning)
+              Blocked by: Patents 2, 3, 5 (Root Cause + Population Learning + Pattern Attribution)
             </p>
             <p className="text-xs leading-relaxed" style={{ color: "rgba(249,247,240,0.6)" }}>
               Cannot develop AI-driven intervention systems.
@@ -357,7 +364,7 @@ function CompetitiveMoat() {
               <p className="text-xs font-bold" style={{ color: OFF_WHITE }}>AI Health Platforms (Whoop, Levels)</p>
             </div>
             <p className="text-[10px] font-semibold tracking-wider uppercase mb-1.5" style={{ color: BLUE }}>
-              Blocked by: Patents 1, 2, 7 (Score + Root Cause + Validation)
+              Blocked by: Patents 1, 2, 8 (Score + Root Cause + Validation)
             </p>
             <p className="text-xs leading-relaxed" style={{ color: "rgba(249,247,240,0.6)" }}>
               Cannot replicate holistic health assessment methodology.
@@ -637,8 +644,8 @@ export default function ExecutiveSummaryPage() {
             <h1>Conceivable IP Portfolio</h1>
             <div class="subtitle">Comprehensive Patent Protection for AI-Powered Fertility Health Platform</div>
             <div class="stat-row">
-              <div class="stat-card"><div class="val">9 Patents</div><div class="lbl">Foundational portfolio</div></div>
-              <div class="stat-card"><div class="val">$15-25M</div><div class="lbl">Estimated licensing potential</div></div>
+              <div class="stat-card"><div class="val">10 Patents</div><div class="lbl">Foundational portfolio</div></div>
+              <div class="stat-card"><div class="val">$18-30M</div><div class="lbl">Estimated licensing potential</div></div>
               <div class="stat-card"><div class="val">3 Layers</div><div class="lbl">Core Platform \u00b7 Real-Time \u00b7 Predictive</div></div>
             </div>
           </div>
@@ -652,17 +659,18 @@ export default function ExecutiveSummaryPage() {
               <div class="card"><div class="num" style="color:#5A6FFF">Patent 2</div><h4>AI-Powered Root Cause Analysis</h4><p>AI identifies underlying physiological conditions causing multiple symptoms simultaneously</p></div>
               <div class="card"><div class="num" style="color:#5A6FFF">Patent 3</div><h4>Population-Based Pattern Learning</h4><p>AI learns optimal intervention sequences from 1000+ users with similar physiological patterns</p></div>
               <div class="card"><div class="num" style="color:#5A6FFF">Patent 4</div><h4>Closed-Loop Physiologic Correction System</h4><p>Measures intervention effectiveness through continuous wearable monitoring and automatically escalates protocols when corrections fail</p></div>
+              <div class="card"><div class="num" style="color:#5A6FFF">Patent 5</div><h4>AI-Driven Physiological Pattern Attribution</h4><p>Iterative causal analysis that drills down to root causes through dynamic questioning, validates attributions through outcome tracking, and learns from population-level intervention success patterns</p></div>
             </div>
             <div class="tier-label" style="color:#1EAA55">Real-Time Monitoring & Intervention</div>
             <div class="card-grid">
-              <div class="card"><div class="num" style="color:#1EAA55">Patent 5</div><h4>Real-Time Monitoring & Care Team Coordination</h4><p>Continuous wearable monitoring triggers automated specialist interventions</p></div>
-              <div class="card"><div class="num" style="color:#1EAA55">Patent 6</div><h4>Cycle-Based AI Recalibration</h4><p>Monthly AI learning cycles differentiating clinical vs behavioral barriers</p></div>
-              <div class="card"><div class="num" style="color:#1EAA55">Patent 7</div><h4>Objective Data Validation</h4><p>Cross-validates self-reported symptoms against wearable data</p></div>
+              <div class="card"><div class="num" style="color:#1EAA55">Patent 6</div><h4>Real-Time Monitoring & Care Team Coordination</h4><p>Continuous wearable monitoring triggers automated specialist interventions</p></div>
+              <div class="card"><div class="num" style="color:#1EAA55">Patent 7</div><h4>Cycle-Based AI Recalibration</h4><p>Monthly AI learning cycles differentiating clinical vs behavioral barriers</p></div>
+              <div class="card"><div class="num" style="color:#1EAA55">Patent 8</div><h4>Objective Data Validation</h4><p>Cross-validates self-reported symptoms against wearable data</p></div>
             </div>
             <div class="tier-label" style="color:#9686B9">Predictive Analytics & Emerging Tech</div>
             <div class="card-grid">
-              <div class="card" style="flex:1"><div class="num" style="color:#9686B9">Patent 8</div><h4>Pregnancy Risk Assessment</h4><p>Predictive analytics for adverse outcomes using pre-conception + wearable data</p></div>
-              <div class="card" style="flex:1"><div class="num" style="color:#9686B9">Patent 9</div><h4>Smartphone Multi-Modal Assessment</h4><p>Facial analysis + voice patterns for comprehensive health assessment</p></div>
+              <div class="card" style="flex:1"><div class="num" style="color:#9686B9">Patent 9</div><h4>Pregnancy Risk Assessment</h4><p>Predictive analytics for adverse outcomes using pre-conception + wearable data</p></div>
+              <div class="card" style="flex:1"><div class="num" style="color:#9686B9">Patent 10</div><h4>Smartphone Multi-Modal Assessment</h4><p>Facial analysis + voice patterns for comprehensive health assessment</p></div>
             </div>
           </div>
 
@@ -674,9 +682,9 @@ export default function ExecutiveSummaryPage() {
             <div class="moat-section">
               <div class="moat-hub"><span class="badge">Conceivable \u2014 Protected Core</span></div>
               <div class="moat-grid">
-                <div class="moat-card"><div class="name">Oura Ring</div><div class="blocked" style="color:#E24D47">Blocked by: Patent 8 (Pregnancy Risk Assessment)</div><div class="desc">Limited to basic tracking. We control intervention-based pregnancy health optimization.</div></div>
-                <div class="moat-card"><div class="name">Fertility Apps (Flo, Clue, Ava)</div><div class="blocked" style="color:#F59E0B">Blocked by: Patents 2, 3 (Root Cause + Population Learning)</div><div class="desc">Cannot develop AI-driven intervention systems.</div></div>
-                <div class="moat-card"><div class="name">AI Health Platforms (Whoop, Levels)</div><div class="blocked" style="color:#5A6FFF">Blocked by: Patents 1, 2, 7 (Score + Root Cause + Validation)</div><div class="desc">Cannot replicate holistic health assessment methodology.</div></div>
+                <div class="moat-card"><div class="name">Oura Ring</div><div class="blocked" style="color:#E24D47">Blocked by: Patent 9 (Pregnancy Risk Assessment)</div><div class="desc">Limited to basic tracking. We control intervention-based pregnancy health optimization.</div></div>
+                <div class="moat-card"><div class="name">Fertility Apps (Flo, Clue, Ava)</div><div class="blocked" style="color:#F59E0B">Blocked by: Patents 2, 3, 5 (Root Cause + Population Learning + Pattern Attribution)</div><div class="desc">Cannot develop AI-driven intervention systems.</div></div>
+                <div class="moat-card"><div class="name">AI Health Platforms (Whoop, Levels)</div><div class="blocked" style="color:#5A6FFF">Blocked by: Patents 1, 2, 8 (Score + Root Cause + Validation)</div><div class="desc">Cannot replicate holistic health assessment methodology.</div></div>
               </div>
             </div>
           </div>

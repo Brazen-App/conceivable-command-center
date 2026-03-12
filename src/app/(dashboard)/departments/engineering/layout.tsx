@@ -7,6 +7,7 @@ import { Code2 } from "lucide-react";
 const TABS = [
   { href: "/departments/engineering", label: "Dashboard" },
   { href: "/departments/engineering/kanban", label: "Kanban" },
+  { href: "/departments/engineering/tech-specs", label: "Tech Specs" },
   { href: "/departments/engineering/infrastructure", label: "Infrastructure" },
   { href: "/departments/engineering/architecture", label: "Architecture" },
   { href: "/departments/engineering/integrations", label: "Integrations" },
@@ -61,7 +62,7 @@ export default function EngineeringLayout({
                 color: "var(--muted)",
               }}
             >
-              Dashboard &middot; Kanban &middot; Infrastructure &middot; Architecture &middot; Integrations
+              Dashboard &middot; Kanban &middot; Tech Specs &middot; Infrastructure &middot; Architecture &middot; Integrations
             </p>
           </div>
         </div>

@@ -1,244 +1,279 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Clock,
-  Plug,
-  Activity,
+  Wifi,
+  WifiOff,
+  Loader2,
+  ExternalLink,
+  Zap,
+  Shield,
+  Database,
+  Globe,
+  MessageSquare,
+  Sparkles,
+  ShoppingBag,
+  BarChart3,
+  Users,
+  Image,
+  GitCommit,
 } from "lucide-react";
 
-const ACCENT = "#6B7280";
+const BRAND_BLUE = "#5A6FFF";
+const BRAND_GREEN = "#1EAA55";
 
-type IntegrationStatus = "connected" | "disconnected" | "error" | "planned";
-
-interface Integration {
+interface IntegrationInfo {
+  connected: boolean;
   name: string;
-  status: IntegrationStatus;
-  lastSync: string;
-  requestsToday: number;
-  errorRate: string;
-  description: string;
 }
 
-const INTEGRATIONS: Integration[] = [
-  {
-    name: "Anthropic API (Claude)",
-    status: "connected",
-    lastSync: "2 min ago",
-    requestsToday: 198,
-    errorRate: "0.1%",
-    description: "Primary AI engine for agent system, content generation, coaching, and structured analysis.",
+const INTEGRATION_META: Record<string, { icon: typeof Wifi; color: string; description: string }> = {
+  anthropic: {
+    icon: Sparkles,
+    color: "#D4A843",
+    description: "Claude AI powers all care team agents (Kai, Seren, Olive, Luna, Atlas, Navi, Zhen) and the Product Coach.",
   },
-  {
-    name: "Google AI (Gemini)",
-    status: "connected",
-    lastSync: "15 min ago",
-    requestsToday: 23,
-    errorRate: "0%",
-    description: "Multi-model fallback. Used for embedding generation and secondary analysis tasks.",
+  gemini: {
+    icon: Image,
+    color: "#4285F4",
+    description: "Google Gemini for image generation and multi-modal AI capabilities.",
   },
-  {
-    name: "Prisma Database",
-    status: "connected",
-    lastSync: "Live",
-    requestsToday: 847,
-    errorRate: "0%",
-    description: "PostgreSQL via Prisma ORM. Connection pooling active. Schema version: 14.",
+  mailchimp: {
+    icon: MessageSquare,
+    color: "#FFE01B",
+    description: "Email marketing platform. 28,908 subscribers. Manages launch email warmup sequence.",
   },
-  {
-    name: "Mailchimp",
-    status: "connected",
-    lastSync: "1 hr ago",
-    requestsToday: 12,
-    errorRate: "0%",
-    description: "Email marketing platform. 23 launch sequence emails configured. List management active.",
+  late: {
+    icon: Globe,
+    color: "#E37FB1",
+    description: "Social media publishing. Manages Instagram, Facebook, and LinkedIn content scheduling.",
   },
-  {
-    name: "Late.dev",
-    status: "connected",
-    lastSync: "3 hrs ago",
-    requestsToday: 8,
-    errorRate: "0%",
-    description: "Social media scheduling and management. Content calendar integration.",
+  database: {
+    icon: Database,
+    color: BRAND_GREEN,
+    description: "PostgreSQL database via Prisma ORM. Stores experiences, features, chat logs, and all app data.",
   },
-  {
-    name: "Vercel",
-    status: "connected",
-    lastSync: "Live",
-    requestsToday: 1247,
-    errorRate: "0.2%",
-    description: "Hosting platform. Auto-deploy from main. Edge functions. Analytics and Speed Insights.",
+  vercel: {
+    icon: Globe,
+    color: "#000000",
+    description: "Hosting and deployment platform. Auto-deploys from main branch. Edge functions and serverless API routes.",
   },
-  {
-    name: "GitHub",
-    status: "connected",
-    lastSync: "5 min ago",
-    requestsToday: 34,
-    errorRate: "0%",
-    description: "Source code repository. CI/CD pipeline triggers. Issue tracking integration.",
+  github: {
+    icon: GitCommit,
+    color: "#6B7280",
+    description: "Source code repository. Brazen-App/conceivable-command-center. Commit history and PR management.",
   },
-];
-
-const STATUS_CONFIG: Record<IntegrationStatus, { label: string; color: string; icon: typeof CheckCircle2 }> = {
-  connected: { label: "Connected", color: "#1EAA55", icon: CheckCircle2 },
-  disconnected: { label: "Disconnected", color: "var(--muted)", icon: XCircle },
-  error: { label: "Error", color: "#E24D47", icon: AlertTriangle },
-  planned: { label: "Planned", color: "#F1C028", icon: Clock },
-};
-
-/* ── Connection Logs ── */
-const CONNECTION_LOGS = [
-  { time: "09:14 AM", event: "Vercel deploy triggered", integration: "Vercel", type: "info" as const },
-  { time: "09:12 AM", event: "Claude API: batch prompt cached (12 queries)", integration: "Anthropic", type: "success" as const },
-  { time: "08:45 AM", event: "Mailchimp: audience sync complete (2,847 contacts)", integration: "Mailchimp", type: "success" as const },
-  { time: "08:30 AM", event: "GitHub: PR #47 merged to main", integration: "GitHub", type: "info" as const },
-  { time: "07:15 AM", event: "Database backup completed", integration: "Prisma", type: "success" as const },
-  { time: "06:00 AM", event: "Late.dev: 3 posts scheduled for today", integration: "Late.dev", type: "info" as const },
-  { time: "Yesterday 11:45 PM", event: "Gemini API: embedding batch processed (45 docs)", integration: "Gemini", type: "success" as const },
-  { time: "Yesterday 09:30 PM", event: "Vercel: edge function cold start spike (2.1s)", integration: "Vercel", type: "warning" as const },
-];
-
-const LOG_TYPE_COLORS: Record<string, string> = {
-  success: "#1EAA55",
-  info: "#5A6FFF",
-  warning: "#F1C028",
-  error: "#E24D47",
+  shopify: {
+    icon: ShoppingBag,
+    color: "#96BF48",
+    description: "E-commerce platform for supplement packs and Halo Ring sales.",
+  },
+  fal: {
+    icon: Image,
+    color: "#9686B9",
+    description: "Fal.ai for fast image generation and AI media processing.",
+  },
+  circle: {
+    icon: Users,
+    color: "#5A6FFF",
+    description: "Community platform for Conceivable founding members and beta testers.",
+  },
+  ga4: {
+    icon: BarChart3,
+    color: "#E24D47",
+    description: "Google Analytics 4 for website traffic, user behavior, and conversion tracking.",
+  },
 };
 
 export default function IntegrationsPage() {
-  const connectedCount = INTEGRATIONS.filter((i) => i.status === "connected").length;
-  const totalRequests = INTEGRATIONS.reduce((a, i) => a + i.requestsToday, 0);
+  const [integrations, setIntegrations] = useState<Record<string, IntegrationInfo> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/engineering/status")
+      .then((r) => r.json())
+      .then((data) => setIntegrations(data.integrations || {}))
+      .catch(() => setIntegrations(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin" size={24} style={{ color: "var(--muted)" }} />
+      </div>
+    );
+  }
+
+  const entries = Object.entries(integrations || {});
+  const connected = entries.filter(([, i]) => i.connected);
+  const disconnected = entries.filter(([, i]) => !i.connected);
 
   return (
     <div>
-      {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-        <div
-          className="rounded-2xl border p-5 text-center"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <p className="text-3xl font-bold" style={{ color: "#1EAA55" }}>
-            {connectedCount}/{INTEGRATIONS.length}
-          </p>
-          <p className="text-xs" style={{ color: "var(--muted)" }}>Connected</p>
+      {/* Header Stats */}
+      <div
+        className="rounded-2xl p-6 mb-6 relative overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${BRAND_BLUE}10, ${BRAND_GREEN}06)`,
+          border: `1px solid ${BRAND_BLUE}15`,
+        }}
+      >
+        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-[0.03]" style={{ background: `radial-gradient(circle, ${BRAND_BLUE}, transparent)` }} />
+        <div className="flex items-center gap-3 mb-4 relative">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${BRAND_BLUE}14` }}>
+            <Zap size={20} style={{ color: BRAND_BLUE }} />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold" style={{ color: "var(--foreground)" }}>Integration Hub</h2>
+            <p className="text-[10px]" style={{ color: "var(--muted)" }}>Live connection status for all external services</p>
+          </div>
         </div>
-        <div
-          className="rounded-2xl border p-5 text-center"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <p className="text-3xl font-bold" style={{ color: "var(--foreground)" }}>
-            {totalRequests.toLocaleString()}
-          </p>
-          <p className="text-xs" style={{ color: "var(--muted)" }}>Requests Today</p>
-        </div>
-        <div
-          className="rounded-2xl border p-5 text-center"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <p className="text-3xl font-bold" style={{ color: "#1EAA55" }}>
-            0
-          </p>
-          <p className="text-xs" style={{ color: "var(--muted)" }}>Active Errors</p>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: "Connected", value: connected.length, color: BRAND_GREEN },
+            { label: "Needs Setup", value: disconnected.length, color: disconnected.length > 0 ? "#F59E0B" : "var(--muted)" },
+            { label: "Total Services", value: entries.length, color: BRAND_BLUE },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-xl p-3 text-center"
+              style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+            >
+              <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: "var(--muted)" }}>{stat.label}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Integration Status Grid */}
-      <div
-        className="rounded-2xl border p-5 mb-6"
-        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <Plug size={16} style={{ color: ACCENT }} />
-          <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-            API Connections
-          </h3>
-        </div>
-        <div className="space-y-2">
-          {INTEGRATIONS.map((integration) => {
-            const statusConf = STATUS_CONFIG[integration.status];
-            const StatusIcon = statusConf.icon;
-
-            return (
-              <div
-                key={integration.name}
-                className="rounded-xl border p-4"
-                style={{ borderColor: "var(--border)", backgroundColor: "var(--background)" }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
-                        {integration.name}
-                      </p>
-                      <span
-                        className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: `${statusConf.color}14`, color: statusConf.color }}
-                      >
-                        <StatusIcon size={10} />
-                        {statusConf.label}
-                      </span>
+      {/* Connected Services */}
+      {connected.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Wifi size={14} style={{ color: BRAND_GREEN }} />
+            <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: BRAND_GREEN }}>
+              Connected ({connected.length})
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {connected.map(([key, integration]) => {
+              const meta = INTEGRATION_META[key] || { icon: Wifi, color: "#6B7280", description: "" };
+              const Icon = meta.icon;
+              return (
+                <div
+                  key={key}
+                  className="rounded-2xl p-4 group hover:shadow-sm transition-all"
+                  style={{
+                    backgroundColor: "var(--surface)",
+                    border: `1px solid ${BRAND_GREEN}20`,
+                    borderLeft: `3px solid ${meta.color}`,
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: `${meta.color}12` }}
+                    >
+                      <Icon size={18} style={{ color: meta.color }} />
                     </div>
-                    <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-                      {integration.description}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
+                          {integration.name}
+                        </h4>
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: BRAND_GREEN }} />
+                      </div>
+                      <p className="text-[11px] leading-relaxed mt-1" style={{ color: "var(--muted)" }}>
+                        {meta.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3 mt-3">
-                  <div className="rounded-lg p-2" style={{ backgroundColor: "var(--surface)" }}>
-                    <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>Last Sync</p>
-                    <p className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{integration.lastSync}</p>
-                  </div>
-                  <div className="rounded-lg p-2" style={{ backgroundColor: "var(--surface)" }}>
-                    <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>Requests</p>
-                    <p className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{integration.requestsToday}</p>
-                  </div>
-                  <div className="rounded-lg p-2" style={{ backgroundColor: "var(--surface)" }}>
-                    <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>Error Rate</p>
-                    <p className="text-xs font-medium" style={{ color: integration.errorRate === "0%" ? "#1EAA55" : "#F1C028" }}>{integration.errorRate}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Connection Logs */}
-      <div
-        className="rounded-2xl border p-5"
-        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <Activity size={16} style={{ color: ACCENT }} />
-          <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-            Connection Logs
-          </h3>
+      {/* Needs Setup */}
+      {disconnected.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <WifiOff size={14} style={{ color: "#F59E0B" }} />
+            <h3 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: "#F59E0B" }}>
+              Needs Setup ({disconnected.length})
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {disconnected.map(([key, integration]) => {
+              const meta = INTEGRATION_META[key] || { icon: WifiOff, color: "#6B7280", description: "" };
+              const Icon = meta.icon;
+              const envVar = key === "vercel" ? "VERCEL_API_TOKEN" : key === "github" ? "GITHUB_TOKEN" : `${key.toUpperCase()}_API_KEY`;
+              return (
+                <div
+                  key={key}
+                  className="rounded-2xl p-4 border-2 border-dashed"
+                  style={{ borderColor: "#F59E0B25", backgroundColor: "var(--surface)" }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: "var(--background)" }}
+                    >
+                      <Icon size={18} style={{ color: "var(--muted)" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                        {integration.name}
+                      </h4>
+                      <p className="text-[11px] mt-1" style={{ color: "var(--muted)" }}>
+                        {meta.description}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Shield size={10} style={{ color: "#F59E0B" }} />
+                        <code className="text-[10px] font-mono" style={{ color: "#F59E0B" }}>
+                          {envVar}
+                        </code>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="space-y-1">
-          {CONNECTION_LOGS.map((log, i) => {
-            const typeColor = LOG_TYPE_COLORS[log.type] || "var(--muted)";
-            return (
-              <div
-                key={i}
-                className="flex items-center gap-3 rounded-lg p-2 hover:bg-[var(--background)] transition-colors"
-              >
-                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: typeColor }} />
-                <span className="text-[10px] font-mono shrink-0 w-32" style={{ color: "var(--muted)" }}>
-                  {log.time}
-                </span>
-                <span className="text-xs flex-1 min-w-0 truncate" style={{ color: "var(--foreground)" }}>
-                  {log.event}
-                </span>
-                <span className="text-[9px] shrink-0" style={{ color: "var(--muted)" }}>
-                  {log.integration}
-                </span>
-              </div>
-            );
-          })}
+      )}
+
+      {/* Setup Instructions */}
+      {disconnected.length > 0 && (
+        <div
+          className="rounded-2xl p-5 mt-6"
+          style={{ backgroundColor: `${BRAND_BLUE}06`, border: `1px solid ${BRAND_BLUE}15` }}
+        >
+          <div className="flex items-start gap-3">
+            <ExternalLink size={16} className="shrink-0 mt-0.5" style={{ color: BRAND_BLUE }} />
+            <div>
+              <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                How to Connect
+              </p>
+              <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--muted)" }}>
+                Add the required environment variables in your{" "}
+                <a
+                  href="https://vercel.com/kirsten-3720s-projects/conceivable-command-center/settings/environment-variables"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium underline"
+                  style={{ color: BRAND_BLUE }}
+                >
+                  Vercel project settings
+                </a>
+                . After adding, redeploy to activate the connection.
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

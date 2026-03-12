@@ -1,339 +1,416 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   CheckCircle2,
-  Clock,
   AlertCircle,
-  GitPullRequest,
-  Gauge,
-  Server,
-  Database,
+  GitCommit,
   Globe,
+  Database,
+  Loader2,
+  FileText,
+  Wrench,
+  Zap,
   ArrowRight,
-  TrendingUp,
-  LayoutList,
+  Wifi,
+  WifiOff,
   ExternalLink,
 } from "lucide-react";
-import JoyButton from "@/components/joy/JoyButton";
+import Link from "next/link";
 
-const ACCENT = "#6B7280";
+const BRAND_BLUE = "#5A6FFF";
+const BRAND_BABY_BLUE = "#ACB7FF";
+const BRAND_GREEN = "#1EAA55";
 
-/* ── System Health Data ── */
-const SYSTEM_STATUS = "operational" as const; // green
-
-const DEPLOYMENT = {
-  lastDeploy: "2026-03-02 09:14 AM",
-  environment: "Production",
-  platform: "Vercel",
-  branch: "main",
-  commit: "a3f8b2c",
-  status: "success" as const,
-};
-
-const DB_HEALTH = {
-  status: "healthy",
-  orm: "Prisma",
-  database: "PostgreSQL",
-  connectionPool: "8/20 active",
-  avgQueryTime: "12ms",
-  totalTables: 14,
-  totalRows: "2.4K",
-};
-
-const API_METRICS = {
-  avgResponseTime: "145ms",
-  endpoints: 23,
-  successRate: "99.8%",
-  requestsToday: 1_247,
-};
-
-const OPEN_ISSUES = 8;
-const OPEN_PRS = 3;
-const BUILD_SUCCESS_RATE = 97.2;
-
-const STATUS_ICON_MAP = {
-  operational: { icon: CheckCircle2, color: "#1EAA55", label: "All Systems Operational" },
-  degraded: { icon: AlertCircle, color: "#F1C028", label: "Degraded Performance" },
-  down: { icon: AlertCircle, color: "#E24D47", label: "System Outage" },
-};
+interface StatusData {
+  database?: {
+    connected: boolean;
+    experiences?: number;
+    features?: number;
+    chatLogs?: number;
+    totalRecords?: number;
+  };
+  vercel?: {
+    connected: boolean;
+    needsToken?: boolean;
+    deployments?: {
+      id: string;
+      url: string;
+      state: string;
+      createdAt: number;
+      meta?: { githubCommitMessage?: string; githubCommitSha?: string };
+    }[];
+  };
+  github?: {
+    connected: boolean;
+    needsToken?: boolean;
+    recentCommits?: {
+      sha: string;
+      message: string;
+      date: string;
+      author: string;
+    }[];
+  };
+  integrations?: Record<string, { connected: boolean; name: string }>;
+}
 
 export default function EngineeringDashboardPage() {
-  const statusConf = STATUS_ICON_MAP[SYSTEM_STATUS];
-  const StatusIcon = statusConf.icon;
+  const [data, setData] = useState<StatusData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/engineering/status")
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const dbConnected = data?.database?.connected ?? false;
+  const vercelConnected = data?.vercel?.connected ?? false;
+  const githubConnected = data?.github?.connected ?? false;
+  const integrations = data?.integrations ?? {};
+  const connectedCount = Object.values(integrations).filter((i) => i.connected).length;
+  const totalIntegrations = Object.keys(integrations).length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin" size={24} style={{ color: "var(--muted)" }} />
+      </div>
+    );
+  }
 
   return (
     <div>
       {/* Hero: System Health */}
       <div
-        className="rounded-2xl p-6 mb-6"
+        className="rounded-2xl p-6 mb-6 relative overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, ${statusConf.color}18, ${statusConf.color}08)`,
-          border: `1px solid ${statusConf.color}25`,
+          background: dbConnected
+            ? `linear-gradient(135deg, ${BRAND_GREEN}12, ${BRAND_BLUE}08, ${BRAND_BABY_BLUE}06)`
+            : `linear-gradient(135deg, #F59E0B12, #F59E0B06)`,
+          border: `1px solid ${dbConnected ? BRAND_GREEN : "#F59E0B"}20`,
         }}
       >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* Subtle decorative gradient circle */}
+        <div
+          className="absolute -top-20 -right-20 w-60 h-60 rounded-full opacity-[0.04]"
+          style={{ background: `radial-gradient(circle, ${BRAND_BLUE}, transparent)` }}
+        />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative">
           <div>
             <p
-              className="text-[10px] font-bold uppercase tracking-wider mb-1"
-              style={{ color: statusConf.color }}
+              className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2"
+              style={{ color: dbConnected ? BRAND_GREEN : "#F59E0B" }}
             >
               System Health
             </p>
-            <h2
-              className="text-xl font-bold flex items-center gap-2"
-              style={{ color: "var(--foreground)" }}
-            >
-              <StatusIcon size={24} style={{ color: statusConf.color }} />
-              {statusConf.label}
+            <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: "var(--foreground)" }}>
+              {dbConnected ? (
+                <CheckCircle2 size={22} style={{ color: BRAND_GREEN }} />
+              ) : (
+                <AlertCircle size={22} style={{ color: "#F59E0B" }} />
+              )}
+              {dbConnected ? "All Systems Operational" : "Checking Connections..."}
             </h2>
             <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-              Last checked: {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} -- Uptime: 99.9%
+              {connectedCount} of {totalIntegrations} integrations connected
             </p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-6">
             <div className="text-center">
-              <p className="text-3xl font-bold" style={{ color: statusConf.color }}>
-                99.9%
+              <p className="text-3xl font-bold" style={{ color: BRAND_GREEN }}>
+                {connectedCount}
               </p>
-              <p className="text-[10px]" style={{ color: "var(--muted)" }}>Uptime</p>
+              <p className="text-[9px] font-bold uppercase tracking-wider mt-1" style={{ color: "var(--muted)" }}>
+                Connected
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold" style={{ color: data?.database?.totalRecords ? BRAND_BLUE : "var(--muted)" }}>
+                {data?.database?.totalRecords?.toLocaleString() || "—"}
+              </p>
+              <p className="text-[9px] font-bold uppercase tracking-wider mt-1" style={{ color: "var(--muted)" }}>
+                DB Records
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        {/* Deployment Status */}
+      {/* Three Main Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Database — Live */}
         <div
-          className="rounded-2xl border p-5"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+          className="rounded-2xl p-5 relative overflow-hidden"
+          style={{
+            backgroundColor: "var(--surface)",
+            border: dbConnected ? `1px solid ${BRAND_GREEN}30` : "1px solid var(--border)",
+          }}
         >
-          <div className="flex items-center gap-2 mb-3">
-            <Globe size={16} style={{ color: ACCENT }} />
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-              Deployment
-            </h3>
+          <div className="flex items-center gap-2 mb-4">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: dbConnected ? `${BRAND_GREEN}14` : "var(--border-light)" }}
+            >
+              <Database size={16} style={{ color: dbConnected ? BRAND_GREEN : "var(--muted)" }} />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+                Database
+              </h3>
+              <p className="text-[9px]" style={{ color: "var(--muted)" }}>Prisma + PostgreSQL</p>
+            </div>
+            <div
+              className="ml-auto w-2 h-2 rounded-full"
+              style={{ backgroundColor: dbConnected ? BRAND_GREEN : "#E24D47" }}
+            />
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Last Deploy</span>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{DEPLOYMENT.lastDeploy}</span>
+          {dbConnected ? (
+            <div className="space-y-2.5">
+              {[
+                { label: "Experiences", value: data?.database?.experiences || 0 },
+                { label: "Features", value: data?.database?.features || 0 },
+                { label: "Chat Logs", value: data?.database?.chatLogs || 0 },
+              ].map((row) => (
+                <div key={row.label} className="flex justify-between items-center">
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>{row.label}</span>
+                  <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>{row.value}</span>
+                </div>
+              ))}
+              <div className="pt-2 mt-2" style={{ borderTop: "1px solid var(--border)" }}>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-medium" style={{ color: BRAND_GREEN }}>Total Records</span>
+                  <span className="text-sm font-bold" style={{ color: BRAND_GREEN }}>
+                    {data?.database?.totalRecords || 0}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Platform</span>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{DEPLOYMENT.platform}</span>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-xs" style={{ color: "var(--muted)" }}>Unable to connect</p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Branch</span>
-              <span className="text-xs font-mono" style={{ color: "var(--foreground)" }}>{DEPLOYMENT.branch}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Commit</span>
-              <span className="text-xs font-mono" style={{ color: "var(--foreground)" }}>{DEPLOYMENT.commit}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Status</span>
-              <span
-                className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full flex items-center gap-1"
-                style={{ backgroundColor: "#1EAA5514", color: "#1EAA55" }}
-              >
-                <CheckCircle2 size={10} />
-                Success
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Database Health */}
+        {/* Vercel Deployments */}
         <div
-          className="rounded-2xl border p-5"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+          className="rounded-2xl p-5"
+          style={{
+            backgroundColor: "var(--surface)",
+            border: vercelConnected ? `1px solid ${BRAND_BLUE}30` : "1px solid var(--border)",
+          }}
         >
-          <div className="flex items-center gap-2 mb-3">
-            <Database size={16} style={{ color: ACCENT }} />
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-              Database
-            </h3>
+          <div className="flex items-center gap-2 mb-4">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: vercelConnected ? `${BRAND_BLUE}14` : "var(--border-light)" }}
+            >
+              <Globe size={16} style={{ color: vercelConnected ? BRAND_BLUE : "var(--muted)" }} />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+                Vercel
+              </h3>
+              <p className="text-[9px]" style={{ color: "var(--muted)" }}>Deployments</p>
+            </div>
+            <div
+              className="ml-auto w-2 h-2 rounded-full"
+              style={{ backgroundColor: vercelConnected ? BRAND_GREEN : "#F59E0B" }}
+            />
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Status</span>
-              <span
-                className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
-                style={{ backgroundColor: "#1EAA5514", color: "#1EAA55" }}
-              >
-                Healthy
-              </span>
+          {vercelConnected && data?.vercel?.deployments ? (
+            <div className="space-y-2">
+              {data.vercel.deployments.slice(0, 4).map((d) => (
+                <div
+                  key={d.id}
+                  className="flex items-center gap-2 rounded-lg px-2.5 py-2"
+                  style={{ backgroundColor: "var(--background)" }}
+                >
+                  <CheckCircle2 size={12} style={{ color: BRAND_GREEN }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-medium truncate" style={{ color: "var(--foreground)" }}>
+                      {d.meta?.githubCommitMessage?.split("\n")[0] || "Deploy"}
+                    </p>
+                    <p className="text-[9px]" style={{ color: "var(--muted)" }}>
+                      {new Date(d.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      {d.meta?.githubCommitSha && ` · ${d.meta.githubCommitSha.slice(0, 7)}`}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Stack</span>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{DB_HEALTH.orm} + {DB_HEALTH.database}</span>
+          ) : (
+            <div className="text-center py-4">
+              <WifiOff size={20} className="mx-auto mb-2" style={{ color: "var(--muted)" }} />
+              <p className="text-[11px] font-medium mb-1" style={{ color: "var(--foreground)" }}>
+                {data?.vercel?.needsToken ? "API Token Needed" : "Not Connected"}
+              </p>
+              <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+                Add VERCEL_API_TOKEN to Vercel env vars
+              </p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Pool</span>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{DB_HEALTH.connectionPool}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Avg Query</span>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{DB_HEALTH.avgQueryTime}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Tables / Rows</span>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{DB_HEALTH.totalTables} / {DB_HEALTH.totalRows}</span>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* API Health */}
+        {/* GitHub Activity */}
         <div
-          className="rounded-2xl border p-5"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+          className="rounded-2xl p-5"
+          style={{
+            backgroundColor: "var(--surface)",
+            border: githubConnected ? `1px solid ${BRAND_BLUE}30` : "1px solid var(--border)",
+          }}
         >
-          <div className="flex items-center gap-2 mb-3">
-            <Server size={16} style={{ color: ACCENT }} />
-            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-              API Health
-            </h3>
+          <div className="flex items-center gap-2 mb-4">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: githubConnected ? `${BRAND_BLUE}14` : "var(--border-light)" }}
+            >
+              <GitCommit size={16} style={{ color: githubConnected ? BRAND_BLUE : "var(--muted)" }} />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
+                GitHub
+              </h3>
+              <p className="text-[9px]" style={{ color: "var(--muted)" }}>Recent Activity</p>
+            </div>
+            <div
+              className="ml-auto w-2 h-2 rounded-full"
+              style={{ backgroundColor: githubConnected ? BRAND_GREEN : "#F59E0B" }}
+            />
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Avg Response</span>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{API_METRICS.avgResponseTime}</span>
+          {githubConnected && data?.github?.recentCommits ? (
+            <div className="space-y-2">
+              {data.github.recentCommits.slice(0, 4).map((c) => (
+                <div
+                  key={c.sha}
+                  className="flex items-center gap-2 rounded-lg px-2.5 py-2"
+                  style={{ backgroundColor: "var(--background)" }}
+                >
+                  <span className="text-[10px] font-mono shrink-0" style={{ color: BRAND_BLUE }}>{c.sha}</span>
+                  <p className="text-[11px] truncate flex-1" style={{ color: "var(--foreground)" }}>
+                    {(c.message || "").split("\n")[0]}
+                  </p>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Endpoints</span>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{API_METRICS.endpoints}</span>
+          ) : (
+            <div className="text-center py-4">
+              <WifiOff size={20} className="mx-auto mb-2" style={{ color: "var(--muted)" }} />
+              <p className="text-[11px] font-medium mb-1" style={{ color: "var(--foreground)" }}>
+                {data?.github?.needsToken ? "API Token Needed" : "Not Connected"}
+              </p>
+              <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+                Add GITHUB_TOKEN to Vercel env vars
+              </p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Success Rate</span>
-              <span className="text-xs font-medium" style={{ color: "#1EAA55" }}>{API_METRICS.successRate}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: "var(--muted)" }}>Requests Today</span>
-              <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{API_METRICS.requestsToday.toLocaleString()}</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Second row: Issues, PRs, Build Rate */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div
-          className="rounded-2xl border p-5 text-center"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <GitPullRequest size={20} className="mx-auto mb-2" style={{ color: "#F1C028" }} />
-          <p className="text-3xl font-bold" style={{ color: "var(--foreground)" }}>{OPEN_ISSUES}</p>
-          <p className="text-xs" style={{ color: "var(--muted)" }}>Open Issues</p>
-        </div>
-        <div
-          className="rounded-2xl border p-5 text-center"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <GitPullRequest size={20} className="mx-auto mb-2" style={{ color: "#5A6FFF" }} />
-          <p className="text-3xl font-bold" style={{ color: "var(--foreground)" }}>{OPEN_PRS}</p>
-          <p className="text-xs" style={{ color: "var(--muted)" }}>Open PRs</p>
-        </div>
-        <div
-          className="rounded-2xl border p-5 text-center"
-          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-        >
-          <TrendingUp size={20} className="mx-auto mb-2" style={{ color: "#1EAA55" }} />
-          <p className="text-3xl font-bold" style={{ color: "#1EAA55" }}>{BUILD_SUCCESS_RATE}%</p>
-          <p className="text-xs" style={{ color: "var(--muted)" }}>Build Success Rate</p>
-        </div>
-      </div>
-
-      {/* Linear Integration */}
+      {/* Integration Status Grid */}
       <div
-        className="rounded-2xl border p-5 mb-6"
-        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        className="rounded-2xl p-5 mb-6"
+        style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
       >
         <div className="flex items-center gap-2 mb-4">
-          <LayoutList size={16} style={{ color: "#5A6FFF" }} />
+          <Zap size={16} style={{ color: BRAND_BLUE }} />
           <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>
-            Linear Project Management
+            Integration Status
           </h3>
           <span
-            className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: "#F1C02814", color: "#F1C028" }}
+            className="text-[9px] font-bold px-2 py-0.5 rounded-full ml-auto"
+            style={{ backgroundColor: `${BRAND_GREEN}14`, color: BRAND_GREEN }}
           >
-            NOT CONNECTED
+            {connectedCount}/{totalIntegrations} Connected
           </span>
         </div>
-        <p className="text-xs mb-4" style={{ color: "var(--muted)" }}>
-          Connect Linear to sync issues, sprints, and roadmap directly into the Command Center.
-          Once connected, Joy will track velocity, flag blockers, and surface cross-department dependencies automatically.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          <div
-            className="rounded-xl p-4 text-center"
-            style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
-          >
-            <p className="text-2xl font-bold" style={{ color: "var(--muted)" }}>—</p>
-            <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Active Sprints</p>
-          </div>
-          <div
-            className="rounded-xl p-4 text-center"
-            style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
-          >
-            <p className="text-2xl font-bold" style={{ color: "var(--muted)" }}>—</p>
-            <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Open Issues</p>
-          </div>
-          <div
-            className="rounded-xl p-4 text-center"
-            style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}
-          >
-            <p className="text-2xl font-bold" style={{ color: "var(--muted)" }}>—</p>
-            <p className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Sprint Velocity</p>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+          {Object.entries(integrations).map(([key, integration]) => (
+            <div
+              key={key}
+              className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
+              style={{
+                backgroundColor: integration.connected ? `${BRAND_GREEN}06` : "var(--background)",
+                border: `1px solid ${integration.connected ? `${BRAND_GREEN}20` : "var(--border)"}`,
+              }}
+            >
+              {integration.connected ? (
+                <Wifi size={12} style={{ color: BRAND_GREEN }} />
+              ) : (
+                <WifiOff size={12} style={{ color: "var(--muted)" }} />
+              )}
+              <span
+                className="text-[11px] font-medium"
+                style={{ color: integration.connected ? "var(--foreground)" : "var(--muted)" }}
+              >
+                {integration.name}
+              </span>
+            </div>
+          ))}
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <JoyButton
-            agent="executive-coach"
-            prompt="Help me set up the Linear API integration for the Command Center. I need to: 1) Get a Linear API key, 2) Configure the webhook for issue/sprint sync, 3) Map Linear projects to our department structure. Walk me through the setup step by step."
-            label="Connect Linear API"
-            icon={<ExternalLink size={12} />}
-          />
-          <JoyButton
-            agent="executive-coach"
-            prompt="Set up the Linear project management integration for the Conceivable Command Center. Create the project structure: map Linear teams to our 10 departments, set up sprint tracking, and configure cross-department dependency alerts. What's the best way to organize this?"
-            label="Joy: Set Up Integration"
-            variant="secondary"
-          />
-        </div>
+        <Link
+          href="/departments/engineering/integrations"
+          className="flex items-center gap-1 mt-3 text-[10px] font-medium"
+          style={{ color: BRAND_BLUE }}
+        >
+          View all integrations <ArrowRight size={10} />
+        </Link>
       </div>
 
-      {/* Cross-Department */}
-      <div
-        className="rounded-2xl border p-5"
-        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <Gauge size={16} style={{ color: ACCENT }} />
-          <h3
-            className="text-xs font-bold uppercase tracking-wider"
-            style={{ color: "var(--foreground)" }}
+      {/* Quick Navigation */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {[
+          {
+            title: "Kanban Board",
+            desc: "Task management for Lakshmi & Sam",
+            href: "/departments/engineering/kanban",
+            icon: Wrench,
+            color: "#6B7280",
+          },
+          {
+            title: "Tech Specs Library",
+            desc: "Engineering-ready specification documents",
+            href: "/departments/engineering/tech-specs",
+            icon: FileText,
+            color: BRAND_BLUE,
+          },
+          {
+            title: "Integrations",
+            desc: "Connected services and API health",
+            href: "/departments/engineering/integrations",
+            icon: Zap,
+            color: BRAND_GREEN,
+          },
+        ].map((nav) => (
+          <Link
+            key={nav.href}
+            href={nav.href}
+            className="rounded-2xl p-5 group hover:shadow-md transition-all"
+            style={{
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--border)",
+            }}
           >
-            Cross-Department Connection
-          </h3>
-          <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#5A6FFF14", color: "#5A6FFF" }}>
-            10x
-          </span>
-        </div>
-        <div
-          className="rounded-xl p-4 flex items-center gap-3"
-          style={{ backgroundColor: `${ACCENT}08`, border: `1px solid ${ACCENT}15` }}
-        >
-          <div className="flex-1">
-            <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
-              Infrastructure reliability enables Product velocity
+            <div className="flex items-center gap-3 mb-2">
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform"
+                style={{ backgroundColor: `${nav.color}14` }}
+              >
+                <nav.icon size={16} style={{ color: nav.color }} />
+              </div>
+              <ExternalLink size={12} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "var(--muted)" }} />
+            </div>
+            <h4 className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
+              {nav.title}
+            </h4>
+            <p className="text-[11px] mt-1" style={{ color: "var(--muted)" }}>
+              {nav.desc}
             </p>
-            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-              99.9% uptime means zero deployment blockers for Product sprints. API response times under 200ms ensure a smooth user experience for the 50-Factor Dashboard and Halo Ring sync features currently in development.
-            </p>
-          </div>
-          <ArrowRight size={16} style={{ color: ACCENT }} />
-        </div>
+          </Link>
+        ))}
       </div>
     </div>
   );

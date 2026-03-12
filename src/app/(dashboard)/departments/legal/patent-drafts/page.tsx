@@ -15,6 +15,7 @@ import {
 const ACCENT = "#E24D47";
 
 const STATUS_CONFIG: Record<DraftStatus, { label: string; color: string; bg: string; icon: typeof FileText }> = {
+  draft: { label: "Draft", color: "#9686B9", bg: "#9686B914", icon: FileText },
   in_progress: { label: "In Progress", color: "#F59E0B", bg: "#F59E0B14", icon: Clock },
   review_ready: { label: "Review Ready", color: "#5A6FFF", bg: "#5A6FFF14", icon: CheckCircle },
   filed: { label: "Filed", color: "#1EAA55", bg: "#1EAA5514", icon: Send },
@@ -223,6 +224,7 @@ export default function PatentDraftsPage() {
           >
             {[
               { key: "all" as const, label: "All" },
+              { key: "draft" as const, label: "Draft" },
               { key: "in_progress" as const, label: "In Progress" },
               { key: "review_ready" as const, label: "Review Ready" },
               { key: "filed" as const, label: "Filed" },

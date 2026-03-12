@@ -11,6 +11,7 @@ import { PATENT_DRAFTS, type PatentDraftEntry, type DraftStatus } from "@/lib/da
 const ACCENT = "#E24D47";
 
 const STATUS_OPTIONS: { value: DraftStatus; label: string; color: string; icon: typeof FileText }[] = [
+  { value: "draft", label: "Draft", color: "#9686B9", icon: FileText },
   { value: "in_progress", label: "In Progress", color: "#F59E0B", icon: Clock },
   { value: "review_ready", label: "Review Ready", color: "#5A6FFF", icon: CheckCircle },
   { value: "filed", label: "Filed", color: "#1EAA55", icon: Send },

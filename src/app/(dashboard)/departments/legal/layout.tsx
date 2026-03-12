@@ -8,6 +8,7 @@ const ACCENT = "#E24D47";
 
 const TABS = [
   { href: "/departments/legal", label: "Dashboard" },
+  { href: "/departments/legal/executive-summary", label: "Executive Summary" },
   { href: "/departments/legal/patents", label: "Patents" },
   { href: "/departments/legal/patent-drafts", label: "Patent Drafts" },
   { href: "/departments/legal/compliance", label: "Compliance" },

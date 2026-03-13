@@ -1,7 +1,12 @@
 "use client";
 
 import { useRef, useCallback } from "react";
-import { Download, Shield, Zap, Eye, Brain, Activity, Smartphone, Baby, BarChart3, Heart, Search } from "lucide-react";
+import {
+  Download, Shield, Zap, Eye, Brain, Activity, Smartphone,
+  Baby, BarChart3, Heart, Sparkles, TrendingUp, Flower2
+} from "lucide-react";
+import { EXISTING_PATENTS } from "@/lib/data/patent-coverage-review";
+import { PATENT_DRAFTS, type PatentDraftEntry } from "@/lib/data/patent-drafts-data";
 
 /* ──────────────────────────────────────────────
    Color Palette
@@ -14,7 +19,89 @@ const PURPLE = "#9686B9";
 const OFF_WHITE = "#F9F7F0";
 
 /* ──────────────────────────────────────────────
-   Section 1 — Hero Header
+   Experience config — colors & icons
+   ────────────────────────────────────────────── */
+const EXPERIENCE_CONFIG: Record<string, { color: string; icon: React.ReactNode }> = {
+  Fertility: { color: BLUE, icon: <Heart size={16} style={{ color: BLUE }} /> },
+  Platform: { color: NAVY, icon: <Brain size={16} style={{ color: NAVY }} /> },
+  Pregnancy: { color: GREEN, icon: <Baby size={16} style={{ color: GREEN }} /> },
+  Postpartum: { color: PURPLE, icon: <Sparkles size={16} style={{ color: PURPLE }} /> },
+  Periods: { color: "#E24D47", icon: <Activity size={16} style={{ color: "#E24D47" }} /> },
+  "First Period": { color: "#F4A7B9", icon: <Flower2 size={16} style={{ color: "#F4A7B9" }} /> },
+  Perimenopause: { color: "#D4944A", icon: <TrendingUp size={16} style={{ color: "#D4944A" }} /> },
+  "Menopause & Beyond": { color: "#2A8A8A", icon: <Eye size={16} style={{ color: "#2A8A8A" }} /> },
+};
+
+const STATUS_COLORS: Record<string, { label: string; color: string }> = {
+  draft: { label: "Draft", color: "#9686B9" },
+  in_progress: { label: "In Progress", color: "#F59E0B" },
+  review_ready: { label: "Review Ready", color: "#5A6FFF" },
+  filed: { label: "Filed", color: "#1EAA55" },
+  needs_revision: { label: "Needs Revision", color: "#E24D47" },
+};
+
+const PRIORITY_COLORS: Record<string, string> = {
+  critical: "#E24D47",
+  high: "#F59E0B",
+  medium: "#5A6FFF",
+  low: "#78C3BF",
+};
+
+/* ──────────────────────────────────────────────
+   Build merged patent data from EXISTING_PATENTS + PATENT_DRAFTS
+   ────────────────────────────────────────────── */
+const draftLookup = new Map<string, PatentDraftEntry>(
+  PATENT_DRAFTS.map((d) => [d.id, d])
+);
+
+interface MergedPatent {
+  number: string;
+  name: string;
+  id: string;
+  experience: string;
+  status: string;
+  priority: string;
+  shortTitle: string;
+  fullTitle: string;
+}
+
+const ALL_PATENTS: MergedPatent[] = EXISTING_PATENTS.map((p) => {
+  const draft = draftLookup.get(p.id);
+  return {
+    number: p.number,
+    name: p.name,
+    id: p.id,
+    experience: p.experience,
+    status: draft?.status ?? "identified",
+    priority: draft?.filingPriority ?? "high",
+    shortTitle: draft?.shortTitle ?? p.name,
+    fullTitle: draft?.title ?? p.name,
+  };
+});
+
+// Group by experience, maintaining lifecycle order
+const EXPERIENCE_ORDER = [
+  "Fertility",
+  "Platform",
+  "Pregnancy",
+  "Postpartum",
+  "First Period",
+  "Periods",
+  "Perimenopause",
+  "Menopause & Beyond",
+];
+
+const patentsByExperience = EXPERIENCE_ORDER
+  .map((exp) => ({
+    experience: exp,
+    patents: ALL_PATENTS.filter((p) => p.experience === exp),
+  }))
+  .filter((g) => g.patents.length > 0);
+
+const uniqueExperiences = patentsByExperience.length;
+
+/* ──────────────────────────────────────────────
+   Section 1 — Hero Header (auto-updating stats)
    ────────────────────────────────────────────── */
 function HeroHeader() {
   return (
@@ -38,14 +125,15 @@ function HeroHeader() {
           Conceivable IP Portfolio
         </h1>
         <p className="text-base md:text-lg mb-10" style={{ color: "rgba(249,247,240,0.7)" }}>
-          Comprehensive Patent Protection for AI-Powered Fertility Health Platform
+          Comprehensive Patent Protection for AI-Powered Women&apos;s Health Platform
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
-            { value: "12 Patents", label: "Foundational portfolio" },
+            { value: `${ALL_PATENTS.length} Patents`, label: "Full lifecycle portfolio" },
+            { value: `${uniqueExperiences} Experiences`, label: "First Period → Menopause" },
             { value: "$20-35M", label: "Estimated licensing potential" },
-            { value: "3 Layers", label: "Core Platform \u00b7 Real-Time \u00b7 Predictive" },
+            { value: "3 Layers", label: "Core · Real-Time · Predictive" },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -67,54 +155,57 @@ function HeroHeader() {
 }
 
 /* ──────────────────────────────────────────────
-   Section 2 — Portfolio Architecture
+   Section 2 — Portfolio Architecture (auto-generated)
    ────────────────────────────────────────────── */
-interface PatentCardProps {
-  number: number;
-  title: string;
-  description: string;
-  accent: string;
-  badge?: string;
-  icon: React.ReactNode;
-}
+function PatentCard({ patent }: { patent: MergedPatent }) {
+  const expConfig = EXPERIENCE_CONFIG[patent.experience] ?? { color: BLUE, icon: null };
+  const statusInfo = STATUS_COLORS[patent.status];
+  const priorityColor = PRIORITY_COLORS[patent.priority] ?? BLUE;
 
-function PatentCard({ number, title, description, accent, badge, icon }: PatentCardProps) {
   return (
     <div
-      className="rounded-xl p-5 h-full flex flex-col"
+      className="rounded-xl p-4 h-full flex flex-col"
       style={{
         backgroundColor: "var(--surface)",
         border: "1px solid var(--border)",
         boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
       }}
     >
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2">
         <div
-          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${accent}14` }}
+          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: `${expConfig.color}14` }}
         >
-          {icon}
+          {expConfig.icon}
         </div>
-        {badge && (
+        <div className="flex items-center gap-1.5">
+          {statusInfo && (
+            <span
+              className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
+              style={{ backgroundColor: `${statusInfo.color}14`, color: statusInfo.color }}
+            >
+              {statusInfo.label}
+            </span>
+          )}
           <span
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: `${accent}14`, color: accent }}
+            className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase"
+            style={{ backgroundColor: `${priorityColor}14`, color: priorityColor }}
           >
-            {badge}
+            {patent.priority}
           </span>
-        )}
+        </div>
       </div>
       <p
         className="text-[10px] font-bold tracking-[0.15em] uppercase mb-1"
-        style={{ color: accent }}
+        style={{ color: expConfig.color }}
       >
-        Patent {number}
+        Patent {patent.number}
       </p>
-      <h4 className="text-sm font-semibold mb-2 leading-snug" style={{ color: "var(--foreground)" }}>
-        {title}
+      <h4 className="text-sm font-semibold mb-1 leading-snug" style={{ color: "var(--foreground)" }}>
+        {patent.shortTitle}
       </h4>
-      <p className="text-xs leading-relaxed flex-1" style={{ color: "var(--muted)" }}>
-        {description}
+      <p className="text-[10px] leading-relaxed flex-1" style={{ color: "var(--muted)" }}>
+        {patent.experience} experience
       </p>
     </div>
   );
@@ -128,123 +219,31 @@ function PortfolioArchitecture() {
           Portfolio Architecture
         </h2>
         <p className="text-sm" style={{ color: "var(--muted)" }}>
-          Three-tier protection strategy covering the full technology stack
+          {ALL_PATENTS.length} patents spanning {uniqueExperiences} lifecycle experiences — auto-generated from patent registry
         </p>
       </div>
 
-      {/* Tier 1 — Core Platform */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: BLUE }} />
-          <h3 className="text-sm font-bold tracking-wide uppercase" style={{ color: BLUE }}>
-            Core Platform Protection
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <PatentCard
-            number={1}
-            title="Conceivable Score System"
-            description="Five-category composite fertility scoring using weighted multi-signal wearable inputs"
-            accent={BLUE}
-            badge="Filed March 2024"
-            icon={<BarChart3 size={16} style={{ color: BLUE }} />}
-          />
-          <PatentCard
-            number={2}
-            title="AI-Powered Root Cause Analysis"
-            description="AI identifies underlying physiological conditions causing multiple symptoms simultaneously"
-            accent={BLUE}
-            icon={<Brain size={16} style={{ color: BLUE }} />}
-          />
-          <PatentCard
-            number={3}
-            title="Population-Based Pattern Learning"
-            description="AI learns optimal intervention sequences from 1000+ users with similar physiological patterns"
-            accent={BLUE}
-            icon={<Zap size={16} style={{ color: BLUE }} />}
-          />
-          <PatentCard
-            number={4}
-            title="Closed-Loop Physiologic Correction System"
-            description="Measures intervention effectiveness through continuous wearable monitoring and automatically escalates protocols when corrections fail"
-            accent={BLUE}
-            icon={<Activity size={16} style={{ color: BLUE }} />}
-          />
-          <PatentCard
-            number={5}
-            title="AI-Driven Physiological Pattern Attribution"
-            description="Iterative causal analysis that drills down to root causes through dynamic questioning, validates attributions through outcome tracking, and learns from population-level intervention success patterns"
-            accent={BLUE}
-            icon={<Eye size={16} style={{ color: BLUE }} />}
-          />
-        </div>
-      </div>
-
-      {/* Tier 2 — Real-Time Monitoring */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: GREEN }} />
-          <h3 className="text-sm font-bold tracking-wide uppercase" style={{ color: GREEN }}>
-            Real-Time Monitoring &amp; Intervention
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <PatentCard
-            number={6}
-            title="Real-Time Monitoring & Care Team Coordination"
-            description="Continuous wearable monitoring triggers automated specialist interventions"
-            accent={GREEN}
-            icon={<Activity size={16} style={{ color: GREEN }} />}
-          />
-          <PatentCard
-            number={7}
-            title="Cycle-Based AI Recalibration"
-            description="Monthly AI learning cycles differentiating clinical vs behavioral barriers"
-            accent={GREEN}
-            icon={<Zap size={16} style={{ color: GREEN }} />}
-          />
-          <PatentCard
-            number={8}
-            title="Objective Data Validation"
-            description="Cross-validates self-reported symptoms against wearable data"
-            accent={GREEN}
-            icon={<Eye size={16} style={{ color: GREEN }} />}
-          />
-        </div>
-      </div>
-
-      {/* Tier 3 — Predictive Analytics */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PURPLE }} />
-          <h3 className="text-sm font-bold tracking-wide uppercase" style={{ color: PURPLE }}>
-            Predictive Analytics &amp; Emerging Tech
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <PatentCard
-            number={9}
-            title="Pregnancy Risk Assessment"
-            description="Predictive analytics for adverse outcomes using pre-conception + wearable data"
-            accent={PURPLE}
-            icon={<Baby size={16} style={{ color: PURPLE }} />}
-          />
-          <PatentCard
-            number={10}
-            title="Smartphone Multi-Modal Assessment"
-            description="Facial analysis + voice patterns for comprehensive health assessment"
-            accent={PURPLE}
-            icon={<Smartphone size={16} style={{ color: PURPLE }} />}
-          />
-          <PatentCard
-            number={11}
-            title="Pregnancy Monitoring System"
-            description="Continuous AI monitoring with pre-conception data integration, early GD detection, first trimester viability assessment, and automated multi-specialist care coordination"
-            accent={PURPLE}
-            icon={<Heart size={16} style={{ color: PURPLE }} />}
-          />
-        </div>
-      </div>
+      {patentsByExperience.map((group) => {
+        const config = EXPERIENCE_CONFIG[group.experience] ?? { color: BLUE };
+        return (
+          <div key={group.experience}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: config.color }} />
+              <h3 className="text-sm font-bold tracking-wide uppercase" style={{ color: config.color }}>
+                {group.experience}
+              </h3>
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: `${config.color}14`, color: config.color }}>
+                {group.patents.length} patent{group.patents.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {group.patents.map((p) => (
+                <PatentCard key={p.id} patent={p} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -252,44 +251,6 @@ function PortfolioArchitecture() {
 /* ──────────────────────────────────────────────
    Section 3 — Competitive Moat
    ────────────────────────────────────────────── */
-interface CompetitorBlockProps {
-  name: string;
-  patents: string;
-  explanation: string;
-  color: string;
-}
-
-function CompetitorBlock({ name, patents, explanation, color }: CompetitorBlockProps) {
-  return (
-    <div
-      className="rounded-xl p-5"
-      style={{
-        backgroundColor: "var(--surface)",
-        border: "1px solid var(--border)",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)",
-      }}
-    >
-      <div className="flex items-center gap-3 mb-3">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${color}14` }}
-        >
-          <Shield size={14} style={{ color }} />
-        </div>
-        <div>
-          <h4 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{name}</h4>
-          <p className="text-[10px] font-bold tracking-wider uppercase" style={{ color }}>
-            Blocked by: {patents}
-          </p>
-        </div>
-      </div>
-      <p className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
-        {explanation}
-      </p>
-    </div>
-  );
-}
-
 function CompetitiveMoat() {
   return (
     <div className="space-y-4">
@@ -302,14 +263,12 @@ function CompetitiveMoat() {
         </p>
       </div>
 
-      {/* Center hub */}
       <div
         className="rounded-2xl p-6 md:p-8"
         style={{
           background: `linear-gradient(135deg, ${BLACK} 0%, ${NAVY} 100%)`,
         }}
       >
-        {/* Conceivable hub */}
         <div className="text-center mb-6">
           <div
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full"
@@ -324,60 +283,270 @@ function CompetitiveMoat() {
             <div className="w-px h-6" style={{ backgroundColor: "rgba(249,247,240,0.2)" }} />
           </div>
           <p className="text-xs" style={{ color: "rgba(249,247,240,0.4)" }}>
-            12 patents blocking all competitive vectors
+            {ALL_PATENTS.length} patents blocking all competitive vectors across full lifecycle
           </p>
         </div>
 
-        {/* Radiating arrows to competitors */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div
-            className="rounded-xl p-4"
-            style={{ backgroundColor: "rgba(249,247,240,0.06)" }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#E24D47" }} />
-              <p className="text-xs font-bold" style={{ color: OFF_WHITE }}>Oura Ring</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            {
+              name: "Oura Ring",
+              color: "#E24D47",
+              blocked: "Patents 001, 006, 009, 021",
+              desc: "Cannot replicate composite scoring, Halo Ring integration, gestational wellness, or perimenopause detection.",
+            },
+            {
+              name: "Fertility Apps (Flo, Clue, Ava)",
+              color: "#F59E0B",
+              blocked: "Patents 002, 004, 015, 018",
+              desc: "Cannot develop root cause analysis, supplement personalization, period intelligence, or first period prediction.",
+            },
+            {
+              name: "AI Health Platforms (Whoop, Levels)",
+              color: BLUE,
+              blocked: "Patents 001, 003, 007, 022",
+              desc: "Cannot replicate holistic scoring, cycle intelligence, cross-department AI, or HRT monitoring.",
+            },
+            {
+              name: "Women's Health (Maven, Gennev)",
+              color: "#D4944A",
+              blocked: "Patents 012, 013, 021, 023",
+              desc: "Cannot build PPD detection, recovery modeling, perimenopause prediction, or gut-hormone systems.",
+            },
+          ].map((comp) => (
+            <div
+              key={comp.name}
+              className="rounded-xl p-4"
+              style={{ backgroundColor: "rgba(249,247,240,0.06)" }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: comp.color }} />
+                <p className="text-xs font-bold" style={{ color: OFF_WHITE }}>{comp.name}</p>
+              </div>
+              <p className="text-[10px] font-semibold tracking-wider uppercase mb-1.5" style={{ color: comp.color }}>
+                {comp.blocked}
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: "rgba(249,247,240,0.6)" }}>
+                {comp.desc}
+              </p>
             </div>
-            <p className="text-[10px] font-semibold tracking-wider uppercase mb-1.5" style={{ color: "#E24D47" }}>
-              Blocked by: Patent 9 (Pregnancy Risk Assessment)
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color: "rgba(249,247,240,0.6)" }}>
-              Limited to basic tracking. We control intervention-based pregnancy health optimization.
-            </p>
-          </div>
-
-          <div
-            className="rounded-xl p-4"
-            style={{ backgroundColor: "rgba(249,247,240,0.06)" }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#F59E0B" }} />
-              <p className="text-xs font-bold" style={{ color: OFF_WHITE }}>Fertility Apps (Flo, Clue, Ava)</p>
-            </div>
-            <p className="text-[10px] font-semibold tracking-wider uppercase mb-1.5" style={{ color: "#F59E0B" }}>
-              Blocked by: Patents 2, 3, 5 (Root Cause + Population Learning + Pattern Attribution)
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color: "rgba(249,247,240,0.6)" }}>
-              Cannot develop AI-driven intervention systems.
-            </p>
-          </div>
-
-          <div
-            className="rounded-xl p-4"
-            style={{ backgroundColor: "rgba(249,247,240,0.06)" }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: BLUE }} />
-              <p className="text-xs font-bold" style={{ color: OFF_WHITE }}>AI Health Platforms (Whoop, Levels)</p>
-            </div>
-            <p className="text-[10px] font-semibold tracking-wider uppercase mb-1.5" style={{ color: BLUE }}>
-              Blocked by: Patents 1, 2, 8 (Score + Root Cause + Validation)
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color: "rgba(249,247,240,0.6)" }}>
-              Cannot replicate holistic health assessment methodology.
-            </p>
-          </div>
+          ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   Section 3b — Competitive Patent Blocking Matrix
+   ────────────────────────────────────────────── */
+const BLOCKING_MATRIX = [
+  // FERTILITY HARDWARE
+  {
+    competitor: "Mira",
+    whatTheyDo: "Urine hormone testing (LH, E3G, PdG, FSH). Quantitative levels. Daily Fertility Score. $199 + $60-93/mo strips. 200K+ users.",
+    whatTheyNeed: "Add AI intervention, root cause analysis, personalized supplement recommendations, care team coordination",
+    blockingPatents: "001, 002, 004, 008, 016, 024",
+    strength: "Strong" as const,
+  },
+  {
+    competitor: "Inito",
+    whatTheyDo: "Urine hormone testing (LH, FSH, E3G, PdG). iPhone camera reader. $149 + refills.",
+    whatTheyNeed: "Same as Mira — add intervention layer, cycle-synced optimization, care team",
+    blockingPatents: "001, 002, 004, 008, 016, 024",
+    strength: "Strong" as const,
+  },
+  {
+    competitor: "Kegg",
+    whatTheyDo: "Cervical mucus electrolyte sensing. $249 one-time. Kegel dual function. 20K+ users.",
+    whatTheyNeed: "Add AI interpretation, root cause connection, personalized interventions",
+    blockingPatents: "002, 004, 008, 016",
+    strength: "Strong" as const,
+  },
+  {
+    competitor: "Natural Cycles",
+    whatTheyDo: "FDA-cleared BBT contraception app. $100/yr. Uses BBT for fertile/infertile days. Oura Ring partner.",
+    whatTheyNeed: "Expand BBT analysis to root cause health assessment, add intervention, add lifecycle transitions",
+    blockingPatents: "002, 003, 009, 016, 021, 027",
+    strength: "Strong" as const,
+  },
+  // PERIOD TRACKERS
+  {
+    competitor: "Flo",
+    whatTheyDo: "420M downloads. Period prediction + content + community. $50/yr premium. Settled $56M data lawsuit.",
+    whatTheyNeed: "Add wearable integration, AI care team, root cause analysis, condition detection, outcome improvement",
+    blockingPatents: "001, 002, 004, 008, 016, 017",
+    strength: "Strong" as const,
+  },
+  {
+    competitor: "Clue",
+    whatTheyDo: "Science-focused period tracker. EU privacy. 30+ data points. Research partnerships.",
+    whatTheyNeed: "Add intervention layer, care team, wearable-driven optimization, scoring that improves",
+    blockingPatents: "001, 002, 004, 008, 016",
+    strength: "Strong" as const,
+  },
+  // TECH GIANTS
+  {
+    competitor: "Apple",
+    whatTheyDo: "Apple Watch temp sensor, cycle tracking in Health app. Billions of users. Massive distribution.",
+    whatTheyNeed: "Add care team, root cause analysis, clinical interpretation, intervention, lifecycle transitions",
+    blockingPatents: "002, 004, 008, 019, 027",
+    strength: "Strong" as const,
+  },
+  {
+    competitor: "Oura",
+    whatTheyDo: "Ring with temp, HRV, sleep. Added Perimenopause Check-In (2025). Partnered with Maven Clinic.",
+    whatTheyNeed: "Add reproductive health intervention from ring data, cycle-based optimization, care team",
+    blockingPatents: "007, 008, 016, 021, 027",
+    strength: "Moderate" as const,
+  },
+  // MENOPAUSE
+  {
+    competitor: "Gennev",
+    whatTheyDo: "Telehealth with human doctors. 25 OB/GYNs. $25-85/visit. Insurance-covered.",
+    whatTheyNeed: "Add continuous wearable monitoring, AI care team, predictive detection, automated intervention",
+    blockingPatents: "001, 004, 008, 021, 022",
+    strength: "Moderate" as const,
+  },
+  {
+    competitor: "Elektra",
+    whatTheyDo: "Telehealth with Menopause Society clinicians. $30/mo. Community + education.",
+    whatTheyNeed: "Add continuous monitoring + AI intervention, HRT response tracking, gut-hormone analysis",
+    blockingPatents: "001, 004, 008, 021, 022",
+    strength: "Moderate" as const,
+  },
+  {
+    competitor: "Balance / Caria / Stella",
+    whatTheyDo: "Symptom tracking + CBT content + community. $78-99/yr.",
+    whatTheyNeed: "Add wearable integration, root cause analysis, personalized intervention, scoring improvement",
+    blockingPatents: "001, 002, 004, 008, 016",
+    strength: "Strong" as const,
+  },
+];
+
+const STRENGTH_CONFIG = {
+  Strong: { color: "#E24D47", bg: "#E24D4714" },
+  Moderate: { color: "#F59E0B", bg: "#F59E0B14" },
+  Monitor: { color: "#78C3BF", bg: "#78C3BF14" },
+};
+
+function CompetitiveBlockingMatrix() {
+  const strongCount = BLOCKING_MATRIX.filter((c) => c.strength === "Strong").length;
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <Shield size={20} style={{ color: "#E24D47" }} />
+          <h2 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
+            Competitive Patent Blocking Matrix
+          </h2>
+        </div>
+        <p className="text-sm" style={{ color: "var(--muted)" }}>
+          {BLOCKING_MATRIX.length} competitors analyzed · {strongCount} strongly blocked · Portfolio is not just defensive — it&apos;s <strong style={{ color: "#E24D47" }}>offensive</strong>
+        </p>
+      </div>
+
+      {/* Investor callout */}
+      <div
+        className="rounded-xl p-5"
+        style={{
+          background: `linear-gradient(135deg, ${BLACK} 0%, #1a1a2e 100%)`,
+        }}
+      >
+        <p className="text-sm leading-relaxed" style={{ color: OFF_WHITE }}>
+          <strong style={{ color: "#E24D47" }}>Key investor insight:</strong>{" "}
+          Our {ALL_PATENTS.length} patent applications don&apos;t just protect us — they prevent every major competitor from building the features that differentiate Conceivable.
+          The entire market is blocked from moving from <em>tracking</em> to <em>intervention</em>.
+          {" "}{ALL_PATENTS.length} patents across {uniqueExperiences} lifecycle experiences create an IP moat that grows stronger with each filing.
+        </p>
+      </div>
+
+      {/* Matrix table */}
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{ border: "1px solid var(--border)" }}
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left" style={{ minWidth: 900 }}>
+            <thead>
+              <tr style={{ backgroundColor: "var(--surface)" }}>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)", width: "10%" }}>Competitor</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)", width: "22%" }}>What They Do Now</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)", width: "25%" }}>What They&apos;d Need to Compete</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)", width: "28%" }}>Blocked By</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-center" style={{ color: "var(--muted)", width: "15%" }}>Blocking Strength</th>
+              </tr>
+            </thead>
+            <tbody>
+              {BLOCKING_MATRIX.map((row, i) => {
+                const strengthStyle = STRENGTH_CONFIG[row.strength];
+                return (
+                  <tr
+                    key={row.competitor}
+                    style={{
+                      backgroundColor: i % 2 === 0 ? "var(--background)" : "var(--surface)",
+                      borderTop: "1px solid var(--border)",
+                    }}
+                  >
+                    <td className="px-4 py-3">
+                      <p className="text-xs font-bold" style={{ color: "var(--foreground)" }}>{row.competitor}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-[11px] leading-relaxed" style={{ color: "var(--muted)" }}>{row.whatTheyDo}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="text-[11px] leading-relaxed" style={{ color: "var(--foreground)" }}>{row.whatTheyNeed}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {row.blockingPatents.split(", ").map((num) => {
+                          const patent = ALL_PATENTS.find((p) => p.number === num);
+                          return (
+                            <span
+                              key={num}
+                              className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
+                              style={{ backgroundColor: "#E24D4714", color: "#E24D47" }}
+                              title={patent?.shortTitle ?? ""}
+                            >
+                              {num}
+                              {patent && <span style={{ color: "var(--muted)" }}>({patent.shortTitle})</span>}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className="text-[10px] font-bold px-3 py-1 rounded-full"
+                        style={{ backgroundColor: strengthStyle.bg, color: strengthStyle.color }}
+                      >
+                        {row.strength}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-6">
+        {(["Strong", "Moderate", "Monitor"] as const).map((s) => (
+          <div key={s} className="flex items-center gap-2">
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: STRENGTH_CONFIG[s].bg, color: STRENGTH_CONFIG[s].color }}
+            >
+              {s}
+            </span>
+            <span className="text-[10px]" style={{ color: "var(--muted)" }}>
+              {s === "Strong" ? "Multiple patents block core expansion" : s === "Moderate" ? "Key patents block likely growth path" : "Indirect blocking, watch for workarounds"}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -390,22 +559,22 @@ function LicensingOpportunities() {
   const opportunities = [
     {
       title: "Healthcare Systems",
-      description: "License predictive analytics for population health management",
+      description: "License predictive analytics for population health management — perimenopause detection, PPD screening",
       icon: <Activity size={18} style={{ color: BLUE }} />,
     },
     {
       title: "Wearable Companies",
-      description: "License AI interpretation layers for raw physiological data",
+      description: "License AI interpretation layers for raw physiological data across all lifecycle stages",
       icon: <Eye size={18} style={{ color: GREEN }} />,
     },
     {
-      title: "Pharma",
-      description: "License population-based intervention optimization for clinical trials",
+      title: "Pharma / HRT",
+      description: "License HRT response monitoring and supplement optimization for clinical trials",
       icon: <Zap size={18} style={{ color: PURPLE }} />,
     },
     {
       title: "Digital Health Platforms",
-      description: "License real-time monitoring and intervention coordination",
+      description: "License real-time monitoring, care team coordination, and lifecycle transition engines",
       icon: <Brain size={18} style={{ color: NAVY }} />,
     },
   ];
@@ -502,18 +671,18 @@ function InvestmentImplications() {
       title: "IP Value Drivers",
       color: BLUE,
       items: [
-        "First-mover advantage in AI fertility health",
+        "First-mover advantage in AI women\u2019s health across full lifecycle",
         "Dataset moat with high barriers to entry",
-        "Full-stack platform protection",
-        "Expandable beyond fertility to all women\u2019s health",
+        `${ALL_PATENTS.length}-patent full-stack platform protection`,
+        "Coverage from First Period through Menopause & Beyond",
       ],
     },
     {
       title: "Revenue Protection",
       color: GREEN,
       items: [
-        "Patents protect core subscription functionality",
-        "B2B licensing creates additional revenue streams",
+        "Patents protect core subscription functionality across all experiences",
+        "B2B licensing creates additional revenue streams (HRT monitoring, PPD detection)",
         "Comprehensive portfolio increases acquisition value",
       ],
     },
@@ -521,7 +690,7 @@ function InvestmentImplications() {
       title: "Risk Mitigation",
       color: PURPLE,
       items: [
-        "Competitive protection prevents direct replication",
+        `${ALL_PATENTS.length} patents block competitive replication across ${uniqueExperiences} experiences`,
         "Freedom to operate with proprietary innovations",
         "Clinical validation creates regulatory moat beyond IP",
       ],
@@ -573,165 +742,170 @@ function InvestmentImplications() {
 }
 
 /* ──────────────────────────────────────────────
+   Section 7 — Full Patent Table (auto-generated)
+   ────────────────────────────────────────────── */
+function PatentTable() {
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-bold mb-1" style={{ color: "var(--foreground)" }}>
+          Complete Patent Registry
+        </h2>
+        <p className="text-sm" style={{ color: "var(--muted)" }}>
+          {ALL_PATENTS.length} patents · auto-generated from patent data — updates automatically when patents are added
+        </p>
+      </div>
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{ border: "1px solid var(--border)" }}
+      >
+        <table className="w-full text-left">
+          <thead>
+            <tr style={{ backgroundColor: "var(--surface)" }}>
+              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>#</th>
+              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>Patent</th>
+              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "var(--muted)" }}>Experience</th>
+              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "var(--muted)" }}>Status</th>
+              <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider hidden md:table-cell" style={{ color: "var(--muted)" }}>Priority</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ALL_PATENTS.map((p, i) => {
+              const expConfig = EXPERIENCE_CONFIG[p.experience] ?? { color: BLUE };
+              const statusInfo = STATUS_COLORS[p.status] ?? { label: "Identified", color: "#78C3BF" };
+              const priorityColor = PRIORITY_COLORS[p.priority] ?? BLUE;
+              return (
+                <tr
+                  key={p.id}
+                  style={{
+                    backgroundColor: i % 2 === 0 ? "var(--background)" : "var(--surface)",
+                    borderTop: "1px solid var(--border)",
+                  }}
+                >
+                  <td className="px-4 py-2.5">
+                    <span className="text-xs font-bold" style={{ color: expConfig.color }}>{p.number}</span>
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <p className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>{p.shortTitle}</p>
+                  </td>
+                  <td className="px-4 py-2.5 hidden md:table-cell">
+                    <span
+                      className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: `${expConfig.color}14`, color: expConfig.color }}
+                    >
+                      {p.experience}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 hidden md:table-cell">
+                    <span
+                      className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: `${statusInfo.color}14`, color: statusInfo.color }}
+                    >
+                      {statusInfo.label}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 hidden md:table-cell">
+                    <span
+                      className="text-[10px] font-semibold uppercase"
+                      style={{ color: priorityColor }}
+                    >
+                      {p.priority}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────
+   PDF Export (auto-generated content)
+   ────────────────────────────────────────────── */
+function buildPdfHtml() {
+  const patentRows = ALL_PATENTS.map(
+    (p) =>
+      `<tr><td style="padding:6px 10px;font-size:11px;font-weight:700;color:#5A6FFF">${p.number}</td><td style="padding:6px 10px;font-size:11px;font-weight:600">${p.shortTitle}</td><td style="padding:6px 10px;font-size:11px;color:#666">${p.experience}</td><td style="padding:6px 10px;font-size:11px;color:#666">${STATUS_COLORS[p.status]?.label ?? "Identified"}</td><td style="padding:6px 10px;font-size:11px;text-transform:uppercase;color:${PRIORITY_COLORS[p.priority] ?? BLUE}">${p.priority}</td></tr>`
+  ).join("");
+
+  const experienceGroups = patentsByExperience
+    .map((g) => {
+      const config = EXPERIENCE_CONFIG[g.experience] ?? { color: BLUE };
+      const cards = g.patents
+        .map(
+          (p) =>
+            `<div class="card"><div class="num" style="color:${config.color}">Patent ${p.number}</div><h4>${p.shortTitle}</h4></div>`
+        )
+        .join("");
+      return `<div class="tier-label" style="color:${config.color}">${g.experience} (${g.patents.length})</div><div class="card-grid">${cards}</div>`;
+    })
+    .join("");
+
+  return `<!DOCTYPE html><html><head><title>Conceivable IP Portfolio — Executive Summary</title><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2A2828;background:#fff;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+@page{margin:0.5in;size:letter}
+.print-container{max-width:100%}.print-container>div{margin-bottom:24px}
+.gradient-header{background:linear-gradient(135deg,#2A2828 0%,#356FB6 50%,#5A6FFF 100%)!important;border-radius:12px;padding:40px;margin-bottom:24px}
+.gradient-header h1{color:#F9F7F0;font-size:28px;font-weight:700;margin-bottom:4px}
+.gradient-header .subtitle{color:rgba(249,247,240,0.7);font-size:14px;margin-bottom:32px}
+.gradient-header .investor-label{color:rgba(249,247,240,0.5);font-size:10px;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.stat-row{display:flex;gap:12px}
+.stat-card{flex:1;background:rgba(249,247,240,0.08);border-radius:8px;padding:16px 20px}
+.stat-card .val{color:#F9F7F0;font-size:22px;font-weight:700}
+.stat-card .lbl{color:rgba(249,247,240,0.6);font-size:11px;margin-top:2px}
+h2{font-size:18px;font-weight:700;margin-bottom:4px}
+.section-sub{color:#888;font-size:12px;margin-bottom:12px}
+.tier-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;margin-top:12px}
+.card-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px}
+.card-grid .card{flex:1;min-width:30%;border:1px solid #e5e5e5;border-radius:10px;padding:12px}
+.card .num{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
+.card h4{font-size:11px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#f5f5f5;padding:8px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888}
+td{border-top:1px solid #eee}
+tr:nth-child(even){background:#fafafa}
+.page-break{page-break-before:always}
+.dark-section{background:linear-gradient(135deg,#2A2828 0%,#1a1a2e 100%)!important;border-radius:12px;padding:28px 32px}
+.dark-section .label{color:rgba(249,247,240,0.4);font-size:9px;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px}
+.dark-stats{display:flex;gap:20px}
+.dark-stats .item .val{color:#F9F7F0;font-size:16px;font-weight:700}
+.dark-stats .item .lbl{color:rgba(249,247,240,0.5);font-size:10px}
+</style></head><body><div class="print-container">
+<div class="gradient-header">
+<div class="investor-label">Investor Overview</div>
+<h1>Conceivable IP Portfolio</h1>
+<div class="subtitle">Comprehensive Patent Protection for AI-Powered Women's Health Platform</div>
+<div class="stat-row">
+<div class="stat-card"><div class="val">${ALL_PATENTS.length} Patents</div><div class="lbl">Full lifecycle portfolio</div></div>
+<div class="stat-card"><div class="val">${uniqueExperiences} Experiences</div><div class="lbl">First Period → Menopause</div></div>
+<div class="stat-card"><div class="val">$20-35M</div><div class="lbl">Estimated licensing potential</div></div>
+<div class="stat-card"><div class="val">3 Layers</div><div class="lbl">Core · Real-Time · Predictive</div></div>
+</div></div>
+<div><h2>Portfolio Architecture</h2><div class="section-sub">${ALL_PATENTS.length} patents spanning ${uniqueExperiences} lifecycle experiences</div>${experienceGroups}</div>
+<div class="page-break"></div>
+<div><h2>Complete Patent Registry</h2><table><thead><tr><th>#</th><th>Patent</th><th>Experience</th><th>Status</th><th>Priority</th></tr></thead><tbody>${patentRows}</tbody></table></div>
+<div class="page-break"></div>
+<div><h2>Competitive Patent Blocking Matrix</h2><div class="section-sub">${BLOCKING_MATRIX.length} competitors analyzed — portfolio prevents the entire market from building what we've built</div>
+<table><thead><tr><th>Competitor</th><th>What They Do</th><th>What They'd Need</th><th>Blocking Patents</th><th>Strength</th></tr></thead><tbody>${BLOCKING_MATRIX.map((r, i) => `<tr${i % 2 === 1 ? ' style="background:#fafafa"' : ''}><td style="padding:6px 10px;font-size:11px;font-weight:700">${r.competitor}</td><td style="padding:6px 10px;font-size:11px;color:#666">${r.whatTheyDo}</td><td style="padding:6px 10px;font-size:11px">${r.whatTheyNeed}</td><td style="padding:6px 10px;font-size:11px;color:#E24D47;font-weight:600">Patents ${r.blockingPatents}</td><td style="padding:6px 10px;font-size:11px;font-weight:700;color:${r.strength === 'Strong' ? '#E24D47' : '#F59E0B'}">${r.strength}</td></tr>`).join("")}</tbody></table></div>
+<div class="dark-section"><div class="label">Market Validation</div><div class="dark-stats"><div class="item"><div class="val">25+ years</div><div class="lbl">Clinical experience</div></div><div class="item"><div class="val">500K+</div><div class="lbl">BBT charts analyzed</div></div><div class="item"><div class="val">7,000+</div><div class="lbl">Patient outcome records</div></div><div class="item"><div class="val">240K+</div><div class="lbl">Data points in current platform</div></div><div class="item"><div class="val">US 10,467,382</div><div class="lbl">Granted patent (2019)</div></div></div></div>
+</div></body></html>`;
+}
+
+/* ──────────────────────────────────────────────
    Main Page
    ────────────────────────────────────────────── */
 export default function ExecutiveSummaryPage() {
   const printRef = useRef<HTMLDivElement>(null);
 
   const handleExportPDF = useCallback(() => {
-    // Open print dialog which allows saving as PDF
-    const printContent = printRef.current;
-    if (!printContent) return;
-
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Conceivable IP Portfolio — Executive Summary</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            color: #2A2828;
-            background: #ffffff;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          @page { margin: 0.5in; size: letter; }
-          .print-container { max-width: 100%; }
-          .print-container > div { margin-bottom: 24px; }
-          /* Force background colors to print */
-          .gradient-header {
-            background: linear-gradient(135deg, #2A2828 0%, #356FB6 50%, #5A6FFF 100%) !important;
-            border-radius: 12px; padding: 40px; margin-bottom: 24px;
-          }
-          .gradient-header h1 { color: #F9F7F0; font-size: 28px; font-weight: 700; margin-bottom: 4px; }
-          .gradient-header .subtitle { color: rgba(249,247,240,0.7); font-size: 14px; margin-bottom: 32px; }
-          .gradient-header .investor-label { color: rgba(249,247,240,0.5); font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
-          .stat-row { display: flex; gap: 12px; }
-          .stat-card { flex: 1; background: rgba(249,247,240,0.08); border-radius: 8px; padding: 16px 20px; }
-          .stat-card .val { color: #F9F7F0; font-size: 22px; font-weight: 700; }
-          .stat-card .lbl { color: rgba(249,247,240,0.6); font-size: 11px; margin-top: 2px; }
-          h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-          .section-sub { color: #888; font-size: 12px; margin-bottom: 12px; }
-          .tier-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
-          .card-grid { display: flex; gap: 10px; margin-bottom: 16px; }
-          .card-grid .card { flex: 1; border: 1px solid #e5e5e5; border-radius: 10px; padding: 14px; }
-          .card .num { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
-          .card h4 { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
-          .card p { font-size: 11px; color: #666; line-height: 1.5; }
-          .dark-section { background: linear-gradient(135deg, #2A2828 0%, #1a1a2e 100%) !important; border-radius: 12px; padding: 28px 32px; }
-          .dark-section .label { color: rgba(249,247,240,0.4); font-size: 9px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; }
-          .dark-stats { display: flex; gap: 20px; }
-          .dark-stats .item .val { color: #F9F7F0; font-size: 16px; font-weight: 700; }
-          .dark-stats .item .lbl { color: rgba(249,247,240,0.5); font-size: 10px; }
-          .three-col { display: flex; gap: 12px; }
-          .three-col .col { flex: 1; border: 1px solid #e5e5e5; border-radius: 10px; padding: 18px; }
-          .three-col .col h3 { font-size: 12px; font-weight: 700; margin-bottom: 10px; }
-          .three-col .col li { font-size: 11px; line-height: 1.6; margin-bottom: 4px; list-style: none; padding-left: 10px; position: relative; }
-          .three-col .col li::before { content: ''; position: absolute; left: 0; top: 7px; width: 4px; height: 4px; border-radius: 50%; }
-          .moat-section { background: linear-gradient(135deg, #2A2828 0%, #356FB6 100%) !important; border-radius: 12px; padding: 24px; }
-          .moat-hub { text-align: center; margin-bottom: 16px; }
-          .moat-hub .badge { display: inline-block; background: rgba(90,111,255,0.2); border: 1px solid rgba(90,111,255,0.3); border-radius: 20px; padding: 6px 16px; color: #F9F7F0; font-size: 12px; font-weight: 700; }
-          .moat-grid { display: flex; gap: 10px; }
-          .moat-card { flex: 1; background: rgba(249,247,240,0.06); border-radius: 8px; padding: 12px; }
-          .moat-card .name { color: #F9F7F0; font-size: 11px; font-weight: 700; margin-bottom: 4px; }
-          .moat-card .blocked { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-          .moat-card .desc { color: rgba(249,247,240,0.6); font-size: 10px; line-height: 1.5; }
-          .page-break { page-break-before: always; }
-        </style>
-      </head>
-      <body>
-        <div class="print-container">
-          <div class="gradient-header">
-            <div class="investor-label">Investor Overview</div>
-            <h1>Conceivable IP Portfolio</h1>
-            <div class="subtitle">Comprehensive Patent Protection for AI-Powered Fertility Health Platform</div>
-            <div class="stat-row">
-              <div class="stat-card"><div class="val">12 Patents</div><div class="lbl">Foundational portfolio</div></div>
-              <div class="stat-card"><div class="val">$20-35M</div><div class="lbl">Estimated licensing potential</div></div>
-              <div class="stat-card"><div class="val">3 Layers</div><div class="lbl">Core Platform \u00b7 Real-Time \u00b7 Predictive</div></div>
-            </div>
-          </div>
-
-          <div>
-            <h2>Portfolio Architecture</h2>
-            <div class="section-sub">Three-tier protection strategy covering the full technology stack</div>
-            <div class="tier-label" style="color:#5A6FFF">Core Platform Protection</div>
-            <div class="card-grid">
-              <div class="card"><div class="num" style="color:#5A6FFF">Patent 1</div><h4>Conceivable Score System</h4><p>Five-category composite fertility scoring using weighted multi-signal wearable inputs</p></div>
-              <div class="card"><div class="num" style="color:#5A6FFF">Patent 2</div><h4>AI-Powered Root Cause Analysis</h4><p>AI identifies underlying physiological conditions causing multiple symptoms simultaneously</p></div>
-              <div class="card"><div class="num" style="color:#5A6FFF">Patent 3</div><h4>Population-Based Pattern Learning</h4><p>AI learns optimal intervention sequences from 1000+ users with similar physiological patterns</p></div>
-              <div class="card"><div class="num" style="color:#5A6FFF">Patent 4</div><h4>Closed-Loop Physiologic Correction System</h4><p>Measures intervention effectiveness through continuous wearable monitoring and automatically escalates protocols when corrections fail</p></div>
-              <div class="card"><div class="num" style="color:#5A6FFF">Patent 5</div><h4>AI-Driven Physiological Pattern Attribution</h4><p>Iterative causal analysis that drills down to root causes through dynamic questioning, validates attributions through outcome tracking, and learns from population-level intervention success patterns</p></div>
-            </div>
-            <div class="tier-label" style="color:#1EAA55">Real-Time Monitoring & Intervention</div>
-            <div class="card-grid">
-              <div class="card"><div class="num" style="color:#1EAA55">Patent 6</div><h4>Real-Time Monitoring & Care Team Coordination</h4><p>Continuous wearable monitoring triggers automated specialist interventions</p></div>
-              <div class="card"><div class="num" style="color:#1EAA55">Patent 7</div><h4>Cycle-Based AI Recalibration</h4><p>Monthly AI learning cycles differentiating clinical vs behavioral barriers</p></div>
-              <div class="card"><div class="num" style="color:#1EAA55">Patent 8</div><h4>Objective Data Validation</h4><p>Cross-validates self-reported symptoms against wearable data</p></div>
-            </div>
-            <div class="tier-label" style="color:#9686B9">Predictive Analytics & Emerging Tech</div>
-            <div class="card-grid">
-              <div class="card"><div class="num" style="color:#9686B9">Patent 9</div><h4>Pregnancy Risk Assessment</h4><p>Predictive analytics for adverse outcomes using pre-conception + wearable data</p></div>
-              <div class="card"><div class="num" style="color:#9686B9">Patent 10</div><h4>Smartphone Multi-Modal Assessment</h4><p>Facial analysis + voice patterns for comprehensive health assessment</p></div>
-              <div class="card"><div class="num" style="color:#9686B9">Patent 11</div><h4>Pregnancy Monitoring System</h4><p>Continuous AI monitoring with pre-conception data integration, early GD detection, first trimester viability assessment, and automated multi-specialist care coordination</p></div>
-            </div>
-          </div>
-
-          <div class="page-break"></div>
-
-          <div>
-            <h2>Competitive Moat</h2>
-            <div class="section-sub">Patent portfolio creates multi-directional competitive blocking</div>
-            <div class="moat-section">
-              <div class="moat-hub"><span class="badge">Conceivable \u2014 Protected Core</span></div>
-              <div class="moat-grid">
-                <div class="moat-card"><div class="name">Oura Ring</div><div class="blocked" style="color:#E24D47">Blocked by: Patent 9 (Pregnancy Risk Assessment)</div><div class="desc">Limited to basic tracking. We control intervention-based pregnancy health optimization.</div></div>
-                <div class="moat-card"><div class="name">Fertility Apps (Flo, Clue, Ava)</div><div class="blocked" style="color:#F59E0B">Blocked by: Patents 2, 3, 5 (Root Cause + Population Learning + Pattern Attribution)</div><div class="desc">Cannot develop AI-driven intervention systems.</div></div>
-                <div class="moat-card"><div class="name">AI Health Platforms (Whoop, Levels)</div><div class="blocked" style="color:#5A6FFF">Blocked by: Patents 1, 2, 8 (Score + Root Cause + Validation)</div><div class="desc">Cannot replicate holistic health assessment methodology.</div></div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h2>Licensing Opportunities</h2>
-            <div class="card-grid">
-              <div class="card"><h4>Healthcare Systems</h4><p>License predictive analytics for population health management</p></div>
-              <div class="card"><h4>Wearable Companies</h4><p>License AI interpretation layers for raw physiological data</p></div>
-              <div class="card"><h4>Pharma</h4><p>License population-based intervention optimization for clinical trials</p></div>
-              <div class="card"><h4>Digital Health Platforms</h4><p>License real-time monitoring and intervention coordination</p></div>
-            </div>
-          </div>
-
-          <div class="dark-section">
-            <div class="label">Market Validation</div>
-            <div class="dark-stats">
-              <div class="item"><div class="val">25+ years</div><div class="lbl">Clinical experience</div></div>
-              <div class="item"><div class="val">500K+</div><div class="lbl">BBT charts analyzed</div></div>
-              <div class="item"><div class="val">7,000+</div><div class="lbl">Patient outcome records</div></div>
-              <div class="item"><div class="val">240K+</div><div class="lbl">Data points in current platform</div></div>
-              <div class="item"><div class="val">US 10,467,382</div><div class="lbl">Granted patent (2019)</div></div>
-            </div>
-          </div>
-
-          <div>
-            <h2>Investment Implications</h2>
-            <div class="three-col">
-              <div class="col"><h3 style="color:#5A6FFF">IP Value Drivers</h3><ul><li style="color:#2A2828">First-mover advantage in AI fertility health</li><li>Dataset moat with high barriers to entry</li><li>Full-stack platform protection</li><li>Expandable beyond fertility to all women\u2019s health</li></ul></div>
-              <div class="col"><h3 style="color:#1EAA55">Revenue Protection</h3><ul><li>Patents protect core subscription functionality</li><li>B2B licensing creates additional revenue streams</li><li>Comprehensive portfolio increases acquisition value</li></ul></div>
-              <div class="col"><h3 style="color:#9686B9">Risk Mitigation</h3><ul><li>Competitive protection prevents direct replication</li><li>Freedom to operate with proprietary innovations</li><li>Clinical validation creates regulatory moat beyond IP</li></ul></div>
-            </div>
-          </div>
-        </div>
-      </body>
-      </html>
-    `);
+    printWindow.document.write(buildPdfHtml());
     printWindow.document.close();
-    // Wait for content to render before printing
     setTimeout(() => {
       printWindow.print();
     }, 400);
@@ -739,25 +913,15 @@ export default function ExecutiveSummaryPage() {
 
   return (
     <div ref={printRef} className="space-y-8 pb-12">
-      {/* Section 1 — Hero */}
       <HeroHeader />
-
-      {/* Section 2 — Portfolio Architecture */}
       <PortfolioArchitecture />
-
-      {/* Section 3 — Competitive Moat */}
+      <PatentTable />
       <CompetitiveMoat />
-
-      {/* Section 4 — Licensing Opportunities */}
+      <CompetitiveBlockingMatrix />
       <LicensingOpportunities />
-
-      {/* Section 5 — Market Validation */}
       <MarketValidation />
-
-      {/* Section 6 — Investment Implications */}
       <InvestmentImplications />
 
-      {/* Section 7 — Export Button */}
       <div className="flex justify-center pt-4">
         <button
           onClick={handleExportPDF}

@@ -50,6 +50,12 @@ export const EXISTING_PATENTS = [
   { number: "021", name: "Perimenopause Predictor", id: "patent-021", experience: "Perimenopause" },
   { number: "022", name: "HRT Response Monitoring", id: "patent-022", experience: "Perimenopause" },
   { number: "023", name: "Gut-Hormone Connection", id: "patent-023", experience: "Perimenopause" },
+  { number: "024", name: "Personalized Supplement Engine", id: "patent-024", experience: "Fertility" },
+  { number: "025", name: "Dual Face Scan", id: "patent-025", experience: "Pregnancy" },
+  { number: "026", name: "Partner Fertility Coordination", id: "patent-026", experience: "Fertility" },
+  { number: "027", name: "Lifecycle Transition Engine", id: "patent-027", experience: "Platform" },
+  { number: "028", name: "Voice Biomarker Engine", id: "patent-028", experience: "Postpartum" },
+  { number: "029", name: "Lab-to-AI Pipeline", id: "patent-029", experience: "Fertility" },
 ];
 
 // ═══════════════════════════════════════════════════
@@ -95,7 +101,7 @@ export const PATENT_COVERAGE_REVIEW: PatentCoverageEntry[] = [
   { experience: "Pregnancy", experienceColor: "#D4A843", feature: "Trimester-Adaptive Nutrition", coveredBy: [{ number: "010", name: "Trimester-Adaptive Care", id: "patent-010" }], gapStatus: "covered" },
   { experience: "Pregnancy", experienceColor: "#D4A843", feature: "Birth Preferences Builder", coveredBy: [], gapStatus: "gap", recommendation: "AI-assisted birth plan generation from health data — potentially novel but low competitive defensibility", priority: "Low" },
   { experience: "Pregnancy", experienceColor: "#D4A843", feature: "Pregnancy Community", coveredBy: [], gapStatus: "gap", recommendation: "Community platform — not patentable", priority: "Low" },
-  { experience: "Pregnancy", experienceColor: "#D4A843", feature: "Partner Dashboard", coveredBy: [], gapStatus: "gap", recommendation: "Partner health information bridge — similar concept to Parent/Guardian Bridge. Consider combined filing.", novelty: "Relationship-based health information sharing with consent controls", priority: "Medium" },
+  { experience: "Pregnancy", experienceColor: "#D4A843", feature: "Partner Dashboard", coveredBy: [{ number: "026", name: "Partner Fertility Coordination", id: "patent-026" }], gapStatus: "covered" },
   { experience: "Pregnancy", experienceColor: "#D4A843", feature: "Postpartum Preparation Timeline", coveredBy: [{ number: "008", name: "Pregnancy Transition Engine", id: "patent-008" }], gapStatus: "covered" },
 
   // ── POSTPARTUM (13 features) ──
@@ -107,9 +113,9 @@ export const PATENT_COVERAGE_REVIEW: PatentCoverageEntry[] = [
   { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Pelvic Floor Protocol", coveredBy: [], gapStatus: "gap", recommendation: "AI-guided pelvic floor rehabilitation with progress tracking — potentially novel method", novelty: "AI-adaptive pelvic floor rehabilitation protocol", priority: "Medium" },
   { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Sleep Architecture Recovery", coveredBy: [], gapStatus: "gap", recommendation: "Sleep optimization within newborn reality constraints — novel approach but difficult to patent method. Consider as part of recovery trajectory.", priority: "Low" },
   { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Food Train Coordinator", coveredBy: [], gapStatus: "gap", recommendation: "Community meal coordination — not patentable as method", priority: "Low" },
-  { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Voice-First Input", coveredBy: [], gapStatus: "gap", recommendation: "Voice-first health tracking for one-handed operation — potentially novel UX patent", novelty: "Voice-first maternal health data entry system", priority: "Medium" },
+  { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Voice-First Input", coveredBy: [{ number: "028", name: "Voice Biomarker Engine", id: "patent-028" }], gapStatus: "covered" },
   { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Return to Fertility Monitor", coveredBy: [{ number: "014", name: "Secondary Infertility Prevention", id: "patent-014" }], gapStatus: "covered" },
-  { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Partner Dashboard", coveredBy: [], gapStatus: "gap", recommendation: "See Pregnancy Partner Dashboard — combine into single filing", priority: "Medium" },
+  { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Partner Dashboard", coveredBy: [{ number: "026", name: "Partner Fertility Coordination", id: "patent-026" }], gapStatus: "covered" },
   { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Crisis Response Protocol", coveredBy: [{ number: "012", name: "PPD Detection System", id: "patent-012" }], gapStatus: "covered" },
   { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "4-Phase Recovery Framework", coveredBy: [{ number: "013", name: "Recovery Trajectory Modeling", id: "patent-013" }], gapStatus: "covered" },
 
@@ -121,9 +127,9 @@ export const PATENT_COVERAGE_REVIEW: PatentCoverageEntry[] = [
   { experience: "Perimenopause", experienceColor: "#D4944A", feature: "GI Health Integration", coveredBy: [{ number: "023", name: "Gut-Hormone Connection", id: "patent-023" }], gapStatus: "covered" },
   { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Seren's Transition Space", coveredBy: [{ number: "012", name: "PPD Detection System", id: "patent-012" }], gapStatus: "partial", recommendation: "Adapted PPD detection for perimenopausal depression is a novel extension — consider amendment or new filing", priority: "High" },
   { experience: "Perimenopause", experienceColor: "#D4944A", feature: "HRT Decision Support & Partner Referral", coveredBy: [{ number: "022", name: "HRT Response Monitoring", id: "patent-022" }], gapStatus: "covered" },
-  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Day 3 Lab Integration", coveredBy: [], gapStatus: "gap", recommendation: "Lab integration pipeline is shared infrastructure — consider filing for integrated wearable+lab confirmation system", novelty: "Combining continuous wearable data with at-home lab results for perimenopause confirmation", priority: "Medium" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Day 3 Lab Integration", coveredBy: [{ number: "029", name: "Lab-to-AI Pipeline", id: "patent-029" }], gapStatus: "covered" },
   { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Bone Health Awareness", coveredBy: [], gapStatus: "gap", recommendation: "Low patentability — monitoring and recommendations based on known clinical guidelines", priority: "Low" },
-  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Cardiovascular Awareness", coveredBy: [{ number: "006", name: "Halo Ring Integration", id: "draft-06" }], gapStatus: "partial", recommendation: "Face scan BP + Halo Ring glucose correlation for cardiovascular risk assessment may be novel", priority: "Medium" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Cardiovascular Awareness", coveredBy: [{ number: "006", name: "Halo Ring Integration", id: "draft-06" }, { number: "025", name: "Dual Face Scan", id: "patent-025" }], gapStatus: "covered" },
 
   // ── MENOPAUSE & BEYOND (7 features) ──
   { experience: "Menopause & Beyond", experienceColor: "#2A8A8A", feature: "Longevity Wellness Score", coveredBy: [{ number: "001", name: "Conceivable Score", id: "draft-01" }], gapStatus: "covered" },
@@ -193,13 +199,13 @@ export const RECOMMENDED_NEW_PATENTS: RecommendedPatent[] = [
 
 export const PATENT_REVIEW_SUMMARY = {
   totalFeatures: 65,
-  covered: 34,
-  partial: 10,
-  gaps: 21,
-  existingPatents: 23,
+  covered: 39,
+  partial: 9,
+  gaps: 17,
+  existingPatents: 29,
   recommendedNew: 5,
   criticalGaps: 1,
-  highPriorityGaps: 5,
+  highPriorityGaps: 3,
   lastReviewDate: "2026-03-12",
-  reviewNote: "IP protection is time-sensitive across 65 features in 7 experiences. Patent 021 (Perimenopause Predictor) is the highest priority new filing — novel clinical insight with first-mover advantage. Patents 022-023 strengthen the perimenopause/menopause IP moat. Doctor's Report Generator spanning decades of longitudinal data is a strong new filing candidate.",
+  reviewNote: "29 patent portfolio now covers the full lifecycle: First Period through Menopause & Beyond. Patent 027 (Lifecycle Transition Engine) is CRITICAL — it protects the entire platform architecture. Patents 025 (Dual Face Scan), 028 (Voice Biomarker Engine), and 029 (Lab-to-AI Pipeline) close significant coverage gaps. Remaining gaps are primarily content/community features with low patentability. Doctor's Report Generator spanning decades of longitudinal data remains a strong candidate for Patent 030.",
 };

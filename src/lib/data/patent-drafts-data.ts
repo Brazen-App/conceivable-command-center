@@ -559,6 +559,114 @@ export const PATENT_DRAFTS: PatentDraftEntry[] = [
       }
     ],
     notes: "Medium priority. Novel connection between GI signals and perimenopause. Recently validated at 2025 Menopause Society Annual Meeting."
+  },
+  {
+    id: "patent-024",
+    title: "AI-Driven Personalized Supplement Recommendation from Continuous Physiological Data",
+    shortTitle: "Personalized Supplement Engine",
+    status: "draft",
+    patentRef: "US-APP-2026-PENDING",
+    category: "supplement",
+    filingPriority: "high",
+    lastEdited: "2026-03-12",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System generating individualized supplement recommendations (specific nutrients, bioavailable forms, and dosages) from continuous wearable physiological data (BBT, HRV, glucose, sleep), cycle characteristic analysis, dietary intake, and clinical history. Recommendations adapt per-cycle based on physiological response to supplementation.\n\nNovel claim: Real-time personalized supplement protocol generation from continuous multi-modal physiological monitoring with cycle-over-cycle efficacy tracking.\n\nThe system analyzes continuous physiological streams from the Halo Ring and other wearables to identify nutrient deficiency signatures — for example, low luteal phase temperatures suggesting progesterone support needs, disrupted HRV patterns indicating magnesium or B6 deficiency, or glucose variability pointing to chromium or inositol requirements. Each supplement recommendation includes specific nutrient form (e.g., methylfolate vs folic acid, magnesium glycinate vs oxide), dosage calibrated to the user's body weight and absorption patterns, and optimal timing within her cycle.\n\nCycle-over-cycle efficacy tracking measures whether supplementation produces measurable physiological improvements: did luteal temperatures normalize? Did HRV improve? Did sleep architecture shift? If a supplement protocol fails to produce measurable change within 2-3 cycles, the system automatically adjusts — switching forms, adjusting doses, or escalating to clinical referral.\n\nThis patent directly protects Conceivable's supplement revenue stream and blocks competitors (Flo, Clue, Natural Cycles, Oura) from adding personalized supplement features to their tracking tools. No existing patent covers the closed loop from continuous wearable data → personalized supplement protocol → measured physiological response → protocol adjustment.\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "High priority — directly protects supplement revenue stream. Blocks competitors from adding personalized supplement features to their tracking tools."
+  },
+  {
+    id: "patent-025",
+    title: "Dual-Purpose Biometric Face Scan System for Simultaneous Cardiovascular and Psychological Biomarker Extraction",
+    shortTitle: "Dual Face Scan",
+    status: "draft",
+    patentRef: "US-APP-2026-PENDING",
+    category: "software_ai",
+    filingPriority: "high",
+    lastEdited: "2026-03-12",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System that performs a single face scan and simultaneously extracts TWO independent clinical data streams: blood pressure estimation from facial blood flow analysis AND emotional affect/sentiment analysis from facial expression, micro-expression, skin pallor, and eye contact patterns. One user action, two clinical outputs.\n\nUsed in pregnancy (BP monitoring + anxiety detection), postpartum (BP normalization + PPD facial affect detection), and perimenopause (cardiovascular monitoring + mood assessment).\n\nNovel claim: Simultaneous extraction of cardiovascular and psychological biomarkers from a single non-invasive facial scan, with longitudinal trending of both data streams.\n\nThis is the trojan horse that makes PPD face-scan detection possible without additional user burden. The user thinks she's checking her blood pressure — the system is also assessing her emotional state. Combined with Patent 012 (PPD Detection), this creates a passive mental health screening system embedded in routine health checks.\n\nNo existing patent covers dual-purpose cardiovascular + psychological extraction from a single facial scan. Existing face scan patents focus on single outputs (BP OR emotion, never both simultaneously).\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "High priority — trojan horse for PPD face-scan detection. One scan, two clinical outputs. Cross-experience: Pregnancy, Postpartum, Perimenopause, Menopause."
+  },
+  {
+    id: "patent-026",
+    title: "Coordinated Multi-Partner Reproductive Optimization System with AI-Driven Joint Intervention Planning",
+    shortTitle: "Partner Fertility Coordination",
+    status: "draft",
+    patentRef: "US-APP-2026-PENDING",
+    category: "software_ai",
+    filingPriority: "medium",
+    lastEdited: "2026-03-12",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System simultaneously optimizing both partners' reproductive health through independent physiological monitoring streams (her: wearable cycle data, BBT, HRV, glucose; his: semen analysis results, lifestyle factors, supplement compliance) coordinated by an AI care team that generates joint recommendations.\n\nExample: if his morphology is low AND her luteal phase is short, the system prioritizes her luteal support AND his antioxidant protocol simultaneously, with timing coordination around her fertile window.\n\nNovel claim: AI-coordinated dual-partner reproductive health optimization from independent data streams with joint intervention planning.\n\nEvery existing fertility tool treats partners independently. No existing system coordinates interventions across two partners' physiological data to optimize shared reproductive outcomes. The male partner's data (semen analysis, lifestyle, supplement compliance) directly influences the female partner's protocol prioritization and vice versa.\n\nThe system maintains two independent health profiles with a shared reproductive outcome model. When new data arrives from either partner, the joint optimization model recalculates priorities for both. This enables scenarios like: 'His motility improved 15% — that shifts your priority from conception timing to luteal phase support.'\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "Medium priority — differentiates from every single-user fertility tool. No competitor has dual-partner optimization."
+  },
+  {
+    id: "patent-027",
+    title: "Automated Experience Lifecycle Transition System with Physiological State Detection and Care Continuity",
+    shortTitle: "Lifecycle Transition Engine",
+    status: "draft",
+    patentRef: "US-APP-2026-PENDING",
+    category: "software_ai",
+    filingPriority: "critical",
+    lastEdited: "2026-03-12",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System that detects physiological transition points and automatically reconfigures the user's health experience — including scoring parameters, care team behavior, monitoring thresholds, and content delivery — while preserving complete data continuity.\n\nTransitions include:\n- First Period → Periods: cycle establishment detected from regularity patterns\n- Periods → PCOS/Endo: condition signature detected by Patent 017\n- Periods → Fertility: user intent + optimization shift\n- Fertility → Pregnancy: conception detected from BBT/HRV changes before missed period\n- Pregnancy → Postpartum: delivery detected from physiological signature\n- Postpartum → Periods: cycle return + recovery milestones complete\n- Periods → Perimenopause: algorithm detection from BBT + cycle variability (Patent 021)\n- Perimenopause → Menopause: 12 months amenorrhea confirmed\n\nNovel claim: Automated health platform reconfiguration triggered by physiological state detection with full data continuity and care team behavior adaptation across lifecycle transitions.\n\nThis IS the lifecycle platform architecture. Without this patent, someone could copy the experience model. The key innovation is that transitions are DETECTED, not manually selected — the system recognizes that the user's physiology has shifted and automatically adapts every aspect of the care experience.\n\nData continuity means: when a woman transitions from Fertility to Pregnancy, her 18 months of cycle data, intervention response patterns, supplement efficacy data, and care team context all carry forward. The pregnancy experience starts with deep knowledge of her body, not a blank slate.\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "CRITICAL priority — this IS the lifecycle platform architecture. Without this patent, someone could copy the experience model. Covers ALL experiences."
+  },
+  {
+    id: "patent-028",
+    title: "Voice-Derived Physiological and Psychological Biomarker Extraction During AI Care Interactions",
+    shortTitle: "Voice Biomarker Engine",
+    status: "draft",
+    patentRef: "US-APP-2026-PENDING",
+    category: "software_ai",
+    filingPriority: "high",
+    lastEdited: "2026-03-12",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System that extracts clinical biomarkers from voice during routine care team interactions — speech rate, pitch range, pause patterns, vocal energy, linguistic complexity, emotional valence — while simultaneously processing the conversational content for care purposes.\n\nThe user is having a conversation with her AI care team member; the system is simultaneously analyzing her voice for depression markers, anxiety indicators, cognitive function signals, and stress levels. The care interaction IS the clinical assessment.\n\nNovel claim: Passive extraction of multi-dimensional vocal biomarkers during AI health companion voice interactions, with longitudinal trending and clinical threshold alerting.\n\nThis makes voice-first postpartum input a dual-purpose clinical tool. When a new mom tells Luna about her feeding schedule at 3am, the system simultaneously tracks: what she's saying (care content) AND how she's saying it (clinical biomarkers). Declining vocal energy, increasing pause patterns, reduced linguistic complexity, and flattened pitch range are all validated depression indicators.\n\nAlso applicable to perimenopause depression detection and First Period emotional monitoring. Seren can detect distress in a teen's voice during a casual conversation about school.\n\nThe longitudinal trending is key — one voice sample means little, but vocal biomarker trajectories over weeks reveal clinical patterns that voice-only snapshots miss.\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "High priority — makes voice-first interactions dual-purpose clinical tools. Cross-experience: Postpartum, Perimenopause, First Period, all voice interactions."
+  },
+  {
+    id: "patent-029",
+    title: "At-Home Lab Result Integration with AI Contextual Interpretation and Automated Care Protocol Adjustment",
+    shortTitle: "Lab-to-AI Pipeline",
+    status: "draft",
+    patentRef: "US-APP-2026-PENDING",
+    category: "software_ai",
+    filingPriority: "high",
+    lastEdited: "2026-03-12",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System where at-home diagnostic lab results (hormone panels, semen analysis, metabolic panels, thyroid panels) are electronically received, contextualized by an AI system against the user's continuous physiological monitoring data and health history, interpreted through the care team in plain language, and used to automatically adjust care protocols.\n\nDifferent from simply displaying lab results — the AI INTERPRETS them against her personal data and ACTS on them.\n\nExample: FSH comes back elevated → Atlas correlates with 6 months of rising follicular BBTs and increasing cycle variability → Kai explains what this means in context of her personal trend → Olive adjusts nutrition for perimenopause-specific support → system transitions her experience.\n\nNovel claim: Automated clinical lab result integration with continuous physiological monitoring data, AI contextual interpretation, personalized plain-language delivery, and care protocol auto-adjustment.\n\nThis protects the lab partnership revenue model and blocks competitors from building smart lab integration. Existing lab result apps (Everlywell, LetsGetChecked) display results with generic reference ranges. We interpret results against months or years of personal physiological data and automatically adjust care protocols.\n\nApplicable to: Fertility (Day 3 labs, AMH), Perimenopause (hormone panels), Menopause (bone density, cardiovascular panels), and all experiences with lab partnerships.\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "High priority — protects lab partnership revenue model. Blocks competitors from building smart lab integration."
   }
 ];
 

@@ -47,6 +47,9 @@ export const EXISTING_PATENTS = [
   { number: "018", name: "First Period Predictor", id: "patent-018", experience: "First Period" },
   { number: "019", name: "Age-Adaptive Care Team", id: "patent-019", experience: "First Period" },
   { number: "020", name: "Lifetime Data Architecture", id: "patent-020", experience: "First Period" },
+  { number: "021", name: "Perimenopause Predictor", id: "patent-021", experience: "Perimenopause" },
+  { number: "022", name: "HRT Response Monitoring", id: "patent-022", experience: "Perimenopause" },
+  { number: "023", name: "Gut-Hormone Connection", id: "patent-023", experience: "Perimenopause" },
 ];
 
 // ═══════════════════════════════════════════════════
@@ -109,6 +112,27 @@ export const PATENT_COVERAGE_REVIEW: PatentCoverageEntry[] = [
   { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Partner Dashboard", coveredBy: [], gapStatus: "gap", recommendation: "See Pregnancy Partner Dashboard — combine into single filing", priority: "Medium" },
   { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "Crisis Response Protocol", coveredBy: [{ number: "012", name: "PPD Detection System", id: "patent-012" }], gapStatus: "covered" },
   { experience: "Postpartum", experienceColor: "#7CAE7A", feature: "4-Phase Recovery Framework", coveredBy: [{ number: "013", name: "Recovery Trajectory Modeling", id: "patent-013" }], gapStatus: "covered" },
+
+  // ── PERIMENOPAUSE (10 features) ──
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Perimenopause Early Detection", coveredBy: [{ number: "021", name: "Perimenopause Predictor", id: "patent-021" }], gapStatus: "covered" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Transition Wellness Score", coveredBy: [{ number: "001", name: "Conceivable Score", id: "draft-01" }], gapStatus: "covered" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Root Cause Signal Resolution", coveredBy: [{ number: "002", name: "Root Cause Analysis", id: "draft-02" }, { number: "004", name: "Root Cause Resolution", id: "draft-04" }], gapStatus: "covered" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Transition-Synced Nutrition", coveredBy: [{ number: "005", name: "Supplement Personalization", id: "draft-05" }], gapStatus: "partial", recommendation: "Phytoestrogen-specific and GI-nutrition claims may need separate coverage", priority: "Medium" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "GI Health Integration", coveredBy: [{ number: "023", name: "Gut-Hormone Connection", id: "patent-023" }], gapStatus: "covered" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Seren's Transition Space", coveredBy: [{ number: "012", name: "PPD Detection System", id: "patent-012" }], gapStatus: "partial", recommendation: "Adapted PPD detection for perimenopausal depression is a novel extension — consider amendment or new filing", priority: "High" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "HRT Decision Support & Partner Referral", coveredBy: [{ number: "022", name: "HRT Response Monitoring", id: "patent-022" }], gapStatus: "covered" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Day 3 Lab Integration", coveredBy: [], gapStatus: "gap", recommendation: "Lab integration pipeline is shared infrastructure — consider filing for integrated wearable+lab confirmation system", novelty: "Combining continuous wearable data with at-home lab results for perimenopause confirmation", priority: "Medium" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Bone Health Awareness", coveredBy: [], gapStatus: "gap", recommendation: "Low patentability — monitoring and recommendations based on known clinical guidelines", priority: "Low" },
+  { experience: "Perimenopause", experienceColor: "#D4944A", feature: "Cardiovascular Awareness", coveredBy: [{ number: "006", name: "Halo Ring Integration", id: "draft-06" }], gapStatus: "partial", recommendation: "Face scan BP + Halo Ring glucose correlation for cardiovascular risk assessment may be novel", priority: "Medium" },
+
+  // ── MENOPAUSE & BEYOND (7 features) ──
+  { experience: "Menopause & Beyond", experienceColor: "#2A8A8A", feature: "Longevity Wellness Score", coveredBy: [{ number: "001", name: "Conceivable Score", id: "draft-01" }], gapStatus: "covered" },
+  { experience: "Menopause & Beyond", experienceColor: "#2A8A8A", feature: "HRT Monitoring", coveredBy: [{ number: "022", name: "HRT Response Monitoring", id: "patent-022" }], gapStatus: "covered" },
+  { experience: "Menopause & Beyond", experienceColor: "#2A8A8A", feature: "Cardiovascular Health Monitoring", coveredBy: [{ number: "006", name: "Halo Ring Integration", id: "draft-06" }], gapStatus: "partial", recommendation: "Long-term cardiovascular trend monitoring from wearable data has some novelty", priority: "Medium" },
+  { experience: "Menopause & Beyond", experienceColor: "#2A8A8A", feature: "Bone Health Tracking", coveredBy: [], gapStatus: "gap", recommendation: "DEXA result tracking + nutrition + exercise correlation — limited patentability", priority: "Low" },
+  { experience: "Menopause & Beyond", experienceColor: "#2A8A8A", feature: "Cognitive Health Support", coveredBy: [], gapStatus: "gap", recommendation: "Cognitive engagement tracking from wearable + sleep data correlation has some novelty", priority: "Medium" },
+  { experience: "Menopause & Beyond", experienceColor: "#2A8A8A", feature: "Sexual Health & Intimate Wellness", coveredBy: [], gapStatus: "gap", recommendation: "Content/support feature — limited patentability", priority: "Low" },
+  { experience: "Menopause & Beyond", experienceColor: "#2A8A8A", feature: "Doctor's Report Generator", coveredBy: [], gapStatus: "partial", recommendation: "Multi-specialty longitudinal health report spanning decades of wearable data is highly novel — consider filing", novelty: "Comprehensive multi-decade health report generator from continuous wearable monitoring", priority: "High" },
 ];
 
 // ═══════════════════════════════════════════════════
@@ -168,14 +192,14 @@ export const RECOMMENDED_NEW_PATENTS: RecommendedPatent[] = [
 // ═══════════════════════════════════════════════════
 
 export const PATENT_REVIEW_SUMMARY = {
-  totalFeatures: 48,
-  covered: 26,
-  partial: 5,
-  gaps: 17,
-  existingPatents: 20,
+  totalFeatures: 65,
+  covered: 34,
+  partial: 10,
+  gaps: 21,
+  existingPatents: 23,
   recommendedNew: 5,
   criticalGaps: 1,
-  highPriorityGaps: 3,
+  highPriorityGaps: 5,
   lastReviewDate: "2026-03-12",
-  reviewNote: "IP protection is time-sensitive. Critical and High priority filings should be initiated immediately. Patent 021 (Minor Safety) is the highest priority — this is a first-mover advantage that erodes with each competitor who enters the minor health tech space.",
+  reviewNote: "IP protection is time-sensitive across 65 features in 7 experiences. Patent 021 (Perimenopause Predictor) is the highest priority new filing — novel clinical insight with first-mover advantage. Patents 022-023 strengthen the perimenopause/menopause IP moat. Doctor's Report Generator spanning decades of longitudinal data is a strong new filing candidate.",
 };

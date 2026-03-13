@@ -58,6 +58,20 @@ import {
   LIFE_NAVIGATION_FRAMING,
   FIRST_PERIOD_SUPPLY_PROGRAM,
 } from "@/lib/data/first-period-features-data";
+import {
+  PERIMENOPAUSE_IP_COVERAGE,
+  PERIMENOPAUSE_CARE_TEAM,
+  PERIMENOPAUSE_MARKET_DATA,
+  PERIMENOPAUSE_ENGINEERING,
+  PERIMENOPAUSE_TRANSITIONS,
+  PERIMENOPAUSE_ROADMAP,
+} from "@/lib/data/perimenopause-features-data";
+import {
+  MENOPAUSE_IP_COVERAGE,
+  MENOPAUSE_CARE_TEAM,
+  MENOPAUSE_TRANSITIONS,
+  MENOPAUSE_ROADMAP,
+} from "@/lib/data/menopause-features-data";
 
 /* ─── Types ─── */
 interface Experience {
@@ -142,6 +156,14 @@ const PERIOD_TABS = [
 ];
 
 const FIRST_PERIOD_TABS = [
+  ...BASE_TABS,
+];
+
+const PERIMENOPAUSE_TABS = [
+  ...BASE_TABS,
+];
+
+const MENOPAUSE_TABS = [
   ...BASE_TABS,
 ];
 
@@ -351,6 +373,8 @@ function OverviewTab({
   const isPostpartum = experience.slug === "postpartum";
   const isPeriods = experience.slug === "periods";
   const isFirstPeriod = experience.slug === "first-period";
+  const isPerimenopause = experience.slug === "perimenopause";
+  const isMenopause = experience.slug === "menopause-beyond";
 
   return (
     <div className="space-y-6">
@@ -441,7 +465,7 @@ function OverviewTab({
       </div>
 
       {/* Lifecycle Cross-Links */}
-      {(isPregnancy || isPostpartum || isPeriods || isFirstPeriod) && (
+      {(isPregnancy || isPostpartum || isPeriods || isFirstPeriod || isPerimenopause || isMenopause) && (
         <div
           className="rounded-2xl p-6"
           style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
@@ -462,6 +486,14 @@ function OverviewTab({
               { name: "PCOS", slug: "pcos", color: "#9686B9", icon: "\u{1F52C}" },
               { name: "Fertility", slug: "fertility", color: "#5A6FFF", icon: "\u2728" },
               { name: "Perimenopause", slug: "perimenopause", color: "#D4944A", icon: "\u{1F525}" },
+            ] : isPerimenopause ? [
+              { name: "Periods", slug: "periods", color: "#E24D47", icon: "\u{1F4AB}" },
+              { name: "Perimenopause", slug: "perimenopause", color: "#D4944A", icon: "\u{1F525}" },
+              { name: "Menopause & Beyond", slug: "menopause-beyond", color: "#2A8A8A", icon: "\u{1F30A}" },
+            ] : isMenopause ? [
+              { name: "Perimenopause", slug: "perimenopause", color: "#D4944A", icon: "\u{1F525}" },
+              { name: "Menopause & Beyond", slug: "menopause-beyond", color: "#2A8A8A", icon: "\u{1F30A}" },
+              { name: "First Period", slug: "first-period", color: "#F4A7B9", icon: "\u{1F338}", label: "Next Generation" },
             ] : [
               { name: "Fertility", slug: "fertility", color: "#5A6FFF", icon: "\u2728" },
               { name: "Pregnancy", slug: "pregnancy", color: "#D4A843", icon: "\u{1F31F}" },
@@ -500,6 +532,10 @@ function OverviewTab({
               ? "Get her at 10. Keep her for 40 years. Every data point she generates from day one travels with her through every Conceivable experience for the rest of her life. The First Period experience is the entry point for the next generation."
               : isPeriods
               ? "The Period experience is the central hub. Most women enter here. The system naturally identifies when she needs a specialized experience — PCOS, Endometriosis, Fertility, or Perimenopause. One entry point, decades of care."
+              : isPerimenopause
+              ? "The transition nobody prepares women for. Detected by our prediction algorithm from continuous Halo Ring data — often years before clinical diagnosis. The foundation she built at 15 pays off at 45."
+              : isMenopause
+              ? "The relationship never ends. She's been with Conceivable since she was 10 or 15 or 25 or 40. Now she's 55. Her daughter just got her first period. Two generations. Lifetime value squared."
               : "The Conceivable lifecycle is continuous. Data flows forward — pregnancy data informs postpartum recovery, postpartum data optimizes future fertility. She never starts from scratch."}
           </p>
         </div>
@@ -1824,6 +1860,266 @@ function OverviewTab({
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Perimenopause Care Team */}
+      {isPerimenopause && (
+        <div className="rounded-2xl p-6" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#D4944A" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>Perimenopause Care Team</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {PERIMENOPAUSE_CARE_TEAM.map((agent) => (
+              <div key={agent.name} className="rounded-xl p-4" style={{ backgroundColor: "var(--background)", border: `1px solid ${agent.color}25` }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold" style={{ backgroundColor: `${agent.color}18`, color: agent.color }}>{agent.name[0]}</div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{agent.name}</p>
+                    <p className="text-[10px] font-medium" style={{ color: agent.color }}>{agent.role}</p>
+                  </div>
+                </div>
+                <p className="text-[11px] leading-relaxed" style={{ color: "var(--muted)" }}>{agent.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Perimenopause Market Context */}
+      {isPerimenopause && (
+        <div className="rounded-2xl p-6" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#D4944A" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>Market Context</h3>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {[
+              { label: "Market Size", value: PERIMENOPAUSE_MARKET_DATA.marketSize, color: "#D4944A" },
+              { label: "Growth", value: PERIMENOPAUSE_MARKET_DATA.growth, color: "#1EAA55" },
+              { label: "Global Reach", value: PERIMENOPAUSE_MARKET_DATA.globalReach, color: "#5A6FFF" },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-lg p-3 text-center" style={{ backgroundColor: `${stat.color}08` }}>
+                <p className="text-sm font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-[9px] font-medium uppercase tracking-wider" style={{ color: stat.color }}>{stat.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2 mb-4">
+            {PERIMENOPAUSE_MARKET_DATA.competitors.map((c) => (
+              <div key={c.name} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}>
+                <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>{c.name}</span>
+                <span className="text-[10px]" style={{ color: "var(--muted)" }}>{c.model}</span>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg p-3" style={{ backgroundColor: "#D4944A08", border: "1px solid #D4944A20" }}>
+            <p className="text-[11px] leading-relaxed" style={{ color: "#D4944A" }}>
+              <strong>Our Advantage:</strong> {PERIMENOPAUSE_MARKET_DATA.ourAdvantage}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Perimenopause Engineering Components */}
+      {isPerimenopause && (
+        <div className="rounded-2xl p-6" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#D4944A" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>Engineering Components</h3>
+            <Link href="/departments/engineering/kanban" className="flex items-center gap-1 text-[10px] font-medium ml-auto" style={{ color: "#D4944A" }}>
+              <ExternalLink size={10} /> View on Kanban
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {PERIMENOPAUSE_ENGINEERING.map((comp) => (
+              <div key={comp.name} className="rounded-xl p-4" style={{ backgroundColor: "var(--background)", border: `1px solid ${comp.color}25` }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-sm font-semibold flex-1" style={{ color: "var(--foreground)" }}>{comp.name}</p>
+                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: `${comp.color}14`, color: comp.color }}>{comp.priority}</span>
+                </div>
+                <p className="text-[11px] leading-relaxed mb-2" style={{ color: "var(--muted)" }}>{comp.description}</p>
+                <p className="text-[10px]" style={{ color: comp.color }}><strong>Status:</strong> {comp.status}</p>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {comp.dependencies.map((dep) => (
+                    <span key={dep} className="text-[9px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--muted)" }}>{dep}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Perimenopause Transitions */}
+      {isPerimenopause && (
+        <div className="rounded-2xl p-6" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#D4944A" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>Experience Transitions</h3>
+          </div>
+          <div className="space-y-3">
+            {PERIMENOPAUSE_TRANSITIONS.map((trans) => (
+              <div key={`${trans.from}-${trans.to}`} className="rounded-xl p-4" style={{ backgroundColor: "var(--background)", border: `1px solid ${trans.color}25` }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>{trans.from}</span>
+                  <ArrowRight size={10} style={{ color: "var(--muted)" }} />
+                  <span className="text-xs font-semibold" style={{ color: trans.color }}>{trans.to}</span>
+                </div>
+                <p className="text-[10px] mb-1" style={{ color: "var(--muted)" }}><strong>Trigger:</strong> {trans.trigger}</p>
+                <p className="text-[10px]" style={{ color: "var(--muted)" }}>{trans.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Perimenopause Roadmap */}
+      {isPerimenopause && (
+        <div className="rounded-2xl p-6" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#D4944A" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>Implementation Roadmap</h3>
+            <Link href="/departments/product/experiences/perimenopause/prediction-algorithm" className="flex items-center gap-1 text-[10px] font-medium ml-auto" style={{ color: "#D4944A" }}>
+              <ExternalLink size={10} /> Prediction Algorithm Spec
+            </Link>
+          </div>
+          <div className="relative">
+            <div className="absolute left-[19px] top-8 bottom-4 w-px" style={{ backgroundColor: "#D4944A30" }} />
+            <div className="space-y-4">
+              {PERIMENOPAUSE_ROADMAP.map((p, i) => (
+                <div key={p.phase} className="flex gap-4 relative">
+                  <div className="flex flex-col items-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold z-10" style={{ backgroundColor: "#D4944A18", color: "#D4944A" }}>{i + 1}</div>
+                  </div>
+                  <div className="flex-1 rounded-xl p-4" style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="text-sm font-bold" style={{ color: "var(--foreground)" }}>{p.phase}</p>
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: "#D4944A14", color: "#D4944A" }}>{p.label}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {p.items.map((item) => (
+                        <span key={item} className="text-[10px] px-2 py-0.5 rounded-md" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--foreground)" }}>{item}</span>
+                      ))}
+                    </div>
+                    <p className="text-[10px] mt-2" style={{ color: "#D4944A" }}><strong>Deps:</strong> {p.dependencies}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-3 mt-6">
+            {[
+              { label: "Features", value: "10", color: "#D4944A" },
+              { label: "SPRINT Items", value: "1", color: "#E24D47" },
+              { label: "Care Team", value: "6 agents", color: "#5A6FFF" },
+              { label: "Patents", value: "3 new", color: "#1EAA55" },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-lg p-3 text-center" style={{ backgroundColor: `${stat.color}08` }}>
+                <p className="text-lg font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-[9px] font-medium uppercase tracking-wider" style={{ color: stat.color }}>{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Menopause Care Team */}
+      {isMenopause && (
+        <div className="rounded-2xl p-6" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#2A8A8A" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>Menopause & Beyond Care Team</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {MENOPAUSE_CARE_TEAM.map((agent) => (
+              <div key={agent.name} className="rounded-xl p-4" style={{ backgroundColor: "var(--background)", border: `1px solid ${agent.color}25` }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold" style={{ backgroundColor: `${agent.color}18`, color: agent.color }}>{agent.name[0]}</div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{agent.name}</p>
+                    <p className="text-[10px] font-medium" style={{ color: agent.color }}>{agent.role}</p>
+                  </div>
+                </div>
+                <p className="text-[11px] leading-relaxed" style={{ color: "var(--muted)" }}>{agent.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Menopause Transitions */}
+      {isMenopause && (
+        <div className="rounded-2xl p-6" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#2A8A8A" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>Experience Transitions</h3>
+          </div>
+          <div className="space-y-3">
+            {MENOPAUSE_TRANSITIONS.map((trans) => (
+              <div key={`${trans.from}-${trans.to}`} className="rounded-xl p-4" style={{ backgroundColor: "var(--background)", border: `1px solid ${trans.color}25` }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>{trans.from}</span>
+                  <ArrowRight size={10} style={{ color: "var(--muted)" }} />
+                  <span className="text-xs font-semibold" style={{ color: trans.color }}>{trans.to}</span>
+                </div>
+                <p className="text-[10px] mb-1" style={{ color: "var(--muted)" }}><strong>Trigger:</strong> {trans.trigger}</p>
+                <p className="text-[10px]" style={{ color: "var(--muted)" }}>{trans.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Menopause Roadmap */}
+      {isMenopause && (
+        <div className="rounded-2xl p-6" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#2A8A8A" }} />
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--foreground)" }}>Implementation Roadmap</h3>
+          </div>
+          <div className="relative">
+            <div className="absolute left-[19px] top-8 bottom-4 w-px" style={{ backgroundColor: "#2A8A8A30" }} />
+            <div className="space-y-4">
+              {MENOPAUSE_ROADMAP.map((p, i) => (
+                <div key={p.phase} className="flex gap-4 relative">
+                  <div className="flex flex-col items-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold z-10" style={{ backgroundColor: "#2A8A8A18", color: "#2A8A8A" }}>{i + 1}</div>
+                  </div>
+                  <div className="flex-1 rounded-xl p-4" style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="text-sm font-bold" style={{ color: "var(--foreground)" }}>{p.phase}</p>
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: "#2A8A8A14", color: "#2A8A8A" }}>{p.label}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {p.items.map((item) => (
+                        <span key={item} className="text-[10px] px-2 py-0.5 rounded-md" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", color: "var(--foreground)" }}>{item}</span>
+                      ))}
+                    </div>
+                    <p className="text-[10px] mt-2" style={{ color: "#2A8A8A" }}><strong>Deps:</strong> {p.dependencies}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mt-6">
+            {[
+              { label: "Features", value: "7", color: "#2A8A8A" },
+              { label: "Care Team", value: "6 agents", color: "#5A6FFF" },
+              { label: "Lifetime Data", value: "Decades", color: "#D4A843" },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-lg p-3 text-center" style={{ backgroundColor: `${stat.color}08` }}>
+                <p className="text-lg font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-[9px] font-medium uppercase tracking-wider" style={{ color: stat.color }}>{stat.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg p-3 mt-4" style={{ backgroundColor: "#2A8A8A08", border: "1px solid #2A8A8A20" }}>
+            <p className="text-[11px] leading-relaxed" style={{ color: "#2A8A8A" }}>
+              <strong>The Generational Loop:</strong> She&apos;s been with Conceivable since she was 10. Now she&apos;s 55. Her daughter just got her first period. Two generations. Lifetime value squared.
+            </p>
           </div>
         </div>
       )}
@@ -3360,7 +3656,9 @@ function IPCoverageTab({ experience }: { experience: Experience }) {
   const isPostpartum = experience.slug === "postpartum";
   const isPeriods = experience.slug === "periods";
   const isFirstPeriod = experience.slug === "first-period";
-  const ipCoverage = isPregnancy ? PREGNANCY_IP_COVERAGE : isPostpartum ? POSTPARTUM_IP_COVERAGE : isPeriods ? PERIOD_IP_COVERAGE : isFirstPeriod ? FIRST_PERIOD_IP_COVERAGE : null;
+  const isPerimenopause = experience.slug === "perimenopause";
+  const isMenopause = experience.slug === "menopause-beyond";
+  const ipCoverage = isPregnancy ? PREGNANCY_IP_COVERAGE : isPostpartum ? POSTPARTUM_IP_COVERAGE : isPeriods ? PERIOD_IP_COVERAGE : isFirstPeriod ? FIRST_PERIOD_IP_COVERAGE : isPerimenopause ? PERIMENOPAUSE_IP_COVERAGE : isMenopause ? MENOPAUSE_IP_COVERAGE : null;
 
   if (!ipCoverage) {
     return (
@@ -3585,6 +3883,47 @@ function IPCoverageTab({ experience }: { experience: Experience }) {
                   </Link>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Perimenopause Patents Summary */}
+      {isPerimenopause && (
+        <div className="rounded-xl p-5" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", borderLeft: `3px solid ${experience.accentColor}` }}>
+          <div className="flex items-start gap-3">
+            <Shield size={16} className="mt-0.5 shrink-0" style={{ color: experience.accentColor }} />
+            <div>
+              <p className="text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>3 New Perimenopause Patents</p>
+              <div className="space-y-2 mt-2">
+                {[
+                  { id: "patent-021", number: "021", name: "Perimenopause Predictor", priority: "Critical" },
+                  { id: "patent-022", number: "022", name: "HRT Response Monitoring", priority: "High" },
+                  { id: "patent-023", number: "023", name: "Gut-Hormone Connection", priority: "Medium" },
+                ].map((p) => (
+                  <Link key={p.id} href={`/departments/legal/patent-drafts/${p.id}`} className="flex items-center gap-2 text-xs" style={{ color: experience.accentColor }}>
+                    <span className="font-bold">Patent {p.number}:</span> {p.name}
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider" style={{
+                      backgroundColor: p.priority === "Critical" ? "#E24D4714" : p.priority === "High" ? "#F59E0B14" : "#5A6FFF14",
+                      color: p.priority === "Critical" ? "#E24D47" : p.priority === "High" ? "#F59E0B" : "#5A6FFF",
+                    }}>{p.priority}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Menopause Patents Summary */}
+      {isMenopause && (
+        <div className="rounded-xl p-5" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", borderLeft: `3px solid ${experience.accentColor}` }}>
+          <div className="flex items-start gap-3">
+            <Shield size={16} className="mt-0.5 shrink-0" style={{ color: experience.accentColor }} />
+            <div>
+              <p className="text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>IP Coverage — Shared Patents</p>
+              <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+                Menopause &amp; Beyond leverages existing patent coverage from the Conceivable Score system (Patent 001), HRT Response Monitoring (Patent 022), and Halo Ring Integration (Patent 006). The Doctor&apos;s Report Generator — spanning decades of longitudinal data — is a strong candidate for a new filing.
+              </p>
             </div>
           </div>
         </div>

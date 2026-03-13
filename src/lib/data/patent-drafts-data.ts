@@ -505,6 +505,60 @@ export const PATENT_DRAFTS: PatentDraftEntry[] = [
       }
     ],
     notes: "Covers the novel connection between postpartum recovery and future fertility preservation. Powerful differentiator — nobody else in the market connects these two lifecycle phases for fertility optimization."
+  },
+  {
+    id: "patent-021",
+    title: "Predictive Perimenopause Detection from Continuous Wearable Physiological Data Using Multi-Signal Convergence Scoring",
+    shortTitle: "Perimenopause Predictor",
+    status: "draft",
+    patentRef: "US-APP-2026-PENDING",
+    category: "software_ai",
+    filingPriority: "critical",
+    lastEdited: "2026-03-12",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System detecting onset of perimenopause through continuous physiological monitoring using elevated follicular phase basal body temperature as primary indicator (30% weight), combined with cycle variability analysis (20%), HRV trajectory (15%), sleep architecture changes (15%), thermoregulatory event detection (10%), and self-reported indicators (10%). Calibrated against individual historical baseline when available from Periods experience data.\n\nNovel claim: Follicular phase BBT elevation above 97.2°F (36.2°C) from continuous wearable data as predictive perimenopause biomarker, combined with multi-signal convergence scoring and longitudinal personal baseline comparison. The algorithm outputs a Transition Likelihood Level (0-4) with appropriate clinical recommendations at each level.\n\nFor women with 1+ years of Periods experience data, detection sensitivity is significantly higher because the system compares against HER personal baseline, not population averages. A rise of 0.3°F from her established baseline is significant even if absolute temp is below 97.2°F.\n\nAt Level 3+, the system recommends Day 3 labs (FSH, LH, estradiol, AMH, TSH) through an at-home lab partner. Lab results feed back into Atlas, dramatically increasing prediction confidence.\n\nNobody else has this — competitors track symptoms after they appear. We detect the transition before symptoms are recognized.\n\nFull technical specification at /product/experiences/perimenopause/prediction-algorithm"
+      }
+    ],
+    notes: "SPRINT ITEM — Critical priority. Novel clinical insight: follicular phase BBT elevation as predictive biomarker for perimenopause. First-mover advantage. See prediction algorithm spec for full technical details."
+  },
+  {
+    id: "patent-022",
+    title: "Continuous HRT Response Monitoring via Wearable Physiological Data with Prescriber-Ready Efficacy Reporting",
+    shortTitle: "HRT Response Monitoring",
+    status: "draft",
+    patentRef: "US-APP-2026-PENDING",
+    category: "software_ai",
+    filingPriority: "high",
+    lastEdited: "2026-03-12",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System monitoring hormone replacement therapy efficacy through continuous wearable data — thermoregulatory event frequency and severity changes, sleep quality metrics (efficiency, wake episodes, deep sleep), HRV recovery patterns, mood indicators, and metabolic indicators — providing prescribers with ongoing response data unavailable through standard follow-up appointments.\n\nNovel claim: Continuous post-HRT physiological monitoring generating prescriber-ready efficacy reports from wearable data. The system tracks response trajectory over weeks/months, quantifying changes like thermoregulatory events decreasing from 4.2/night to 1.1/night, sleep efficiency improving from 62% to 78%, and HRV recovery patterns.\n\nAlso monitors HRT discontinuation response when a woman decides to stop therapy, tracking the return of signals and adjusting care team support accordingly.\n\nB2B angle: This makes Conceivable valuable to the PRESCRIBER, not just the patient. Menopause telehealth companies (Ro, Alloy, Evernow) could partner with Conceivable for continuous monitoring between appointments.\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "High priority. B2B opportunity with menopause telehealth providers. Continuous monitoring data that prescribers have never had access to."
+  },
+  {
+    id: "patent-023",
+    title: "GI-Hormonal Correlation Engine for Menopausal Transition with Automated Nutritional Intervention",
+    shortTitle: "Gut-Hormone Connection",
+    status: "draft",
+    patentRef: "US-APP-2026-PENDING",
+    category: "method",
+    filingPriority: "medium",
+    lastEdited: "2026-03-12",
+    wordCount: 0,
+    sections: [
+      {
+        title: "OVERVIEW",
+        content: "System correlating gastrointestinal signals with hormonal transition data through continuous monitoring and dietary tracking, identifying estrogen-gut motility connections and deploying automated nutritional interventions.\n\nNovel claim: Automated dietary adjustment based on GI-signal-to-cycle-phase correlation during perimenopause. 82% of perimenopausal women report digestive changes; 58% who sought professional help found it inadequate. This system connects GI patterns to hormonal transition phases and deploys targeted nutritional interventions through the AI nutrition agent (Olive).\n\nThe system tracks: food-to-GI-signal correlation (which foods trigger which GI responses), timing patterns (when in her cycle GI signals are most pronounced), fiber and hydration patterns, and gut-supporting nutrition auto-adjustment.\n\nCutting-edge — GI-perimenopause connection was presented at the 2025 Menopause Society Annual Meeting. Nobody else connects GI to perimenopause in an app.\n\nFull patent text being submitted separately."
+      }
+    ],
+    notes: "Medium priority. Novel connection between GI signals and perimenopause. Recently validated at 2025 Menopause Society Annual Meeting."
   }
 ];
 

@@ -79,7 +79,7 @@ export const EXPERIENCES: ExperienceSeed[] = [
     slug: "perimenopause",
     tagline: "The transition nobody prepares women for. Until now.",
     accentColor: "#D4944A",
-    status: "not_started",
+    status: "in_design",
     icon: "\u{1F525}",
   },
   {
@@ -87,7 +87,7 @@ export const EXPERIENCES: ExperienceSeed[] = [
     slug: "menopause-beyond",
     tagline: "Health optimization doesn't end. Neither do we.",
     accentColor: "#2A8A8A",
-    status: "not_started",
+    status: "in_design",
     icon: "\u{1F30A}",
   },
 ];

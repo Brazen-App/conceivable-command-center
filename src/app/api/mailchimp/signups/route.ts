@@ -65,11 +65,11 @@ export async function GET() {
         if (isToday) allToday++;
         if (isYesterday) allYesterday++;
 
-        if (m.source === "Popup Form") {
-          popupTotal++;
-          if (isToday) popupToday++;
-          if (isYesterday) popupYesterday++;
-        }
+        // Count ALL new signups since popup launch as early access
+        // Sources include: "Popup Form", "Conceivable", "Embed Form", Stan Store imports, etc.
+        popupTotal++;
+        if (isToday) popupToday++;
+        if (isYesterday) popupYesterday++;
       }
 
       offset += pageSize;
@@ -84,7 +84,7 @@ export async function GET() {
         total: popupTotal,
         today: popupToday,
         yesterday: popupYesterday,
-        source: "Popup Form",
+        source: "all (since Mar 12 popup launch)",
       },
       allSignups: {
         today: allToday,

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import {
   Users,
   FileText,
@@ -14,13 +13,8 @@ import {
   Star,
   Target,
   Loader2,
-  TrendingUp,
   ArrowUpRight,
   Zap,
-  BarChart3,
-  PenTool,
-  Globe,
-  Megaphone,
 } from "lucide-react";
 import { colors, gradients } from "@/lib/theme";
 
@@ -124,6 +118,136 @@ function MetricCard({
   );
 }
 
+// ── Stan Store Import ───────────────────────────────────────
+
+function StanStoreImport() {
+  const [file, setFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState<{ added: number; failed: number; message: string } | null>(null);
+
+  const handleImport = async () => {
+    if (!file) return;
+    setImporting(true);
+    setResult(null);
+
+    try {
+      const text = await file.text();
+      const lines = text.split("\n").filter((l) => l.trim());
+      if (lines.length < 2) {
+        setResult({ added: 0, failed: 0, message: "CSV appears empty (no data rows)" });
+        setImporting(false);
+        return;
+      }
+
+      // Parse CSV header
+      const header = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/"/g, ""));
+      const emailIdx = header.findIndex((h) => h === "email" || h === "email address" || h === "e-mail");
+      const fnameIdx = header.findIndex((h) => h === "first name" || h === "firstname" || h === "first_name" || h === "fname");
+      const lnameIdx = header.findIndex((h) => h === "last name" || h === "lastname" || h === "last_name" || h === "lname");
+      const productIdx = header.findIndex((h) => h === "product" || h === "product name" || h === "item");
+
+      if (emailIdx === -1) {
+        setResult({ added: 0, failed: 0, message: "No 'email' column found in CSV. Check your export." });
+        setImporting(false);
+        return;
+      }
+
+      const contacts = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(",").map((c) => c.trim().replace(/"/g, ""));
+        const email = cols[emailIdx];
+        if (!email || !email.includes("@")) continue;
+        contacts.push({
+          email,
+          firstName: fnameIdx >= 0 ? cols[fnameIdx] : "",
+          lastName: lnameIdx >= 0 ? cols[lnameIdx] : "",
+          product: productIdx >= 0 ? cols[productIdx] : "",
+          source: "stan-store-csv",
+        });
+      }
+
+      if (contacts.length === 0) {
+        setResult({ added: 0, failed: 0, message: "No valid emails found in CSV" });
+        setImporting(false);
+        return;
+      }
+
+      const res = await fetch("/api/stan-store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contacts }),
+      });
+      const data = await res.json();
+      setResult({ added: data.added ?? 0, failed: data.failed ?? 0, message: data.message ?? "Done" });
+    } catch {
+      setResult({ added: 0, failed: 0, message: "Import failed — check console" });
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <div
+      className="rounded-2xl p-5"
+      style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <ShieldCheck size={14} style={{ color: colors.yellow }} />
+        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>
+          Stan Store → Mailchimp Import
+        </span>
+      </div>
+      <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
+        Export your customers CSV from Stan Store (Customers tab → Export), then upload here.
+        Contacts get tagged &quot;Stan Store&quot; + &quot;Early Access&quot; in Mailchimp automatically.
+      </p>
+      <div className="flex items-center gap-3 flex-wrap">
+        <label
+          className="px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer transition-opacity hover:opacity-80"
+          style={{ backgroundColor: `${colors.yellow}18`, color: colors.yellow, border: `1px solid ${colors.yellow}30` }}
+        >
+          {file ? file.name : "Choose CSV file..."}
+          <input
+            type="file"
+            accept=".csv"
+            className="hidden"
+            onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null); }}
+          />
+        </label>
+        <button
+          onClick={handleImport}
+          disabled={!file || importing}
+          className="px-4 py-2 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+          style={{ backgroundColor: colors.blue }}
+        >
+          {importing ? "Importing..." : "Import to Mailchimp"}
+        </button>
+      </div>
+      {result && (
+        <div
+          className="mt-3 px-3 py-2 rounded-lg text-xs"
+          style={{
+            backgroundColor: result.added > 0 ? `${colors.green}12` : `${colors.red}12`,
+            color: result.added > 0 ? colors.green : colors.red,
+          }}
+        >
+          {result.message}
+        </div>
+      )}
+      <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
+        <p className="text-[10px] font-semibold mb-1" style={{ color: "var(--muted)" }}>Auto-sync with Zapier:</p>
+        <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+          Stan → New Customer trigger → Webhooks POST to{" "}
+          <code className="px-1 py-0.5 rounded text-[9px]" style={{ backgroundColor: "var(--border)" }}>
+            /api/stan-store
+          </code>
+          {" "}— auto-adds to Mailchimp with tags.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ───────────────────────────────────────────────
 
 export default function MarketingDashboard() {
@@ -138,7 +262,7 @@ export default function MarketingDashboard() {
         fetch("/api/mailchimp/report").then((r) => r.ok ? r.json() : null).catch(() => null),
       ]);
       if (signupsRes) setSignups(signupsRes);
-      if (campaignsRes?.reports) setCampaigns(campaignsRes.reports.slice(0, 3));
+      if (campaignsRes?.reports) setCampaigns(campaignsRes.reports.slice(0, 5));
     } catch { /* ignore */ }
     finally { setSignupsLoading(false); }
   }, []);
@@ -272,7 +396,9 @@ export default function MarketingDashboard() {
                     <p className="text-sm font-bold" style={{ color: colors.green }}>
                       {((c.openRate || 0) * 100).toFixed(1)}%
                     </p>
-                    <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>opens</p>
+                    <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                      {c.uniqueOpens?.toLocaleString()} opens
+                    </p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-bold" style={{ color: colors.blue }}>
@@ -280,53 +406,18 @@ export default function MarketingDashboard() {
                     </p>
                     <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>clicks</p>
                   </div>
-                  {c.unsubscribed > 0 && (
-                    <div className="text-center">
-                      <p className="text-sm font-bold" style={{ color: colors.red }}>
-                        {c.unsubscribed}
-                      </p>
-                      <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>unsubs</p>
-                    </div>
-                  )}
+                  <div className="text-center">
+                    <p className="text-sm font-bold" style={{ color: colors.red }}>
+                      {(c.unsubscribed || 0) + (c.bounces || 0)}
+                    </p>
+                    <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>unsub+bounce</p>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* ═══════════════════════════════════════════════════════ */}
-      {/* QUICK LINKS                                            */}
-      {/* ═══════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { href: "/departments/marketing/content", icon: PenTool, label: "Content", color: colors.purple },
-          { href: "/departments/marketing/email-ops", icon: Mail, label: "Email Ops", color: colors.pink },
-          { href: "/departments/marketing/analytics", icon: BarChart3, label: "Analytics", color: colors.blue },
-          { href: "/departments/marketing/blog", icon: FileText, label: "Blog Engine", color: colors.yellow },
-          { href: "/departments/marketing/seo-geo", icon: Globe, label: "SEO & GEO", color: colors.paleBlue },
-          { href: "/departments/marketing/affiliates", icon: UserCheck, label: "Affiliates", color: colors.green },
-          { href: "/departments/marketing/partnerships", icon: Handshake, label: "Partnerships", color: colors.navy },
-          { href: "/departments/marketing/paid", icon: Megaphone, label: "Paid", color: colors.red },
-        ].map(({ href, icon: Icon, label, color }) => (
-          <Link
-            key={href}
-            href={href}
-            className="rounded-xl p-3.5 flex items-center gap-3 transition-all hover:shadow-md hover:scale-[1.02]"
-            style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
-          >
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-              style={{ backgroundColor: `${color}12` }}
-            >
-              <Icon size={15} style={{ color }} />
-            </div>
-            <span className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
-              {label}
-            </span>
-          </Link>
-        ))}
-      </div>
 
       {/* ═══════════════════════════════════════════════════════ */}
       {/* KPI GRID                                               */}
@@ -428,6 +519,11 @@ export default function MarketingDashboard() {
           subtext="latest open rate"
         />
       </div>
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* STAN STORE IMPORT                                      */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      <StanStoreImport />
 
       {/* ═══════════════════════════════════════════════════════ */}
       {/* MULTIPLIER OPPORTUNITY                                 */}

@@ -82,15 +82,20 @@ export default function ContentDepartmentPage() {
     setRefreshError(null);
     try {
       const res = await fetch("/api/briefs/refresh", { method: "POST" });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: `Server error (${res.status})` }));
+        setRefreshError(errData.error || `Refresh failed (${res.status})`);
+        return;
+      }
       const data = await res.json();
-      if (data.ok) {
-        setLastRefreshed(data.refreshedAt);
+      if (data.ok || data.saved) {
+        setLastRefreshed(data.refreshedAt || new Date().toISOString());
         await fetchData(false);
       } else {
-        setRefreshError(data.error || "Refresh failed");
+        setRefreshError(data.error || "Refresh returned no data");
       }
-    } catch {
-      setRefreshError("Network error — check connection and try again");
+    } catch (err) {
+      setRefreshError(err instanceof Error ? err.message : "Network error — check connection and try again");
     } finally {
       setIsRefreshing(false);
     }

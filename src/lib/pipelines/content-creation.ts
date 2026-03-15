@@ -5,6 +5,8 @@ import { applyTemplate } from "./content-templates";
 
 const PLATFORMS: ContentPlatform[] = [
   "linkedin",
+  "x",
+  "bluesky",
   "instagram-post",
   "pinterest",
   "youtube",
@@ -214,6 +216,31 @@ FORMATTING RULES — FOLLOW EXACTLY:
 - 200-400 words total
 - NO hashtags (this is a community, not social media)
 - NO markdown formatting (no **, no ##)
+- Write in plain text only${IMAGE_PROMPT_INSTRUCTION}`,
+
+  x: `Write a tweet/thread for X (Twitter).
+
+FORMATTING RULES — FOLLOW EXACTLY:
+- Single tweet: 280 characters max. Punchy, conversational, slightly provocative.
+- If longer: write a thread of 3-5 tweets. Mark each tweet clearly: [1/4], [2/4], etc.
+- Hook tweet MUST stop scrolling. Lead with the most surprising stat, claim, or question.
+- Tone: smart, cheeky, slightly contrarian. Like a founder who can't stop thinking about this.
+- Use line breaks for emphasis within a tweet.
+- End with a CTA: follow, reply, repost, or link click.
+- Max 2 hashtags (Twitter is anti-hashtag-spam). #Conceivable + 1 topic tag.
+- NO markdown formatting
+- Write in plain text only${IMAGE_PROMPT_INSTRUCTION}`,
+
+  bluesky: `Write a Bluesky post.
+
+FORMATTING RULES — FOLLOW EXACTLY:
+- 300 characters max (Bluesky limit). Be concise and sharp.
+- Tone: warm, authentic, nerdy-smart. Bluesky audience values substance over performance.
+- More conversational than Twitter, less corporate than LinkedIn.
+- Can include a link — Bluesky auto-unfurls previews.
+- Max 2-3 hashtags at the end.
+- This is where the real community-building happens. Talk like a human, not a brand.
+- NO markdown formatting
 - Write in plain text only${IMAGE_PROMPT_INSTRUCTION}`,
 };
 

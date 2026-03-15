@@ -189,6 +189,8 @@ function toContentItems(news: NewsItem[], research: ResearchItem[], reddit: Redd
 
 const PLATFORM_META: Record<string, { label: string; icon: typeof Linkedin; color: string; gradient: string }> = {
   linkedin: { label: "LinkedIn", icon: Linkedin, color: "#0A66C2", gradient: "linear-gradient(135deg, #0A66C2, #004182)" },
+  x: { label: "X / Twitter", icon: MessageCircle, color: "#000000", gradient: "linear-gradient(135deg, #14171A, #657786)" },
+  bluesky: { label: "Bluesky", icon: Send, color: "#0085FF", gradient: "linear-gradient(135deg, #0085FF, #0066CC)" },
   "instagram-post": { label: "Instagram", icon: Instagram, color: "#E4405F", gradient: "linear-gradient(135deg, #E4405F, #833AB4)" },
   "instagram-carousel": { label: "IG Carousel", icon: Instagram, color: "#833AB4", gradient: "linear-gradient(135deg, #833AB4, #E4405F)" },
   "instagram-story": { label: "IG Story", icon: Instagram, color: "#F77737", gradient: "linear-gradient(135deg, #F77737, #E4405F)" },

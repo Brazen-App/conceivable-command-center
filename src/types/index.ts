@@ -42,6 +42,8 @@ export type PipelineType =
 
 export type ContentPlatform =
   | "linkedin"
+  | "x"
+  | "bluesky"
   | "instagram-post"
   | "instagram-carousel"
   | "pinterest"

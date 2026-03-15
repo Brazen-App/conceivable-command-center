@@ -281,10 +281,17 @@ export async function publishBlogToShopify(opts: {
           },
         }
       );
+      if (!blogsRes.ok) {
+        const errText = await blogsRes.text().catch(() => "unknown");
+        return { success: false, error: `Shopify API error ${blogsRes.status}: ${errText.slice(0, 300)}. Check SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN.` };
+      }
       const blogsData = await blogsRes.json();
-      blogId = blogsData?.blogs?.[0]?.id?.toString();
+      if (!blogsData?.blogs || !Array.isArray(blogsData.blogs) || blogsData.blogs.length === 0) {
+        return { success: false, error: "No blogs found in Shopify store. Create a blog in Shopify first, or set SHOPIFY_BLOG_ID env var." };
+      }
+      blogId = blogsData.blogs[0].id?.toString();
       if (!blogId) {
-        return { success: false, error: "No blogs found in Shopify store. Create a blog first." };
+        return { success: false, error: "Blog found but has no ID — this shouldn't happen." };
       }
     } catch (err) {
       return { success: false, error: `Failed to fetch blogs: ${err instanceof Error ? err.message : String(err)}` };

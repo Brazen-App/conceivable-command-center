@@ -54,6 +54,8 @@ interface ConnectedPlatforms {
 
 const PLATFORM_IMAGE_DEFAULTS: Record<ContentPlatform, { style: string; aspectRatio: string }> = {
   linkedin: { style: "photography", aspectRatio: "1:1" },
+  x: { style: "photography", aspectRatio: "16:9" },
+  bluesky: { style: "photography", aspectRatio: "16:9" },
   "instagram-post": { style: "photography", aspectRatio: "1:1" },
   "instagram-carousel": { style: "illustration", aspectRatio: "1:1" },
   pinterest: { style: "infographic", aspectRatio: "2:3" },
@@ -68,6 +70,8 @@ const PLATFORM_CONFIG: Record<
   { label: string; icon: typeof Linkedin; color: string }
 > = {
   linkedin: { label: "LinkedIn", icon: Linkedin, color: "#0A66C2" },
+  x: { label: "X / Twitter", icon: Edit3, color: "#000000" },
+  bluesky: { label: "Bluesky", icon: PenTool, color: "#0085FF" },
   "instagram-post": { label: "IG Post", icon: Instagram, color: "#E4405F" },
   "instagram-carousel": { label: "IG Carousel", icon: Instagram, color: "#C13584" },
   pinterest: { label: "Pinterest", icon: PenTool, color: "#E60023" },

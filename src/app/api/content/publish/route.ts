@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import getLate from "@/lib/late";
 import { publishToGeneral } from "@/lib/integrations/circle";
 import { publishBlogToShopify, isShopifyConfigured } from "@/lib/integrations/shopify-blog";
+import { createBlueskyPost, isBlueskyConfigured } from "@/lib/integrations/bluesky";
 
 interface PublishPiece {
   platform: string;
@@ -15,6 +16,7 @@ interface PublishPiece {
 const PLATFORM_MAP: Record<string, string> = {
   linkedin: "linkedin",
   x: "twitter",
+  bluesky: "bluesky",
   facebook: "facebook",
   instagram: "instagram",
   "instagram-post": "instagram",
@@ -105,6 +107,25 @@ export async function POST(request: Request) {
         return { platform: "circle", data: result };
       }
 
+      // Bluesky posts go through native AT Protocol, not Late
+      if (piece.platform === "bluesky") {
+        if (!isBlueskyConfigured()) {
+          return {
+            platform: "bluesky",
+            data: { published: false, message: "Bluesky not configured. Add BLUESKY_HANDLE and BLUESKY_PASSWORD env vars." },
+          };
+        }
+        const result = await createBlueskyPost(
+          piece.copy,
+          piece.imageData,
+          piece.title || "Conceivable"
+        );
+        if (!result.success) {
+          throw new Error(result.error || "Bluesky post failed");
+        }
+        return { platform: "bluesky", data: { published: true, uri: result.uri } };
+      }
+
       // Blog posts go to Shopify if configured, otherwise return as ready to copy
       if (piece.platform === "blog") {
         if (isShopifyConfigured()) {
@@ -143,6 +164,12 @@ export async function POST(request: Request) {
         ? `${piece.copy}\n\n${piece.hashtags.map((t) => `#${t}`).join(" ")}`
         : piece.copy;
 
+      // Instagram REQUIRES media — validate before calling Late API
+      const isInstagram = piece.platform.startsWith("instagram");
+      if (isInstagram && !piece.imageData) {
+        throw new Error("Instagram requires an image to post. Generate or upload an image first.");
+      }
+
       // Upload image if we have one and it's not a script-only platform
       let mediaUrls: string[] | undefined;
       if (!scriptOnly && piece.imageData) {
@@ -150,6 +177,11 @@ export async function POST(request: Request) {
         if (publicUrl) {
           mediaUrls = [publicUrl];
         }
+      }
+
+      // Double-check Instagram has media after upload attempt
+      if (isInstagram && (!mediaUrls || mediaUrls.length === 0)) {
+        throw new Error("Instagram requires media but image upload failed. Try regenerating the image.");
       }
 
       const res = await getLate().posts.createPost({

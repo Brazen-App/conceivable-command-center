@@ -54,18 +54,19 @@ export async function POST() {
       });
     }
 
-    // 3. Use AI to analyze and tag the REAL articles (not fabricate them)
-    //    Pick top 10 news, top 5 research, top 5 reddit
-    const topNews = verifiedNews.slice(0, 10);
-    const topResearch = fetchResult.research.slice(0, 5);
+    // 3. Pick top items — keep small to stay within Vercel timeout
+    const topNews = verifiedNews.slice(0, 8);
+    const topResearch = fetchResult.research.slice(0, 4);
     const topReddit = fetchResult.reddit
       .sort((a, b) => b.upvotes - a.upvotes)
-      .slice(0, 5);
+      .slice(0, 4);
 
-    // 4. AI-analyze news items in batch
-    const analyzedNews = await analyzeNewsItems(topNews);
-    const analyzedResearch = await analyzeResearchItems(topResearch);
-    const analyzedReddit = await analyzeRedditPosts(topReddit);
+    // 4. AI-analyze ALL in PARALLEL (not sequential — saves ~60s)
+    const [analyzedNews, analyzedResearch, analyzedReddit] = await Promise.all([
+      analyzeNewsItems(topNews),
+      analyzeResearchItems(topResearch),
+      analyzeRedditPosts(topReddit),
+    ]);
 
     // 5. Clear old items and insert new verified ones
     await prisma.$transaction([

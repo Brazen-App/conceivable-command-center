@@ -3,21 +3,17 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Shield,
-  FileText,
   Sparkles,
   Send,
-  Clock,
   Loader2,
   ChevronRight,
   Gem,
-  AlertTriangle,
   ShieldCheck,
   FilePlus2,
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
-
-const ACCENT = "#E24D47";
+import { PATENT_DRAFTS, getDraftStats } from "@/lib/data/patent-drafts-data";
 
 interface PatentClaim {
   id: string;
@@ -191,13 +187,15 @@ export default function LegalDashboardPage() {
     fetchClaims();
   }, [fetchClaims]);
 
-  const fileNowClaims = claims.filter((c) => c.urgency === "file_now" && (c.status === "not_drafted" || c.status === "drafted"));
   const grantedClaims = claims.filter((c) => c.status === "granted");
   const filedClaims = claims.filter((c) => c.status === "filed");
-  const toFileClaims = claims.filter((c) => c.status === "not_drafted" || c.status === "drafted");
   const grantedValue = grantedClaims.reduce((s, c) => s + (c.estimatedValue || 0), 0);
   const filedValue = filedClaims.reduce((s, c) => s + (c.estimatedValue || 0), 0);
   const totalValue = claims.reduce((s, c) => s + (c.estimatedValue || 0), 0);
+
+  // Patent drafts stats (full portfolio from patent-drafts-data)
+  const draftStats = getDraftStats();
+  const totalPortfolio = PATENT_DRAFTS.length + draftStats.opportunities;
 
   if (loading) {
     return (
@@ -258,103 +256,22 @@ export default function LegalDashboardPage() {
             <div className="rounded-xl p-4" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
               <div className="flex items-center gap-2 mb-1">
                 <FilePlus2 size={14} className="text-white/70" />
-                <span className="text-[10px] text-white/50 uppercase tracking-wider">To File</span>
+                <span className="text-[10px] text-white/50 uppercase tracking-wider">Drafts</span>
               </div>
-              <p className="text-2xl font-bold text-white">{toFileClaims.length}</p>
-              <p className="text-[10px] text-white/40">{fileNowClaims.length} urgent</p>
+              <p className="text-2xl font-bold text-white">{draftStats.total}</p>
+              <p className="text-[10px] text-white/40">{draftStats.reviewReady} review-ready, {(draftStats.totalWords / 1000).toFixed(0)}K words</p>
             </div>
             <div className="rounded-xl p-4" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp size={14} className="text-white/70" />
-                <span className="text-[10px] text-white/50 uppercase tracking-wider">Total Claims</span>
+                <span className="text-[10px] text-white/50 uppercase tracking-wider">Patent Portfolio</span>
               </div>
-              <p className="text-2xl font-bold text-white">{claims.length}</p>
-              <p className="text-[10px] text-white/40">across portfolio</p>
+              <p className="text-2xl font-bold text-white">{totalPortfolio}</p>
+              <p className="text-[10px] text-white/40">{draftStats.total} drafts, {draftStats.opportunities} opportunities</p>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Urgent Filings — This Week's Actions */}
-      {fileNowClaims.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={16} style={{ color: ACCENT }} />
-            <h2 className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
-              File This Week
-            </h2>
-            <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}
-            >
-              {fileNowClaims.length} urgent
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {fileNowClaims.map((claim) => (
-              <Link
-                key={claim.id}
-                href="/departments/legal/patents"
-                className="group rounded-2xl border p-5 transition-all hover:shadow-lg hover:border-[#E24D4740] hover:-translate-y-0.5"
-                style={{
-                  borderColor: "var(--border)",
-                  backgroundColor: "var(--surface)",
-                }}
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: `${ACCENT}14` }}
-                  >
-                    <FileText size={18} style={{ color: ACCENT }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: `${ACCENT}14`, color: ACCENT }}
-                      >
-                        FILE NOW
-                      </span>
-                      <span
-                        className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                        style={{
-                          backgroundColor: claim.valueTier === "HIGH" ? "#E24D4712" : "#F1C02812",
-                          color: claim.valueTier === "HIGH" ? "#E24D47" : "#F1C028",
-                        }}
-                      >
-                        {claim.valueTier} · ${(claim.estimatedValue / 1000).toFixed(0)}K
-                      </span>
-                    </div>
-                    <p
-                      className="text-sm font-semibold leading-snug mb-1"
-                      style={{ color: "var(--foreground)" }}
-                    >
-                      Claim {claim.claimNumber}: {claim.claimText.slice(0, 100)}
-                      {claim.claimText.length > 100 ? "..." : ""}
-                    </p>
-                    <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                      {claim.parentPatentRef}
-                    </p>
-                  </div>
-                  <ChevronRight
-                    size={16}
-                    className="shrink-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ color: "var(--muted)" }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 mt-3">
-                  <Clock size={11} style={{ color: ACCENT }} />
-                  <span className="text-[10px] font-medium" style={{ color: ACCENT }}>
-                    File before fundraise
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Quick Navigation to Patent Portfolio */}
       <Link
@@ -378,7 +295,7 @@ export default function LegalDashboardPage() {
             Full Patent Portfolio
           </p>
           <p className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
-            {grantedClaims.length} granted claims, {filedClaims.length} pending, {toFileClaims.length} recommended new filings
+            {grantedClaims.length} awarded, {filedClaims.length} filed, {draftStats.total} drafts in progress
           </p>
         </div>
         <ChevronRight

@@ -9,10 +9,14 @@ const LIST_ID = "3c920d5bed";
 // The early access popup launched on March 12, 2026
 const POPUP_LAUNCH_DATE = "2026-03-12T00:00:00Z";
 
+// Only these sources represent REAL early access signups (quiz completers, popup, API).
+// "Conceivable" source = existing list members re-appearing, NOT new early access signups.
+const EARLY_ACCESS_SOURCES = new Set(["Popup Form", "Embed Form", "API - Generic"]);
+
 /**
  * GET /api/mailchimp/signups
  * Returns early access (popup) signup count + today/yesterday breakdown.
- * Counts members with source "Popup Form" since the popup launched.
+ * Only counts members from popup/embed/API sources (real early access flow).
  */
 export async function GET() {
   if (!process.env.MAILCHIMP_API_KEY) {
@@ -66,14 +70,17 @@ export async function GET() {
         if (isToday) allToday++;
         if (isYesterday) allYesterday++;
 
-        // Count ALL new signups since popup launch as early access
-        earlyAccessTotal++;
-        if (isToday) earlyAccessToday++;
-        if (isYesterday) earlyAccessYesterday++;
-
         // Track source breakdown
         const src = m.source || "unknown";
         sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+
+        // Only count real early access sources (Popup Form, Embed Form, API - Generic)
+        // "Conceivable" source = existing list members, not new early access signups
+        if (EARLY_ACCESS_SOURCES.has(src)) {
+          earlyAccessTotal++;
+          if (isToday) earlyAccessToday++;
+          if (isYesterday) earlyAccessYesterday++;
+        }
       }
 
       offset += pageSize;

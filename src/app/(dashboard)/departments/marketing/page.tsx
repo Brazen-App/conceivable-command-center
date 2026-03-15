@@ -460,8 +460,8 @@ export default function MarketingDashboard() {
           icon={DollarSign}
           iconColor={colors.yellow}
           label="Paid Spend"
-          value="$0"
-          subtext="launches post-validation"
+          value="No active campaigns"
+          subtext="Set up in Marketing → Paid"
         />
       </div>
 

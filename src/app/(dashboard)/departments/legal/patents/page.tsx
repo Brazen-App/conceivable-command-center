@@ -221,7 +221,7 @@ export default function PatentsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [discussTarget, setDiscussTarget] = useState<PatentClaim | null>(null);
   const [draftTarget, setDraftTarget] = useState<PatentClaim | null>(null);
-  const [viewFilter, setViewFilter] = useState<"filed" | "drafts_to_file" | "patents_to_file" | "claims_protected">("filed");
+  const [viewFilter, setViewFilter] = useState<"awarded" | "filed" | "ready_to_file" | "in_review" | "in_progress" | "concept">("awarded");
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
   const [showAddForm, setShowAddForm] = useState(false);
   const [viewDraftTarget, setViewDraftTarget] = useState<PatentClaim | null>(null);
@@ -318,21 +318,28 @@ export default function PatentsPage() {
     }
   };
 
-  // Filter claims by new tab structure
-  const filedClaims = claims.filter((c) => (c.status === "filed" || c.status === "granted") && !c.archived);
-  const draftsToFile = claims.filter((c) => (c.status === "drafted" || c.status === "under_review") && !c.archived);
-  const patentsToFile = claims.filter((c) => (c.status === "not_drafted") && !c.archived);
-  const claimsProtected = claims.filter((c) => c.status === "granted" && !c.archived);
+  // Filter claims by status categories
+  const awardedClaims = claims.filter((c) => c.status === "granted" && !c.archived);
+  const filedClaims = claims.filter((c) => c.status === "filed" && !c.archived);
+  const readyToFile = claims.filter((c) => c.status === "drafted" && !c.archived);
+  const inReviewClaims = claims.filter((c) => c.status === "under_review" && !c.archived);
+  const inProgressClaims = claims.filter((c) => c.status === "not_drafted" && c.urgency === "file_now" && !c.archived);
+  const conceptClaims = claims.filter((c) => c.status === "not_drafted" && c.urgency !== "file_now" && !c.archived);
   const activeClaims = claims.filter((c) => !c.archived);
 
-  // Keep these for backward compat with urgent banner
+  // Keep for backward compat with urgent banner
   const fileNowClaims = claims.filter((c) => c.urgency === "file_now" && !c.archived);
-  const protectedClaims = claimsProtected;
+  const protectedClaims = awardedClaims;
 
-  let displayClaims = filedClaims;
-  if (viewFilter === "drafts_to_file") displayClaims = draftsToFile;
-  else if (viewFilter === "patents_to_file") displayClaims = patentsToFile;
-  else if (viewFilter === "claims_protected") displayClaims = claimsProtected;
+  const filterMap = {
+    awarded: awardedClaims,
+    filed: filedClaims,
+    ready_to_file: readyToFile,
+    in_review: inReviewClaims,
+    in_progress: inProgressClaims,
+    concept: conceptClaims,
+  };
+  const displayClaims = filterMap[viewFilter];
 
   // Add new patent claim
   const handleAddClaim = async (data: {
@@ -465,10 +472,12 @@ export default function PatentsPage() {
       {/* Filter Tabs + Add Button */}
       <div className="flex gap-2 flex-wrap items-center">
         {([
+          { key: "awarded", label: "Awarded", count: awardedClaims.length },
           { key: "filed", label: "Filed", count: filedClaims.length },
-          { key: "drafts_to_file", label: "Drafts to File", count: draftsToFile.length },
-          { key: "patents_to_file", label: "Patents to File", count: patentsToFile.length },
-          { key: "claims_protected", label: "Claims Protected", count: claimsProtected.length },
+          { key: "ready_to_file", label: "Ready to File", count: readyToFile.length },
+          { key: "in_review", label: "In Review", count: inReviewClaims.length },
+          { key: "in_progress", label: "In Progress", count: inProgressClaims.length },
+          { key: "concept", label: "Concept", count: conceptClaims.length },
         ] as const).map(({ key, label, count }) => (
           <button
             key={key}

@@ -35,6 +35,7 @@ export default function ContentDepartmentPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<string | undefined>();
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  const [refreshSuccess, setRefreshSuccess] = useState<string | null>(null);
   const [povStats, setPovStats] = useState({ total: 0, topicCount: 0, topics: [] as string[] });
 
   const fetchData = useCallback(async (isInitial = false) => {
@@ -80,6 +81,7 @@ export default function ContentDepartmentPage() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     setRefreshError(null);
+    setRefreshSuccess(null);
     try {
       const res = await fetch("/api/briefs/refresh", { method: "POST" });
       if (!res.ok) {
@@ -91,6 +93,17 @@ export default function ContentDepartmentPage() {
       if (data.ok || data.saved) {
         setLastRefreshed(data.refreshedAt || new Date().toISOString());
         await fetchData(false);
+        // Build success message with counts
+        const parts: string[] = [];
+        if (data.news) parts.push(`${data.news} news`);
+        if (data.research) parts.push(`${data.research} research`);
+        if (data.videos) parts.push(`${data.videos} videos`);
+        const msg = parts.length > 0
+          ? `Refreshed: ${parts.join(", ")}. Reddit is blocked from server — use local fetch if needed.`
+          : "Content refreshed successfully.";
+        setRefreshSuccess(msg);
+        // Auto-clear after 8 seconds
+        setTimeout(() => setRefreshSuccess(null), 8000);
       } else {
         setRefreshError(data.error || "Refresh returned no data");
       }
@@ -172,6 +185,11 @@ export default function ContentDepartmentPage() {
         {refreshError && (
           <div className="mt-3 px-4 py-2.5 rounded-xl text-xs" style={{ backgroundColor: "#E24D4710", color: "#E24D47", border: "1px solid #E24D4720" }}>
             {refreshError}
+          </div>
+        )}
+        {refreshSuccess && (
+          <div className="mt-3 px-4 py-2.5 rounded-xl text-xs" style={{ backgroundColor: "#1EAA5510", color: "#1EAA55", border: "1px solid #1EAA5520" }}>
+            {refreshSuccess}
           </div>
         )}
       </header>

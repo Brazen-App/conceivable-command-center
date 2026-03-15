@@ -902,13 +902,17 @@ export default function ExecutiveSummaryPage() {
   const printRef = useRef<HTMLDivElement>(null);
 
   const handleExportPDF = useCallback(() => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-    printWindow.document.write(buildPdfHtml());
-    printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-    }, 400);
+    // Download as HTML file (can be opened in browser and printed to PDF)
+    const html = buildPdfHtml();
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Conceivable-IP-Portfolio-Executive-Summary.html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }, []);
 
   return (

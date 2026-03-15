@@ -38,7 +38,9 @@ export default function PatentEditorPage() {
     const found = PATENT_DRAFTS.find((d) => d.id === id);
     if (found) {
       setDraft(found);
-      setSections(found.sections.map((s) => ({ ...s })));
+      // Skip "TITLE OF INVENTION" section — it's redundant (title appears in the next section header)
+      const filtered = found.sections.filter((s) => s.title !== "TITLE OF INVENTION");
+      setSections(filtered.map((s) => ({ ...s })));
       setStatus(found.status);
     }
   }, [id]);

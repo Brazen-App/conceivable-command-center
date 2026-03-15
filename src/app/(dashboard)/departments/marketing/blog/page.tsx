@@ -192,9 +192,29 @@ const CHECKLIST_ITEMS = [
 ];
 
 const SUGGESTED_PROMPTS = [
-  "Write a blog post about the best fertility supplements",
-  "Outline a post targeting 'PCOS fertility'",
-  "Draft FAQ section for menstrual cycle phases",
+  "Write a GEO-optimized post targeting 'best fertility supplements 2026'",
+  "Outline a post targeting 'PCOS fertility treatment options'",
+  "Draft an FAQ section that AI search engines will cite for 'menstrual cycle phases'",
+  "Write a post optimized for 'how to improve egg quality naturally'",
+];
+
+// Long-tail keywords for the content calendar (high search volume, low competition)
+const LONG_TAIL_KEYWORDS = [
+  { keyword: "best fertility supplements 2026", volume: "8.1K/mo", difficulty: "Low", geo: true },
+  { keyword: "how to improve egg quality naturally", volume: "5.4K/mo", difficulty: "Low", geo: true },
+  { keyword: "PCOS fertility treatment options", volume: "4.2K/mo", difficulty: "Medium", geo: true },
+  { keyword: "what does your period say about your health", volume: "3.8K/mo", difficulty: "Low", geo: true },
+  { keyword: "fertility after 35 statistics", volume: "3.1K/mo", difficulty: "Low", geo: true },
+  { keyword: "endometriosis and getting pregnant", volume: "2.9K/mo", difficulty: "Medium", geo: true },
+  { keyword: "seed cycling for fertility does it work", volume: "2.6K/mo", difficulty: "Low", geo: true },
+  { keyword: "postpartum recovery timeline week by week", volume: "2.4K/mo", difficulty: "Low", geo: true },
+  { keyword: "blood sugar and menstrual cycle connection", volume: "1.8K/mo", difficulty: "Low", geo: true },
+  { keyword: "first period guide for parents", volume: "1.5K/mo", difficulty: "Low", geo: true },
+  { keyword: "cycle syncing meal plan", volume: "1.3K/mo", difficulty: "Low", geo: true },
+  { keyword: "signs of ovulation after period", volume: "4.7K/mo", difficulty: "Medium", geo: true },
+  { keyword: "supplements to improve AMH levels", volume: "1.1K/mo", difficulty: "Low", geo: true },
+  { keyword: "HRV and fertility connection", volume: "890/mo", difficulty: "Low", geo: true },
+  { keyword: "how long does it take to conceive after stopping birth control", volume: "3.2K/mo", difficulty: "Medium", geo: true },
 ];
 
 const SYSTEM_PROMPT = `You are Conceivable's content engine. You write blog posts that are simultaneously:
@@ -353,6 +373,8 @@ function WorkspaceTab() {
   const [loading, setLoading] = useState(false);
   const [showChecklist, setShowChecklist] = useState(false);
   const [checklist, setChecklist] = useState<boolean[]>(CHECKLIST_ITEMS.map(() => false));
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [heroImage, setHeroImage] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Pre-load completed post HTML when selecting a ready/published post
@@ -411,6 +433,27 @@ function WorkspaceTab() {
     [input, loading, messages, selectedPost],
   );
 
+  const generateHeroImage = async () => {
+    const post = BLOG_CALENDAR.find((p) => p.id === selectedPost);
+    const topic = post?.title || "Conceivable fertility health";
+    setGeneratingImage(true);
+    try {
+      const res = await fetch("/api/content/branded-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic,
+          platform: "blog",
+          template: "editorial",
+          subtitle: post?.primaryKeyword || "",
+        }),
+      });
+      const data = await res.json();
+      if (data.imageData) setHeroImage(data.imageData);
+    } catch { /* ignore */ }
+    finally { setGeneratingImage(false); }
+  };
+
   const copyHtml = () => navigator.clipboard.writeText(lastAssistantHtml);
   const copySchema = () => navigator.clipboard.writeText(extractSchemaBlocks(lastAssistantHtml));
   const downloadHtml = () => {
@@ -453,29 +496,102 @@ function WorkspaceTab() {
             </select>
           </div>
 
+          {/* Keyword & GEO Panel */}
+          {selectedPost !== "new" && (() => {
+            const post = BLOG_CALENDAR.find((p) => p.id === selectedPost);
+            if (!post) return null;
+            return (
+              <div className="px-3 py-2 space-y-2" style={{ borderBottom: "1px solid var(--border)", backgroundColor: "var(--background)" }}>
+                <div className="flex items-center gap-2">
+                  <Target size={12} style={{ color: ACCENT }} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>
+                    Target Keywords & GEO
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${ACCENT}15`, color: ACCENT }}>
+                    {post.primaryKeyword}
+                  </span>
+                  {post.secondaryKeywords.map((kw) => (
+                    <span key={kw} className="text-[11px] px-2 py-0.5 rounded-full" style={{ backgroundColor: "var(--surface)", color: "var(--muted)", border: "1px solid var(--border)" }}>
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-3 text-[10px]" style={{ color: "var(--muted)" }}>
+                  <span className="flex items-center gap-1"><Globe size={10} /> GEO: AI-citable stats + FAQ answers</span>
+                  <span className="flex items-center gap-1"><Search size={10} /> SEO: H1 + meta + schema markup</span>
+                  <span className="flex items-center gap-1"><BarChart3 size={10} /> {post.wordTarget.toLocaleString()} word target</span>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Messages area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: "60vh" }}>
             {messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full gap-4 py-12">
-                <Sparkles size={32} style={{ color: ACCENT, opacity: 0.4 }} />
-                <p className="text-sm" style={{ color: "var(--muted)" }}>
-                  Start drafting your blog post. The AI knows Conceivable&apos;s SEO/GEO rules and brand voice.
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {SUGGESTED_PROMPTS.map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => sendMessage(p)}
-                      className="text-xs px-3 py-1.5 rounded-full transition-all hover:opacity-80"
-                      style={{
-                        border: `1px solid ${ACCENT}`,
-                        color: ACCENT,
-                        backgroundColor: "transparent",
-                      }}
-                    >
-                      {p}
-                    </button>
-                  ))}
+              <div className="space-y-4 py-4">
+                {/* Quick prompts */}
+                <div className="text-center space-y-3">
+                  <Sparkles size={24} style={{ color: ACCENT, opacity: 0.4, margin: "0 auto" }} />
+                  <p className="text-sm" style={{ color: "var(--muted)" }}>
+                    Start drafting. The AI writes SEO + GEO optimized content in Conceivable&apos;s voice.
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {SUGGESTED_PROMPTS.map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => sendMessage(p)}
+                        className="text-xs px-3 py-1.5 rounded-full transition-all hover:opacity-80"
+                        style={{
+                          border: `1px solid ${ACCENT}`,
+                          color: ACCENT,
+                          backgroundColor: "transparent",
+                        }}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Long-tail keyword opportunities */}
+                <div className="rounded-lg p-3" style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target size={12} style={{ color: ACCENT }} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>
+                      Long-Tail Keyword Opportunities
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${GREEN}15`, color: GREEN }}>
+                      GEO Ready
+                    </span>
+                  </div>
+                  <div className="space-y-1 max-h-[300px] overflow-y-auto">
+                    {LONG_TAIL_KEYWORDS.map((kw) => (
+                      <button
+                        key={kw.keyword}
+                        onClick={() => sendMessage(`Write a GEO-optimized blog post targeting "${kw.keyword}". Include FAQ section, data tables, and specific statistics that AI search engines will cite.`)}
+                        className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-left transition-all hover:opacity-80"
+                        style={{ backgroundColor: "var(--surface)" }}
+                      >
+                        <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>
+                          {kw.keyword}
+                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[10px]" style={{ color: "var(--muted)" }}>{kw.volume}</span>
+                          <span
+                            className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor: kw.difficulty === "Low" ? `${GREEN}15` : `${YELLOW}15`,
+                              color: kw.difficulty === "Low" ? GREEN : YELLOW,
+                            }}
+                          >
+                            {kw.difficulty}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -603,12 +719,56 @@ function WorkspaceTab() {
         <ActionBtn icon={<Code2 size={14} />} label="Copy Schema" onClick={copySchema} disabled={!lastAssistantHtml} />
         <ActionBtn icon={<Download size={14} />} label="Download HTML" onClick={downloadHtml} disabled={!lastAssistantHtml} />
         <ActionBtn
+          icon={generatingImage ? <Loader2 size={14} className="animate-spin" /> : <Palette size={14} />}
+          label={generatingImage ? "Generating..." : "Generate Hero Image"}
+          onClick={generateHeroImage}
+          disabled={generatingImage}
+        />
+        <ActionBtn
           icon={<ClipboardList size={14} />}
           label="View Checklist"
           onClick={() => setShowChecklist(true)}
           accent
         />
       </div>
+
+      {/* ── Hero Image Preview ── */}
+      {heroImage && (
+        <div
+          className="rounded-xl p-4"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>
+              Hero Image (1200x630)
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  const a = document.createElement("a");
+                  a.href = heroImage;
+                  a.download = "blog-hero.png";
+                  a.click();
+                }}
+                className="text-xs px-3 py-1 rounded-lg"
+                style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+              >
+                <Download size={12} className="inline mr-1" /> Download
+              </button>
+              <button
+                onClick={generateHeroImage}
+                disabled={generatingImage}
+                className="text-xs px-3 py-1 rounded-lg"
+                style={{ backgroundColor: ACCENT, color: "#fff" }}
+              >
+                Regenerate
+              </button>
+            </div>
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={heroImage} alt="Blog hero" className="w-full rounded-lg" style={{ maxHeight: 300, objectFit: "cover" }} />
+        </div>
+      )}
 
       {/* ── Checklist Modal ── */}
       {showChecklist && (

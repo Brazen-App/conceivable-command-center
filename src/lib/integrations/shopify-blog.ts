@@ -243,7 +243,13 @@ export async function publishBlogToShopify(opts: {
   // Extract metadata from content if present
   const { title: extractedTitle, metaDescription, cleanBody } = extractBlogMeta(opts.body);
   const finalTitle = opts.title || extractedTitle || "Untitled";
-  const bodyHtml = blogTextToHtml(cleanBody, finalTitle, metaDescription ?? undefined, opts.author);
+
+  // If the body is already HTML (from the AI blog workspace), use it directly.
+  // Only convert plain text to HTML if no HTML tags are detected.
+  const isAlreadyHtml = /<[a-z][\s\S]*>/i.test(cleanBody);
+  const bodyHtml = isAlreadyHtml
+    ? cleanBody
+    : blogTextToHtml(cleanBody, finalTitle, metaDescription ?? undefined, opts.author);
 
   // Build the article payload
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -375,6 +375,8 @@ function WorkspaceTab() {
   const [checklist, setChecklist] = useState<boolean[]>(CHECKLIST_ITEMS.map(() => false));
   const [generatingImage, setGeneratingImage] = useState(false);
   const [heroImage, setHeroImage] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [publishResult, setPublishResult] = useState<{ ok: boolean; message: string } | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Pre-load completed post HTML when selecting a ready/published post
@@ -452,6 +454,38 @@ function WorkspaceTab() {
       if (data.imageData) setHeroImage(data.imageData);
     } catch { /* ignore */ }
     finally { setGeneratingImage(false); }
+  };
+
+  const publishToShopify = async () => {
+    if (!lastAssistantHtml) return;
+    setPublishing(true);
+    setPublishResult(null);
+    try {
+      const post = BLOG_CALENDAR.find((p) => p.id === selectedPost);
+      const res = await fetch("/api/content/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pieces: [{
+            platform: "blog",
+            title: post?.title || "New Blog Post",
+            copy: lastAssistantHtml,
+            hashtags: post?.secondaryKeywords || [],
+          }],
+        }),
+      });
+      const data = await res.json();
+      const result = data.results?.[0];
+      if (result?.ok) {
+        setPublishResult({ ok: true, message: "Published to Shopify!" });
+      } else {
+        setPublishResult({ ok: false, message: result?.error || data.error || "Publish failed" });
+      }
+    } catch {
+      setPublishResult({ ok: false, message: "Network error" });
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const copyHtml = () => navigator.clipboard.writeText(lastAssistantHtml);
@@ -725,12 +759,33 @@ function WorkspaceTab() {
           disabled={generatingImage}
         />
         <ActionBtn
+          icon={publishing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+          label={publishing ? "Publishing..." : "Publish to Shopify"}
+          onClick={publishToShopify}
+          disabled={publishing || !lastAssistantHtml}
+          accent
+        />
+        <ActionBtn
           icon={<ClipboardList size={14} />}
           label="View Checklist"
           onClick={() => setShowChecklist(true)}
-          accent
         />
       </div>
+
+      {/* ── Publish Result ── */}
+      {publishResult && (
+        <div
+          className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm"
+          style={{
+            backgroundColor: publishResult.ok ? `${GREEN}15` : `${RED}15`,
+            border: `1px solid ${publishResult.ok ? GREEN : RED}30`,
+            color: publishResult.ok ? GREEN : RED,
+          }}
+        >
+          {publishResult.ok ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+          {publishResult.message}
+        </div>
+      )}
 
       {/* ── Hero Image Preview ── */}
       {heroImage && (

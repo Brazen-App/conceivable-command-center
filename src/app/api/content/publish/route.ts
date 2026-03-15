@@ -20,6 +20,8 @@ const PLATFORM_MAP: Record<string, string> = {
   facebook: "facebook",
   instagram: "instagram",
   "instagram-post": "instagram",
+  "instagram-carousel": "instagram",
+  "instagram-story": "instagram",
   pinterest: "pinterest",
   tiktok: "tiktok",
   youtube: "youtube",
@@ -41,7 +43,7 @@ async function getAccounts() {
 async function uploadImageToLate(imageDataUrl: string): Promise<string | null> {
   try {
     // Extract base64 and mime type from data URL
-    const match = imageDataUrl.match(/^data:(image\/\w+);base64,(.+)$/);
+    const match = imageDataUrl.match(/^data:(image\/\w+);base64,([\s\S]+)$/);
     if (!match) return null;
 
     const mimeType = match[1];

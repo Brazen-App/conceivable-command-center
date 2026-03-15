@@ -16,7 +16,7 @@ interface PublishPiece {
 const PLATFORM_MAP: Record<string, string> = {
   linkedin: "linkedin",
   x: "twitter",
-  bluesky: "bluesky",
+  bluesky: "bluesky", // Late SDK supports Bluesky natively
   facebook: "facebook",
   instagram: "instagram",
   "instagram-post": "instagram",
@@ -50,12 +50,16 @@ async function uploadImageToLate(imageDataUrl: string): Promise<string | null> {
     const fileName = `conceivable-${Date.now()}.${ext}`;
 
     // Get presigned upload URL from Late
+    // SDK type: body: { filename: string, contentType: string }
     const presignRes = await getLate().media.getMediaPresignedUrl({
-      query: { fileName, contentType: mimeType },
+      body: { filename: fileName, contentType: mimeType as "image/png" | "image/jpeg" | "image/jpg" | "image/webp" | "image/gif" },
     });
 
     const presignData = presignRes.data as { uploadUrl?: string; publicUrl?: string };
-    if (!presignData?.uploadUrl || !presignData?.publicUrl) return null;
+    if (!presignData?.uploadUrl || !presignData?.publicUrl) {
+      console.error("[publish] Late presigned URL response missing uploadUrl/publicUrl:", presignData);
+      return null;
+    }
 
     // Upload the image binary to the presigned URL
     const buffer = Buffer.from(base64, "base64");
@@ -107,23 +111,23 @@ export async function POST(request: Request) {
         return { platform: "circle", data: result };
       }
 
-      // Bluesky posts go through native AT Protocol, not Late
+      // Bluesky: try Late first (if account connected), fall back to native AT Protocol
       if (piece.platform === "bluesky") {
-        if (!isBlueskyConfigured()) {
-          return {
-            platform: "bluesky",
-            data: { published: false, message: "Bluesky not configured. Add BLUESKY_HANDLE and BLUESKY_PASSWORD env vars." },
-          };
+        const accounts = await getAccounts();
+        const bskyAccount = accounts.find((a) => a.platform === "bluesky" && a.isActive);
+        if (!bskyAccount) {
+          // No Late account — try native
+          if (!isBlueskyConfigured()) {
+            return {
+              platform: "bluesky",
+              data: { published: false, message: "Bluesky not configured. Connect via Late or add BLUESKY_HANDLE + BLUESKY_PASSWORD env vars." },
+            };
+          }
+          const result = await createBlueskyPost(piece.copy, piece.imageData, piece.title || "Conceivable");
+          if (!result.success) throw new Error(result.error || "Bluesky post failed");
+          return { platform: "bluesky", data: { published: true, uri: result.uri } };
         }
-        const result = await createBlueskyPost(
-          piece.copy,
-          piece.imageData,
-          piece.title || "Conceivable"
-        );
-        if (!result.success) {
-          throw new Error(result.error || "Bluesky post failed");
-        }
-        return { platform: "bluesky", data: { published: true, uri: result.uri } };
+        // Has Late account — fall through to Late publishing below
       }
 
       // Blog posts go to Shopify if configured, otherwise return as ready to copy

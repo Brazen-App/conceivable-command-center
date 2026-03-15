@@ -419,8 +419,41 @@ export default function OperationsDashboardPage() {
       <QuickCaptureWidget />
 
       {/* 5 Things That Need Your Attention */}
-      <section className="mb-6">
-        <div className="flex items-center gap-3 mb-5">
+      <AttentionSection />
+    </div>
+  );
+}
+
+function AttentionSection() {
+  const [dismissed, setDismissed] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("cc-dismissed-priorities");
+      if (saved) setDismissed(new Set(JSON.parse(saved)));
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleDismiss = (num: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const next = new Set(dismissed);
+    next.add(num);
+    setDismissed(next);
+    localStorage.setItem("cc-dismissed-priorities", JSON.stringify([...next]));
+  };
+
+  const handleRestore = () => {
+    setDismissed(new Set());
+    localStorage.removeItem("cc-dismissed-priorities");
+  };
+
+  const visible = CEO_PRIORITIES.filter((p) => !dismissed.has(p.number));
+
+  return (
+    <section className="mb-6">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: `${ACCENT}14` }}
@@ -432,28 +465,46 @@ export default function OperationsDashboardPage() {
               className="text-sm font-bold"
               style={{ color: "var(--foreground)" }}
             >
-              5 Things That Need Your Attention
+              {visible.length > 0 ? `${visible.length} Things That Need Your Attention` : "All caught up!"}
             </h2>
             <p className="text-[10px]" style={{ color: "var(--muted)" }}>
-              Ranked by leverage. Do these and everything else moves forward.
+              {visible.length > 0 ? "Ranked by leverage. Do these and everything else moves forward." : "You've handled everything. Nice work."}
             </p>
           </div>
+          </div>
+          {dismissed.size > 0 && (
+            <button
+              onClick={handleRestore}
+              className="text-[10px] px-2 py-1 rounded-md"
+              style={{ color: "var(--muted)", border: "1px solid var(--border)" }}
+            >
+              Restore {dismissed.size} dismissed
+            </button>
+          )}
         </div>
 
         <div className="space-y-3">
-          {CEO_PRIORITIES.map((priority) => {
+          {visible.map((priority) => {
             const Icon = priority.icon;
             return (
-              <Link
+              <div
                 key={priority.number}
-                href={priority.link}
-                className="group block rounded-xl border overflow-hidden hover:shadow-md transition-all"
+                className="group block rounded-xl border overflow-hidden hover:shadow-md transition-all relative"
                 style={{
                   borderColor: "var(--border)",
                   backgroundColor: "var(--surface)",
                 }}
               >
-                <div className="flex items-stretch">
+                {/* Done button */}
+                <button
+                  onClick={(e) => handleDismiss(priority.number, e)}
+                  className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  style={{ backgroundColor: "#1EAA5518", color: "#1EAA55", border: "1px solid #1EAA5530" }}
+                >
+                  <Check size={10} /> Done
+                </button>
+
+                <Link href={priority.link} className="flex items-stretch">
                   {/* Numbered badge column */}
                   <div
                     className="flex flex-col items-center justify-center px-4 py-5 shrink-0"
@@ -503,12 +554,11 @@ export default function OperationsDashboardPage() {
                       </span>
                     </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             );
           })}
         </div>
       </section>
-    </div>
   );
 }

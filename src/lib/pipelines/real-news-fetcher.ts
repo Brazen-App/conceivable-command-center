@@ -251,24 +251,31 @@ const REDDIT_SUBREDDITS = [
 export async function fetchRedditPosts(maxPerSub = 3): Promise<RealRedditPost[]> {
   const allPosts: RealRedditPost[] = [];
 
-  for (const sub of REDDIT_SUBREDDITS) {
-    try {
+  // Fetch all subreddits in parallel (faster than sequential)
+  const results = await Promise.allSettled(
+    REDDIT_SUBREDDITS.map(async (sub) => {
       const url = `https://www.reddit.com/r/${sub}/hot.json?limit=${maxPerSub}&raw_json=1`;
       const resp = await fetch(url, {
         headers: {
-          "User-Agent": "ConceivableBot/1.0 (health research tool)",
+          // Reddit blocks generic bots — use a browser-like UA
+          "User-Agent": "Mozilla/5.0 (compatible; ConceivableHealth/1.0; +https://conceivable.com)",
+          "Accept": "application/json",
         },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(8000),
       });
-      if (!resp.ok) continue;
+      if (!resp.ok) {
+        console.warn(`[real-news] Reddit r/${sub} returned ${resp.status}`);
+        return [];
+      }
       const data = await resp.json();
+      const posts: RealRedditPost[] = [];
 
       const children = data?.data?.children || [];
       for (const child of children) {
         const post = child?.data;
-        if (!post || post.stickied) continue; // skip pinned posts
+        if (!post || post.stickied) continue;
 
-        allPosts.push({
+        posts.push({
           title: post.title || "",
           body: (post.selftext || "").slice(0, 2000),
           subreddit: `r/${sub}`,
@@ -279,17 +286,20 @@ export async function fetchRedditPosts(maxPerSub = 3): Promise<RealRedditPost[]>
           publishedAt: post.created_utc
             ? new Date(post.created_utc * 1000).toISOString()
             : new Date().toISOString(),
-          verified: true, // Reddit URLs from their API are always valid
+          verified: true,
         });
       }
+      return posts;
+    })
+  );
 
-      // Rate limit for Reddit
-      await new Promise((r) => setTimeout(r, 500));
-    } catch (err) {
-      console.warn(`[real-news] Reddit fetch failed for: r/${sub}`, err);
+  for (const result of results) {
+    if (result.status === "fulfilled" && result.value.length > 0) {
+      allPosts.push(...result.value);
     }
   }
 
+  console.log(`[real-news] Reddit: fetched ${allPosts.length} posts from ${results.filter(r => r.status === "fulfilled" && (r.value as RealRedditPost[]).length > 0).length}/${REDDIT_SUBREDDITS.length} subs`);
   return allPosts;
 }
 

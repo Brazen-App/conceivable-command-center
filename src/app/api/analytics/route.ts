@@ -38,7 +38,7 @@ function getDemoData() {
     topPages: [
       { path: "/", pageviews: 2340, avgDuration: 65 },
       { path: "/fertility-quiz", pageviews: 1580, avgDuration: 210 },
-      { path: "/blog/con-score-explained", pageviews: 890, avgDuration: 340 },
+      { path: "/blog/conceivable-score-explained", pageviews: 890, avgDuration: 340 },
       { path: "/pricing", pageviews: 720, avgDuration: 120 },
       { path: "/about", pageviews: 680, avgDuration: 95 },
       { path: "/blog/7-drivers-fertility", pageviews: 540, avgDuration: 280 },

@@ -33,7 +33,7 @@ export async function GET() {
         byPage: [
           { page: "/", users: 4 },
           { page: "/fertility-quiz", users: 3 },
-          { page: "/blog/con-score-explained", users: 2 },
+          { page: "/blog/conceivable-score-explained", users: 2 },
           { page: "/pricing", users: 2 },
           { page: "/about", users: 1 },
         ],

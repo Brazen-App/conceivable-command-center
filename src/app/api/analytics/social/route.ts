@@ -30,7 +30,7 @@ export async function GET() {
           bounceRate: 0.45,
         },
         platforms: [
-          { platform: "linkedin", sessions: 890, users: 720, conversions: 14, revenue: 1260, topContent: "/blog/con-score-explained" },
+          { platform: "linkedin", sessions: 890, users: 720, conversions: 14, revenue: 1260, topContent: "/blog/conceivable-score-explained" },
           { platform: "tiktok", sessions: 640, users: 580, conversions: 5, revenue: 450, topContent: "/fertility-quiz" },
           { platform: "instagram", sessions: 310, users: 260, conversions: 3, revenue: 270, topContent: "/" },
           { platform: "facebook", sessions: 180, users: 150, conversions: 1, revenue: 90, topContent: "/about" },

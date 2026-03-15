@@ -219,6 +219,10 @@ export default function AnalyticsPage() {
   // Realtime
   const [realtime, setRealtime] = useState<RealtimeData | null>(null);
 
+  // Early Access Signups
+  const [earlyAccess, setEarlyAccess] = useState<{ total: number; today: number; yesterday: number } | null>(null);
+  const [totalSubs, setTotalSubs] = useState(0);
+
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [setupInstructions, setSetupInstructions] = useState<string[]>([]);
   const [serviceAccountEmail, setServiceAccountEmail] = useState("");
@@ -227,13 +231,20 @@ export default function AnalyticsPage() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [overviewRes, emailRes, socialRes, realtimeRes, mcReportsRes] = await Promise.all([
+      const [overviewRes, emailRes, socialRes, realtimeRes, mcReportsRes, signupsRes] = await Promise.all([
         fetch("/api/analytics").then((r) => r.json()),
         fetch("/api/analytics/email-roi").then((r) => r.json()),
         fetch("/api/analytics/social").then((r) => r.json()),
         fetch("/api/analytics/realtime").then((r) => r.json()),
         fetch("/api/mailchimp/report").then((r) => r.json()).catch(() => ({ reports: [] })),
+        fetch("/api/mailchimp/signups").then((r) => r.ok ? r.json() : null).catch(() => null),
       ]);
+
+      // Early Access Signups
+      if (signupsRes) {
+        setEarlyAccess(signupsRes.earlyAccess ?? null);
+        setTotalSubs(signupsRes.totalSubscribers ?? 0);
+      }
 
       // Overview
       const isConnected = overviewRes.connected;
@@ -404,6 +415,53 @@ export default function AnalyticsPage() {
           Refresh
         </button>
       </div>
+
+      {/* ============================================= */}
+      {/* EARLY ACCESS SIGNUPS                          */}
+      {/* ============================================= */}
+      {earlyAccess && (
+        <div
+          className="rounded-xl p-5 border"
+          style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)" }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Users size={14} style={{ color: ACCENT }} />
+            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>
+              Early Access — 500 Founding Member Spots
+            </span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>{earlyAccess.total}</p>
+              <p className="text-[11px]" style={{ color: "var(--muted)" }}>total signups</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold" style={{ color: GREEN }}>+{earlyAccess.today}</p>
+              <p className="text-[11px]" style={{ color: "var(--muted)" }}>today</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>+{earlyAccess.yesterday}</p>
+              <p className="text-[11px]" style={{ color: "var(--muted)" }}>yesterday</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>{totalSubs.toLocaleString()}</p>
+              <p className="text-[11px]" style={{ color: "var(--muted)" }}>total Mailchimp list</p>
+            </div>
+          </div>
+          <div className="mt-3 w-full h-2 rounded-full" style={{ backgroundColor: `${ACCENT}15` }}>
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${Math.min((earlyAccess.total / 500) * 100, 100)}%`,
+                backgroundColor: ACCENT,
+              }}
+            />
+          </div>
+          <p className="text-[10px] mt-1.5 text-right" style={{ color: "var(--muted)" }}>
+            {earlyAccess.total >= 500 ? "Goal reached!" : `${500 - earlyAccess.total} spots remaining`}
+          </p>
+        </div>
+      )}
 
       {/* ============================================= */}
       {/* REAL-TIME USERS (Priority #3) */}

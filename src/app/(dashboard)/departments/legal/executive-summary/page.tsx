@@ -848,7 +848,7 @@ function buildPdfHtml() {
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2A2828;background:#fff;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 @page{margin:0.5in;size:letter}
-.print-container{max-width:100%}.print-container>div{margin-bottom:24px}
+.print-container{max-width:100%;padding:5% 10%}.print-container>div{margin-bottom:32px}
 .gradient-header{background:linear-gradient(135deg,#2A2828 0%,#356FB6 50%,#5A6FFF 100%)!important;border-radius:12px;padding:40px;margin-bottom:24px}
 .gradient-header h1{color:#F9F7F0;font-size:28px;font-weight:700;margin-bottom:4px}
 .gradient-header .subtitle{color:rgba(249,247,240,0.7);font-size:14px;margin-bottom:32px}
@@ -861,11 +861,11 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
 .section-sub{color:#888;font-size:12px;margin-bottom:12px}
 .tier-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;margin-top:12px}
 .card-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px}
-.card-grid .card{flex:1;min-width:30%;border:1px solid #e5e5e5;border-radius:10px;padding:12px}
+.card-grid .card{flex:1;min-width:30%;border:1px solid #e5e5e5;border-radius:10px;padding:16px 20px}
 .card .num{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px}
 .card h4{font-size:11px;font-weight:600}
 table{width:100%;border-collapse:collapse;font-size:11px}
-th{background:#f5f5f5;padding:8px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888}
+th{background:#f5f5f5;padding:12px 16px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#888}
 td{border-top:1px solid #eee}
 tr:nth-child(even){background:#fafafa}
 .page-break{page-break-before:always}
@@ -916,7 +916,7 @@ export default function ExecutiveSummaryPage() {
   }, []);
 
   return (
-    <div ref={printRef} className="space-y-8 pb-12">
+    <div ref={printRef} className="space-y-10 pb-16 px-4 md:px-8 lg:px-12">
       <HeroHeader />
       <PortfolioArchitecture />
       <PatentTable />

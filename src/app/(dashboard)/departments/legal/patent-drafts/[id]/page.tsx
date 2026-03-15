@@ -146,9 +146,6 @@ export default function PatentEditorPage() {
               </h2>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs" style={{ color: "var(--muted)" }}>
-                  {wordCount.toLocaleString()} words
-                </span>
-                <span className="text-xs" style={{ color: "var(--muted)" }}>
                   {sections.length} sections
                 </span>
               </div>
@@ -259,7 +256,7 @@ export default function PatentEditorPage() {
             {sections[activeSection]?.title}
           </h3>
           <span className="text-xs" style={{ color: "var(--muted)" }}>
-            {sections[activeSection]?.content.trim().split(/\s+/).filter(Boolean).length} words
+            Section {activeSection + 1} of {sections.length}
           </span>
         </div>
 

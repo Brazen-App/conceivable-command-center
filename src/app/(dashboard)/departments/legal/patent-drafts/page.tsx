@@ -84,7 +84,6 @@ function DraftCard({ draft }: { draft: PatentDraftEntry }) {
           </p>
 
           <div className="flex items-center gap-4 text-xs" style={{ color: "var(--muted)" }}>
-            <span>{draft.wordCount.toLocaleString()} words</span>
             <span>{draft.sections.length} sections</span>
             <span>Last edited {draft.lastEdited}</span>
           </div>

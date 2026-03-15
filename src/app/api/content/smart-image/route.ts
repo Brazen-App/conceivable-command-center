@@ -17,9 +17,19 @@ export async function POST(req: Request) {
     }
 
     // Use branded image generation (Satori + Sharp — no external API, instant, on-brand)
+    // Pass through any template-specific options from the request
     const result = await generateBrandedImage({
       topic: title || topic,
       platform,
+      template: body.template,
+      accentColor: body.accentColor,
+      subtitle: body.subtitle,
+      stat: body.stat,
+      statLabel: body.statLabel,
+      leftText: body.leftText,
+      rightText: body.rightText,
+      points: body.points,
+      attribution: body.attribution,
     });
 
     return NextResponse.json({

@@ -221,7 +221,7 @@ export default function PatentsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [discussTarget, setDiscussTarget] = useState<PatentClaim | null>(null);
   const [draftTarget, setDraftTarget] = useState<PatentClaim | null>(null);
-  const [viewFilter, setViewFilter] = useState<"all" | "urgent" | "in_progress" | "protected" | "archived">("all");
+  const [viewFilter, setViewFilter] = useState<"filed" | "drafts_to_file" | "patents_to_file" | "claims_protected">("filed");
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
   const [showAddForm, setShowAddForm] = useState(false);
   const [viewDraftTarget, setViewDraftTarget] = useState<PatentClaim | null>(null);
@@ -246,11 +246,10 @@ export default function PatentsPage() {
 
   const fetchClaims = useCallback(async () => {
     try {
-      const includeArchived = viewFilter === "archived";
-      const res = await fetch(`/api/patent-claims${includeArchived ? "?includeArchived=true" : ""}`);
+      const res = await fetch("/api/patent-claims");
       if (!res.ok) throw new Error("Failed to fetch claims");
       const data = await res.json();
-      if (data.length === 0 && !includeArchived) {
+      if (data.length === 0) {
         await fetch("/api/seed", { method: "POST" });
         const retry = await fetch("/api/patent-claims");
         setClaims(await retry.json());
@@ -319,18 +318,21 @@ export default function PatentsPage() {
     }
   };
 
-  // Filter claims
-  const fileNowClaims = claims.filter((c) => c.urgency === "file_now" && !c.archived);
-  const inProgressClaims = claims.filter((c) => (c.status === "drafted" || c.status === "under_review") && !c.archived);
-  const protectedClaims = claims.filter((c) => (c.status === "granted" || c.status === "filed") && !c.archived);
+  // Filter claims by new tab structure
+  const filedClaims = claims.filter((c) => (c.status === "filed" || c.status === "granted") && !c.archived);
+  const draftsToFile = claims.filter((c) => (c.status === "drafted" || c.status === "under_review") && !c.archived);
+  const patentsToFile = claims.filter((c) => (c.status === "not_drafted") && !c.archived);
+  const claimsProtected = claims.filter((c) => c.status === "granted" && !c.archived);
   const activeClaims = claims.filter((c) => !c.archived);
-  const archivedClaims = claims.filter((c) => c.archived);
 
-  let displayClaims = activeClaims;
-  if (viewFilter === "urgent") displayClaims = fileNowClaims;
-  else if (viewFilter === "in_progress") displayClaims = inProgressClaims;
-  else if (viewFilter === "protected") displayClaims = protectedClaims;
-  else if (viewFilter === "archived") displayClaims = archivedClaims;
+  // Keep these for backward compat with urgent banner
+  const fileNowClaims = claims.filter((c) => c.urgency === "file_now" && !c.archived);
+  const protectedClaims = claimsProtected;
+
+  let displayClaims = filedClaims;
+  if (viewFilter === "drafts_to_file") displayClaims = draftsToFile;
+  else if (viewFilter === "patents_to_file") displayClaims = patentsToFile;
+  else if (viewFilter === "claims_protected") displayClaims = claimsProtected;
 
   // Add new patent claim
   const handleAddClaim = async (data: {
@@ -463,11 +465,10 @@ export default function PatentsPage() {
       {/* Filter Tabs + Add Button */}
       <div className="flex gap-2 flex-wrap items-center">
         {([
-          { key: "all", label: "All Active", count: activeClaims.length },
-          { key: "urgent", label: "File Now", count: fileNowClaims.length },
-          { key: "in_progress", label: "In Progress", count: inProgressClaims.length },
-          { key: "protected", label: "Protected", count: protectedClaims.length },
-          { key: "archived", label: "Archived", count: archivedClaims.length },
+          { key: "filed", label: "Filed", count: filedClaims.length },
+          { key: "drafts_to_file", label: "Drafts to File", count: draftsToFile.length },
+          { key: "patents_to_file", label: "Patents to File", count: patentsToFile.length },
+          { key: "claims_protected", label: "Claims Protected", count: claimsProtected.length },
         ] as const).map(({ key, label, count }) => (
           <button
             key={key}
@@ -504,7 +505,7 @@ export default function PatentsPage() {
         {displayClaims.length === 0 && (
           <div className="text-center py-12">
             <p className="text-sm" style={{ color: "var(--muted)" }}>
-              {viewFilter === "archived" ? "No archived patents." : "No patents in this category."}
+              No patents in this category.
             </p>
           </div>
         )}
@@ -522,7 +523,7 @@ export default function PatentsPage() {
             onUnarchive={() => handleUnarchive(claim.id)}
             onDiscuss={() => setDiscussTarget(claim)}
             onViewDraft={() => setViewDraftTarget(claim)}
-            isArchived={viewFilter === "archived"}
+            isArchived={false}
           />
         ))}
       </div>

@@ -13,7 +13,7 @@ function getClient() {
   });
 }
 
-const PROPERTY = `properties/${process.env.GA4_PROPERTY_ID ?? "375867523"}`;
+const PROPERTY = `properties/${process.env.GA4_PROPERTY_ID ?? "375866253"}`;
 
 /* ── GET /api/analytics/realtime — Real-time active users ── */
 export async function GET() {

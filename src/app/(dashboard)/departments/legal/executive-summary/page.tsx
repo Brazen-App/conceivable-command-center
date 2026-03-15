@@ -140,7 +140,7 @@ function HeroHeader() {
               className="rounded-xl px-6 py-5"
               style={{ backgroundColor: "rgba(249,247,240,0.08)", backdropFilter: "blur(12px)" }}
             >
-              <p className="text-2xl md:text-3xl font-bold mb-1" style={{ color: OFF_WHITE }}>
+              <p className="text-xl md:text-2xl font-bold mb-1" style={{ color: OFF_WHITE }}>
                 {stat.value}
               </p>
               <p className="text-sm" style={{ color: "rgba(249,247,240,0.6)" }}>

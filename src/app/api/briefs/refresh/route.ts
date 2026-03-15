@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { invokeAgent } from "@/lib/agents/invoke";
 import {
@@ -7,9 +7,15 @@ import {
   type RealResearchItem,
   type RealRedditPost,
 } from "@/lib/pipelines/real-news-fetcher";
+import { fetchVideoContent, type VideoContentItem } from "@/lib/pipelines/video-content-fetcher";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
+
+// In-memory cache for video items (no Prisma model needed)
+let globalVideoCache: VideoContentItem[] = [];
+let globalVideoCacheTime = 0;
+export { globalVideoCache, globalVideoCacheTime };
 
 /**
  * POST /api/briefs/refresh
@@ -23,8 +29,15 @@ export async function POST() {
   const startTime = Date.now();
 
   try {
-    // 1. Fetch real content from all sources
-    const fetchResult = await fetchAllRealContent();
+    // 1. Fetch real content from all sources (including video)
+    const [fetchResult, videoItems] = await Promise.all([
+      fetchAllRealContent(),
+      fetchVideoContent().catch(() => [] as VideoContentItem[]),
+    ]);
+
+    // Store video items in memory cache for the content engine
+    globalVideoCache = videoItems;
+    globalVideoCacheTime = Date.now();
 
     // 2. Filter to only verified items for news (PubMed/Reddit already verified)
     const verifiedNews = fetchResult.news.filter((n) => n.verified);
@@ -82,6 +95,7 @@ export async function POST() {
         news: analyzedNews.length,
         research: analyzedResearch.length,
         reddit: analyzedReddit.length,
+        video: videoItems.length,
       },
       stats: fetchResult.stats,
     });
@@ -98,10 +112,20 @@ export async function POST() {
 }
 
 /**
- * Also support GET for cron job triggers
+ * Also support GET for cron job triggers.
+ * If ?redirect=1, redirect back to content page after refresh (for no-JS button).
  */
-export async function GET() {
-  return POST();
+export async function GET(req: NextRequest) {
+  const redirect = req.nextUrl.searchParams.get("redirect");
+  const result = await POST();
+
+  if (redirect) {
+    return NextResponse.redirect(
+      new URL("/departments/content?refreshed=1", req.nextUrl.origin)
+    );
+  }
+
+  return result;
 }
 
 // ────────────────────────────────────────────

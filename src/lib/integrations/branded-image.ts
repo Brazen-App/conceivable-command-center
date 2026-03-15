@@ -2,17 +2,57 @@ import satori from "satori";
 import sharp from "sharp";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { colors } from "@/lib/theme";
 
 /**
- * Branded image generator — creates social media graphics with:
- * - Brand gradient background
- * - Full topic title text (dynamic font sizing)
- * - CONCEIVABLE wordmark
+ * Branded Image Generator — 8 Template System
+ * ─────────────────────────────────────────────
+ * Creates social media graphics using 8 distinct visual templates
+ * that rotate for creative variety within the Conceivable brand.
  *
- * Pure Satori + Sharp — no external API calls, instant generation.
+ * Templates: StatBomb, Split, Editorial, DataCard, Quote,
+ *            Breakdown, GradientMoment, StoryFrame
+ *
+ * Rules:
+ * - Never gradient backgrounds (except Template 7, max 1/week)
+ * - Cream (#F9F7F0) is the default background
+ * - Accents used sparingly — stripes, borders, small elements
+ * - Every graphic must look like a senior creative director made it
  */
 
-// ── Font loading (cached) ───────────────────────────────────────────
+// ── Types ───────────────────────────────────────────────────
+
+export type TemplateName =
+  | "stat-bomb"
+  | "split"
+  | "editorial"
+  | "data-card"
+  | "quote"
+  | "breakdown"
+  | "gradient-moment"
+  | "story-frame";
+
+export interface BrandedImageOptions {
+  topic: string;
+  platform?: string;
+  template?: TemplateName;
+  accentColor?: string;
+  subtitle?: string;
+  stat?: string;
+  statLabel?: string;
+  // For split template
+  leftText?: string;
+  rightText?: string;
+  // For breakdown template
+  points?: string[];
+  // For quote template
+  attribution?: string;
+  // Legacy compat
+  gradientFrom?: string;
+  gradientTo?: string;
+}
+
+// ── Font loading ────────────────────────────────────────────
 
 let fontBuffer: Buffer | null = null;
 
@@ -23,9 +63,6 @@ function loadFont(): Buffer {
     join(process.cwd(), "src/lib/integrations/fonts/Montserrat-Bold.ttf"),
     join(process.cwd(), "public/fonts/Montserrat-Bold.ttf"),
     join(__dirname, "fonts", "Montserrat-Bold.ttf"),
-    join(process.cwd(), "src/lib/integrations/fonts/Youth-Bold.ttf"),
-    join(__dirname, "fonts", "Youth-Bold.ttf"),
-    join(process.cwd(), "public/fonts/Youth-Bold.ttf"),
   ];
 
   for (const p of paths) {
@@ -37,7 +74,6 @@ function loadFont(): Buffer {
     }
   }
 
-  // Fallback: Next.js built-in Noto Sans
   try {
     const notoPath = join(process.cwd(), "node_modules/next/dist/compiled/@vercel/og/noto-sans-v27-latin-regular.ttf");
     fontBuffer = readFileSync(notoPath);
@@ -49,61 +85,282 @@ function loadFont(): Buffer {
   throw new Error("No font file found for branded image generation");
 }
 
-// ── Brand gradient palettes ─────────────────────────────────────────
+// ── Platform sizes ──────────────────────────────────────────
 
-const BRAND_GRADIENTS = [
-  { from: "#5A6FFF", to: "#356FB6", name: "blue-navy" },
-  { from: "#356FB6", to: "#5A6FFF", name: "navy-blue" },
-  { from: "#5A6FFF", to: "#ACB7FF", name: "blue-baby" },
-  { from: "#5A6FFF", to: "#9686B9", name: "blue-purple" },
-  { from: "#356FB6", to: "#78C3BF", name: "navy-teal" },
-  { from: "#9686B9", to: "#5A6FFF", name: "purple-blue" },
-  { from: "#E37FB1", to: "#9686B9", name: "pink-purple" },
-  { from: "#356FB6", to: "#1EAA55", name: "navy-green" },
-];
-
-function pickGradient(topic: string): { from: string; to: string } {
-  // Deterministic gradient based on topic string hash
-  let hash = 0;
-  for (let i = 0; i < topic.length; i++) {
-    hash = ((hash << 5) - hash + topic.charCodeAt(i)) | 0;
-  }
-  const idx = Math.abs(hash) % BRAND_GRADIENTS.length;
-  return BRAND_GRADIENTS[idx];
-}
-
-// ── Dynamic font sizing ─────────────────────────────────────────────
-
-function dynamicFontSize(text: string, baseWidth: number): number {
-  const len = text.length;
-  // Scale font down for longer titles
-  if (len <= 20) return Math.round(baseWidth * 0.08);    // short: big
-  if (len <= 35) return Math.round(baseWidth * 0.065);   // medium
-  if (len <= 50) return Math.round(baseWidth * 0.055);   // longer
-  if (len <= 70) return Math.round(baseWidth * 0.045);   // long
-  return Math.round(baseWidth * 0.038);                   // very long
-}
-
-// ── Core branded image generation ───────────────────────────────────
-
-export interface BrandedImageOptions {
-  topic: string;
-  platform?: string;
-  gradientFrom?: string;
-  gradientTo?: string;
-}
-
-// Platform-specific dimensions matching real platform aspect ratios
 const PLATFORM_SIZES: Record<string, { width: number; height: number }> = {
-  "instagram-post": { width: 1080, height: 1080 },       // 1:1
-  "instagram-carousel": { width: 1080, height: 1080 },    // 1:1
-  linkedin: { width: 1200, height: 628 },                 // 1.91:1
-  pinterest: { width: 1000, height: 1500 },                // 2:3
-  tiktok: { width: 1080, height: 1920 },                   // 9:16
-  youtube: { width: 1280, height: 720 },                   // 16:9
-  blog: { width: 1200, height: 628 },                      // 1.91:1
-  circle: { width: 1080, height: 1080 },                   // 1:1
+  "instagram-post": { width: 1080, height: 1080 },
+  "instagram-carousel": { width: 1080, height: 1080 },
+  linkedin: { width: 1200, height: 628 },
+  pinterest: { width: 1000, height: 1500 },
+  tiktok: { width: 1080, height: 1920 },
+  youtube: { width: 1280, height: 720 },
+  blog: { width: 1200, height: 628 },
+  circle: { width: 1080, height: 1080 },
+  square: { width: 1080, height: 1080 },
 };
+
+// ── Helpers ─────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SatoriElement = any;
+
+function text(content: string, style: Record<string, unknown>): SatoriElement {
+  return { type: "div", props: { style: { fontFamily: "Brand", ...style }, children: content } };
+}
+
+function box(style: Record<string, unknown>, children: SatoriElement | SatoriElement[]): SatoriElement {
+  // Satori requires explicit display on elements with multiple children
+  const finalStyle = style.display ? style : { display: "flex", ...style };
+  return { type: "div", props: { style: finalStyle, children: Array.isArray(children) ? children : [children] } };
+}
+
+function wordmark(size: number, color: string): SatoriElement {
+  return text("CONCEIVABLE", {
+    fontSize: `${size}px`,
+    fontWeight: 700,
+    letterSpacing: `${size * 0.3}px`,
+    color,
+    textTransform: "uppercase",
+  });
+}
+
+function accentStripe(w: number, h: number, color: string, position: Record<string, unknown> = {}): SatoriElement {
+  return box({
+    width: `${w}px`,
+    height: `${h}px`,
+    backgroundColor: color,
+    borderRadius: "2px",
+    ...position,
+  }, []);
+}
+
+// ── Template Builders ───────────────────────────────────────
+
+function buildStatBomb(opts: BrandedImageOptions, w: number, h: number, accent: string): SatoriElement {
+  const stat = opts.stat || opts.topic.match(/\d[\d,.]*\s*\w*/)?.[0] || "—";
+  const label = opts.statLabel || opts.subtitle || opts.topic;
+  const useBlueBg = stat.length <= 6;
+  const bg = useBlueBg ? colors.blue : colors.offWhite;
+  const fg = useBlueBg ? "#FFFFFF" : colors.black;
+  const mutedFg = useBlueBg ? "rgba(255,255,255,0.7)" : colors.muted;
+  const statSize = Math.round(w * 0.14);
+  const labelSize = Math.round(w * 0.025);
+  const p = Math.round(w * 0.1);
+
+  return box(
+    { width: `${w}px`, height: `${h}px`, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-start", backgroundColor: bg, padding: `${p}px`, position: "relative" },
+    [
+      // Accent stripe at top
+      box({ position: "absolute", top: "0", left: "0", width: `${w}px`, height: "6px", backgroundColor: accent }, []),
+      // Stat
+      text(stat, { fontSize: `${statSize}px`, fontWeight: 700, color: fg, lineHeight: "1.1", letterSpacing: "-2px" }),
+      // Divider
+      accentStripe(Math.round(w * 0.08), 4, accent, { marginTop: `${Math.round(p * 0.4)}px`, marginBottom: `${Math.round(p * 0.4)}px` }),
+      // Label
+      text(label, { fontSize: `${labelSize}px`, fontWeight: 700, color: mutedFg, lineHeight: "1.5", maxWidth: `${w * 0.7}px` }),
+      // Wordmark
+      box({ position: "absolute", bottom: `${Math.round(p * 0.6)}px`, right: `${p}px` }, [wordmark(Math.round(w * 0.016), mutedFg)]),
+    ]
+  );
+}
+
+function buildSplit(opts: BrandedImageOptions, w: number, h: number, accent: string): SatoriElement {
+  const leftText = opts.leftText || "The old way";
+  const rightText = opts.rightText || opts.topic;
+  const halfW = Math.round(w / 2);
+  const fontSize = Math.round(w * 0.032);
+  const p = Math.round(w * 0.06);
+
+  return box(
+    { width: `${w}px`, height: `${h}px`, display: "flex", flexDirection: "row" },
+    [
+      // Left — dark
+      box(
+        { width: `${halfW}px`, height: `${h}px`, display: "flex", flexDirection: "column", justifyContent: "center", padding: `${p}px`, backgroundColor: colors.black },
+        [
+          text(leftText, { fontSize: `${fontSize}px`, fontWeight: 700, color: "rgba(249,247,240,0.5)", lineHeight: "1.4", textDecoration: "line-through" }),
+        ]
+      ),
+      // Right — accent
+      box(
+        { width: `${halfW}px`, height: `${h}px`, display: "flex", flexDirection: "column", justifyContent: "center", padding: `${p}px`, backgroundColor: accent, position: "relative" },
+        [
+          text(rightText, { fontSize: `${fontSize}px`, fontWeight: 700, color: "#FFFFFF", lineHeight: "1.4" }),
+          box({ position: "absolute", bottom: `${Math.round(p * 0.6)}px`, right: `${p}px` }, [wordmark(Math.round(w * 0.014), "rgba(255,255,255,0.6)")]),
+        ]
+      ),
+    ]
+  );
+}
+
+function buildEditorial(opts: BrandedImageOptions, w: number, h: number, accent: string): SatoriElement {
+  const headline = opts.topic;
+  const p = Math.round(w * 0.1);
+  const fontSize = Math.round(w * 0.045);
+
+  return box(
+    { width: `${w}px`, height: `${h}px`, display: "flex", flexDirection: "column", justifyContent: "center", padding: `${p}px`, backgroundColor: colors.offWhite, position: "relative" },
+    [
+      // Thin accent line at very top
+      box({ position: "absolute", top: "0", left: `${p}px`, right: `${p}px`, height: "3px", backgroundColor: accent }, []),
+      // Headline
+      text(headline, { fontSize: `${fontSize}px`, fontWeight: 700, color: colors.black, lineHeight: "1.35", letterSpacing: "-0.5px", maxWidth: `${w - p * 2}px` }),
+      // Wordmark integrated below
+      box({ marginTop: `${Math.round(p * 0.6)}px`, display: "flex", alignItems: "center", gap: `${Math.round(w * 0.02)}px` }, [
+        accentStripe(Math.round(w * 0.04), 2, accent),
+        wordmark(Math.round(w * 0.015), colors.muted),
+      ]),
+    ]
+  );
+}
+
+function buildDataCard(opts: BrandedImageOptions, w: number, h: number, accent: string): SatoriElement {
+  const stat = opts.stat || "74";
+  const label = opts.statLabel || "Conceivable Score";
+  const subtitle = opts.subtitle || opts.topic;
+  const p = Math.round(w * 0.08);
+  const arcSize = Math.round(Math.min(w, h) * 0.35);
+
+  return box(
+    { width: `${w}px`, height: `${h}px`, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", backgroundColor: "#FFFEFA", padding: `${p}px`, position: "relative" },
+    [
+      // Score arc placeholder (rendered as a circle with the number)
+      box(
+        { width: `${arcSize}px`, height: `${arcSize}px`, borderRadius: "50%", border: `${Math.round(arcSize * 0.06)}px solid ${accent}`, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", position: "relative" },
+        [
+          text(stat, { fontSize: `${Math.round(arcSize * 0.35)}px`, fontWeight: 700, color: colors.black, lineHeight: "1" }),
+          text(label, { fontSize: `${Math.round(arcSize * 0.08)}px`, fontWeight: 700, color: colors.muted, textTransform: "uppercase", letterSpacing: "2px", marginTop: "4px" }),
+        ]
+      ),
+      // Subtitle
+      text(subtitle, { fontSize: `${Math.round(w * 0.022)}px`, fontWeight: 700, color: colors.muted, lineHeight: "1.5", textAlign: "center", marginTop: `${Math.round(p * 0.6)}px`, maxWidth: `${w * 0.7}px` }),
+      // Wordmark
+      box({ position: "absolute", bottom: `${Math.round(p * 0.5)}px` }, [wordmark(Math.round(w * 0.014), `${colors.muted}80`)]),
+    ]
+  );
+}
+
+function buildQuote(opts: BrandedImageOptions, w: number, h: number, accent: string): SatoriElement {
+  const quote = opts.topic;
+  const attribution = opts.attribution || "— Kirsten Karchmer";
+  const useDarkBg = quote.length < 80;
+  const bg = useDarkBg ? accent : colors.offWhite;
+  const fg = useDarkBg ? "#FFFFFF" : colors.black;
+  const mutedFg = useDarkBg ? "rgba(255,255,255,0.6)" : colors.muted;
+  const p = Math.round(w * 0.1);
+  const fontSize = Math.round(w * 0.038);
+
+  return box(
+    { width: `${w}px`, height: `${h}px`, display: "flex", flexDirection: "column", justifyContent: "center", padding: `${p}px`, backgroundColor: bg, position: "relative" },
+    [
+      // Large open quote mark
+      text("\u201C", { fontSize: `${Math.round(w * 0.12)}px`, color: useDarkBg ? "rgba(255,255,255,0.15)" : `${accent}20`, lineHeight: "0.8", position: "absolute", top: `${p}px`, left: `${Math.round(p * 0.8)}px` }),
+      // Quote text
+      text(quote, { fontSize: `${fontSize}px`, fontWeight: 700, color: fg, lineHeight: "1.45", letterSpacing: "-0.3px" }),
+      // Attribution
+      text(attribution, { fontSize: `${Math.round(w * 0.018)}px`, fontWeight: 700, color: mutedFg, marginTop: `${Math.round(p * 0.5)}px`, textTransform: "uppercase", letterSpacing: "2px" }),
+      // Wordmark
+      box({ position: "absolute", bottom: `${Math.round(p * 0.5)}px`, right: `${p}px` }, [wordmark(Math.round(w * 0.013), mutedFg)]),
+    ]
+  );
+}
+
+function buildBreakdown(opts: BrandedImageOptions, w: number, h: number, accent: string): SatoriElement {
+  const title = opts.topic;
+  const points = opts.points || ["Point one", "Point two", "Point three", "Point four"];
+  const p = Math.round(w * 0.07);
+  const cardGap = Math.round(w * 0.025);
+  const cardW = Math.round((w - p * 2 - cardGap) / 2);
+  const cardH = Math.round((h * 0.5 - cardGap) / 2);
+
+  const cards = points.slice(0, 4).map((point, i) =>
+    box(
+      { width: `${cardW}px`, height: `${cardH}px`, borderRadius: "16px", padding: `${Math.round(w * 0.03)}px`, backgroundColor: `${accent}08`, border: `1px solid ${accent}20`, display: "flex", flexDirection: "column", justifyContent: "center" },
+      [
+        text(`${i + 1}`, { fontSize: `${Math.round(w * 0.03)}px`, fontWeight: 700, color: accent, marginBottom: "8px" }),
+        text(point, { fontSize: `${Math.round(w * 0.02)}px`, fontWeight: 700, color: colors.black, lineHeight: "1.4" }),
+      ]
+    )
+  );
+
+  return box(
+    { width: `${w}px`, height: `${h}px`, display: "flex", flexDirection: "column", backgroundColor: colors.offWhite, padding: `${p}px`, position: "relative" },
+    [
+      // Title
+      text(title, { fontSize: `${Math.round(w * 0.032)}px`, fontWeight: 700, color: colors.black, lineHeight: "1.3", marginBottom: `${Math.round(p * 0.5)}px` }),
+      // Accent stripe
+      accentStripe(Math.round(w * 0.06), 3, accent, { marginBottom: `${Math.round(p * 0.5)}px` }),
+      // 2x2 card grid
+      box(
+        { display: "flex", flexWrap: "wrap", gap: `${cardGap}px`, flex: "1" },
+        cards
+      ),
+      // Wordmark
+      box({ position: "absolute", bottom: `${Math.round(p * 0.5)}px`, right: `${p}px` }, [wordmark(Math.round(w * 0.014), `${colors.muted}80`)]),
+    ]
+  );
+}
+
+function buildGradientMoment(opts: BrandedImageOptions, w: number, h: number): SatoriElement {
+  const headline = opts.topic;
+  const p = Math.round(w * 0.1);
+  const fontSize = Math.round(w * 0.042);
+
+  return box(
+    { width: `${w}px`, height: `${h}px`, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: `linear-gradient(135deg, ${colors.blue} 0%, ${colors.purple} 100%)`, padding: `${p}px`, position: "relative" },
+    [
+      text(headline, { fontSize: `${fontSize}px`, fontWeight: 700, color: "#FFFFFF", lineHeight: "1.35", textAlign: "center", letterSpacing: "-0.5px" }),
+      box({ position: "absolute", bottom: `${Math.round(p * 0.6)}px` }, [wordmark(Math.round(w * 0.018), "rgba(255,255,255,0.5)")]),
+    ]
+  );
+}
+
+function buildStoryFrame(opts: BrandedImageOptions, w: number, h: number, accent: string): SatoriElement {
+  const headline = opts.topic;
+  const subtitle = opts.subtitle || "";
+  const p = Math.round(w * 0.08);
+  const headSize = Math.round(w * 0.04);
+  const subSize = Math.round(w * 0.022);
+
+  return box(
+    { width: `${w}px`, height: `${h}px`, display: "flex", flexDirection: "column", justifyContent: "center", backgroundColor: colors.offWhite, padding: `${p}px`, position: "relative" },
+    [
+      // Organic accent shape (top-right corner)
+      box({ position: "absolute", top: "0", right: "0", width: `${Math.round(w * 0.35)}px`, height: `${Math.round(h * 0.25)}px`, backgroundColor: `${accent}08`, borderRadius: `0 0 0 ${Math.round(w * 0.3)}px` }, []),
+      // Left accent border
+      box({ position: "absolute", top: `${p}px`, bottom: `${p}px`, left: `${Math.round(p * 0.5)}px`, width: "4px", backgroundColor: accent, borderRadius: "2px" }, []),
+      // Content
+      box({ paddingLeft: `${Math.round(p * 0.4)}px`, display: "flex", flexDirection: "column", gap: `${Math.round(p * 0.4)}px` }, [
+        text(headline, { fontSize: `${headSize}px`, fontWeight: 700, color: colors.black, lineHeight: "1.4" }),
+        ...(subtitle ? [text(subtitle, { fontSize: `${subSize}px`, fontWeight: 700, color: colors.muted, lineHeight: "1.5" })] : []),
+      ]),
+      // Wordmark bottom
+      box({ position: "absolute", bottom: `${Math.round(p * 0.5)}px`, right: `${p}px` }, [wordmark(Math.round(w * 0.014), `${colors.muted}60`)]),
+    ]
+  );
+}
+
+// ── Auto-select template based on content ───────────────────
+
+function autoSelectTemplate(opts: BrandedImageOptions): TemplateName {
+  const t = opts.topic.toLowerCase();
+  // If stat/number is provided or topic leads with a number
+  if (opts.stat || /^\d/.test(opts.topic)) return "stat-bomb";
+  // If split content provided
+  if (opts.leftText && opts.rightText) return "split";
+  // If points provided
+  if (opts.points && opts.points.length >= 3) return "breakdown";
+  // If attribution provided (quote)
+  if (opts.attribution) return "quote";
+  // Short punchy text → editorial
+  if (t.length < 60) return "editorial";
+  // Longer explanatory text → story frame
+  if (t.length > 120) return "story-frame";
+  // Default to editorial
+  return "editorial";
+}
+
+// ── Main export ─────────────────────────────────────────────
 
 export async function generateBrandedImage(opts: BrandedImageOptions): Promise<{
   base64: string;
@@ -111,156 +368,44 @@ export async function generateBrandedImage(opts: BrandedImageOptions): Promise<{
 }> {
   const font = loadFont();
   const { width, height } = PLATFORM_SIZES[opts.platform || "instagram-post"] || { width: 1080, height: 1080 };
+  const accent = opts.accentColor || colors.blue;
+  const template = opts.template || autoSelectTemplate(opts);
 
-  const gradient = opts.gradientFrom && opts.gradientTo
-    ? { from: opts.gradientFrom, to: opts.gradientTo }
-    : pickGradient(opts.topic);
+  let element: SatoriElement;
 
-  // Full topic text — dynamic font size adjusts for length
-  const titleText = opts.topic.toUpperCase();
-  const fontSize = dynamicFontSize(titleText, width);
-  const logoFontSize = Math.round(width * 0.022);
-  const padding = Math.round(width * 0.08);
-
-  // Word wrap title — chars per line scales with font size
-  const maxCharsPerLine = titleText.length <= 30 ? 18 : titleText.length <= 50 ? 22 : 28;
-  const words = titleText.split(/\s+/);
-  const lines: string[] = [];
-  let currentLine = "";
-  for (const word of words) {
-    const test = currentLine ? `${currentLine} ${word}` : word;
-    if (test.length > maxCharsPerLine && currentLine) {
-      lines.push(currentLine);
-      currentLine = word;
-    } else {
-      currentLine = test;
-    }
+  switch (template) {
+    case "stat-bomb":
+      element = buildStatBomb(opts, width, height, accent);
+      break;
+    case "split":
+      element = buildSplit(opts, width, height, accent);
+      break;
+    case "editorial":
+      element = buildEditorial(opts, width, height, accent);
+      break;
+    case "data-card":
+      element = buildDataCard(opts, width, height, accent);
+      break;
+    case "quote":
+      element = buildQuote(opts, width, height, accent);
+      break;
+    case "breakdown":
+      element = buildBreakdown(opts, width, height, accent);
+      break;
+    case "gradient-moment":
+      element = buildGradientMoment(opts, width, height);
+      break;
+    case "story-frame":
+      element = buildStoryFrame(opts, width, height, accent);
+      break;
+    default:
+      element = buildEditorial(opts, width, height, accent);
   }
-  if (currentLine) lines.push(currentLine);
-
-  const lineHeight = fontSize * 1.35;
-
-  // Build the Satori element tree
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const element: any = {
-    type: "div",
-    props: {
-      style: {
-        width: `${width}px`,
-        height: `${height}px`,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        background: `linear-gradient(145deg, ${gradient.from} 0%, ${gradient.to} 100%)`,
-        padding: `${padding}px`,
-        position: "relative",
-      },
-      children: [
-        // Decorative circle (top right)
-        {
-          type: "div",
-          props: {
-            style: {
-              position: "absolute",
-              top: `-${Math.round(height * 0.15)}px`,
-              right: `-${Math.round(width * 0.1)}px`,
-              width: `${Math.round(width * 0.5)}px`,
-              height: `${Math.round(width * 0.5)}px`,
-              borderRadius: "50%",
-              background: "rgba(255, 255, 255, 0.06)",
-            },
-          },
-        },
-        // Decorative circle (bottom left)
-        {
-          type: "div",
-          props: {
-            style: {
-              position: "absolute",
-              bottom: `-${Math.round(height * 0.1)}px`,
-              left: `-${Math.round(width * 0.15)}px`,
-              width: `${Math.round(width * 0.4)}px`,
-              height: `${Math.round(width * 0.4)}px`,
-              borderRadius: "50%",
-              background: "rgba(255, 255, 255, 0.04)",
-            },
-          },
-        },
-        // Title text block
-        {
-          type: "div",
-          props: {
-            style: {
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0",
-              maxWidth: `${width - padding * 2}px`,
-            },
-            children: lines.map((line) => ({
-              type: "div",
-              props: {
-                style: {
-                  color: "#F9F7F0",
-                  fontSize: `${fontSize}px`,
-                  fontFamily: "Brand",
-                  fontWeight: 700,
-                  textAlign: "center",
-                  letterSpacing: `${fontSize * 0.08}px`,
-                  lineHeight: `${lineHeight}px`,
-                  textShadow: "0 2px 16px rgba(0,0,0,0.2)",
-                },
-                children: line,
-              },
-            })),
-          },
-        },
-        // Divider line
-        {
-          type: "div",
-          props: {
-            style: {
-              width: `${Math.round(width * 0.12)}px`,
-              height: "3px",
-              backgroundColor: "rgba(249, 247, 240, 0.5)",
-              borderRadius: "2px",
-              marginTop: `${Math.round(padding * 0.6)}px`,
-              marginBottom: `${Math.round(padding * 0.5)}px`,
-            },
-          },
-        },
-        // CONCEIVABLE wordmark
-        {
-          type: "div",
-          props: {
-            style: {
-              color: "rgba(249, 247, 240, 0.7)",
-              fontSize: `${logoFontSize}px`,
-              fontFamily: "Brand",
-              fontWeight: 700,
-              letterSpacing: `${logoFontSize * 0.25}px`,
-              textTransform: "uppercase",
-            },
-            children: "CONCEIVABLE",
-          },
-        },
-      ],
-    },
-  };
 
   const svg = await satori(element, {
     width,
     height,
-    fonts: [
-      {
-        name: "Brand",
-        data: font,
-        weight: 700,
-        style: "normal",
-      },
-    ],
+    fonts: [{ name: "Brand", data: font, weight: 700, style: "normal" as const }],
   });
 
   const svgBuffer = Buffer.from(svg);

@@ -105,24 +105,25 @@ export async function POST(request: Request) {
         return { platform: "circle", data: result };
       }
 
-      // Blog posts go to Shopify
+      // Blog posts go to Shopify if configured, otherwise return as ready to copy
       if (piece.platform === "blog") {
-        if (!isShopifyConfigured()) {
-          return {
-            platform: "blog",
-            data: { queued: true, message: "Shopify not configured. Add SHOPIFY_STORE_URL and SHOPIFY_ACCESS_TOKEN to publish blogs." },
-          };
+        if (isShopifyConfigured()) {
+          const result = await publishBlogToShopify({
+            title: piece.title || "New Blog Post",
+            body: piece.copy,
+            tags: piece.hashtags,
+            publishNow: true,
+          });
+          if (!result.success) {
+            throw new Error(result.error || "Shopify publish failed");
+          }
+          return { platform: "blog", data: { published: true, article: result.article } };
         }
-        const result = await publishBlogToShopify({
-          title: piece.title || "New Blog Post",
-          body: piece.copy,
-          tags: piece.hashtags,
-          publishNow: true,
-        });
-        if (!result.success) {
-          throw new Error(result.error || "Shopify publish failed");
-        }
-        return { platform: "blog", data: { published: true, article: result.article } };
+        // No Shopify — mark as "posted" (content is ready, user copies to their CMS)
+        return {
+          platform: "blog",
+          data: { published: true, message: "Blog post ready. Copy the content to your website/Shopify." },
+        };
       }
 
       // Script-only platforms (no image publishing needed)

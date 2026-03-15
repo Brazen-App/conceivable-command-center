@@ -56,7 +56,7 @@ export interface RedditPost {
   upvotes: number;
   comments: number;
   url: string;
-  engagementPotential: number;
+  engagementPotential: number | string;
   relevanceScore: number;
   riskLevel: RiskLevel;
   draftResponse: string;

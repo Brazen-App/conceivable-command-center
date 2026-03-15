@@ -62,6 +62,18 @@ interface EmailCampaign {
   revenue: number;
 }
 
+interface MailchimpCampaignReport {
+  campaignId: string;
+  subject: string;
+  sendTime: string;
+  emailsSent: number;
+  openRate: number;
+  uniqueOpens: number;
+  clickRate: number;
+  unsubscribed: number;
+  bounces: number;
+}
+
 interface SocialPlatform {
   platform: string;
   sessions: number;
@@ -195,6 +207,10 @@ export default function AnalyticsPage() {
   const [emailConversions, setEmailConversions] = useState(0);
   const [emailSessions, setEmailSessions] = useState(0);
 
+  // Mailchimp campaign reports (real data)
+  const [mcReports, setMcReports] = useState<MailchimpCampaignReport[]>([]);
+  const [mcConnected, setMcConnected] = useState(false);
+
   // Social
   const [socialPlatforms, setSocialPlatforms] = useState<SocialPlatform[]>([]);
   const [socialSessions, setSocialSessions] = useState(0);
@@ -211,11 +227,12 @@ export default function AnalyticsPage() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [overviewRes, emailRes, socialRes, realtimeRes] = await Promise.all([
+      const [overviewRes, emailRes, socialRes, realtimeRes, mcReportsRes] = await Promise.all([
         fetch("/api/analytics").then((r) => r.json()),
         fetch("/api/analytics/email-roi").then((r) => r.json()),
         fetch("/api/analytics/social").then((r) => r.json()),
         fetch("/api/analytics/realtime").then((r) => r.json()),
+        fetch("/api/mailchimp/report").then((r) => r.json()).catch(() => ({ reports: [] })),
       ]);
 
       // Overview
@@ -262,6 +279,12 @@ export default function AnalyticsPage() {
       const rtData = realtimeRes.connected ? realtimeRes : realtimeRes.demo;
       if (rtData) {
         setRealtime(rtData);
+      }
+
+      // Mailchimp campaign reports (always real data when API key exists)
+      if (mcReportsRes.reports && mcReportsRes.reports.length > 0) {
+        setMcReports(mcReportsRes.reports);
+        setMcConnected(true);
       }
     } catch {
       // fail silently, keep demo data
@@ -310,7 +333,7 @@ export default function AnalyticsPage() {
                 GA4 Not Connected — Showing Demo Data
               </p>
               <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-                Property ID <strong>375867523</strong> is configured. To connect live data:
+                Property ID <strong>375866253</strong> is configured. To connect live data:
               </p>
               <ol className="text-xs mt-2 space-y-1 list-decimal pl-4" style={{ color: "var(--muted)" }}>
                 {setupInstructions.map((step, i) => (
@@ -541,7 +564,126 @@ export default function AnalyticsPage() {
       )}
 
       {/* ============================================= */}
-      {/* EMAIL CAMPAIGN ROI (Priority #1) */}
+      {/* MAILCHIMP CAMPAIGN PERFORMANCE (Live Data) */}
+      {/* ============================================= */}
+      {mcConnected && mcReports.length > 0 && (
+        <div
+          className="rounded-xl border overflow-hidden"
+          style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)" }}
+        >
+          <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+            <div className="flex items-center gap-2">
+              <Mail size={16} style={{ color: ACCENT }} />
+              <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
+                Mailchimp Campaign Performance
+              </span>
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: `${GREEN}14`, color: GREEN }}
+              >
+                Live Data
+              </span>
+            </div>
+            <a
+              href="https://us17.admin.mailchimp.com/reports/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[10px] font-medium hover:underline"
+              style={{ color: ACCENT }}
+            >
+              Open Mailchimp <ExternalLink size={10} />
+            </a>
+          </div>
+
+          {/* Summary stats */}
+          <div className="grid grid-cols-4 divide-x" style={{ borderColor: "var(--border)" }}>
+            <div className="px-5 py-3 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                Campaigns
+              </p>
+              <p className="text-xl font-bold mt-1" style={{ color: "var(--foreground)" }}>
+                {mcReports.length}
+              </p>
+            </div>
+            <div className="px-5 py-3 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                Total Sent
+              </p>
+              <p className="text-xl font-bold mt-1" style={{ color: "var(--foreground)" }}>
+                {formatNum(mcReports.reduce((s, r) => s + (r.emailsSent || 0), 0))}
+              </p>
+            </div>
+            <div className="px-5 py-3 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                Avg Open Rate
+              </p>
+              <p className="text-xl font-bold mt-1" style={{ color: GREEN }}>
+                {(mcReports.reduce((s, r) => s + (r.openRate || 0), 0) / mcReports.length * 100).toFixed(1)}%
+              </p>
+            </div>
+            <div className="px-5 py-3 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                Avg Click Rate
+              </p>
+              <p className="text-xl font-bold mt-1" style={{ color: ACCENT }}>
+                {(mcReports.reduce((s, r) => s + (r.clickRate || 0), 0) / mcReports.length * 100).toFixed(1)}%
+              </p>
+            </div>
+          </div>
+
+          {/* Campaign list */}
+          <div className="border-t" style={{ borderColor: "var(--border)" }}>
+            <div className="px-5 py-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                Recent Campaigns
+              </span>
+            </div>
+            <div className="px-5 pb-4 space-y-2">
+              {mcReports.slice(0, 10).map((r) => (
+                <div
+                  key={r.campaignId}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-lg"
+                  style={{ backgroundColor: "var(--background)" }}
+                >
+                  <div className="flex-1 min-w-0 mr-4">
+                    <p className="text-xs font-medium truncate" style={{ color: "var(--foreground)" }}>
+                      {r.subject || "Untitled"}
+                    </p>
+                    <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+                      {r.sendTime ? new Date(r.sendTime).toLocaleDateString() : "—"} &middot; {formatNum(r.emailsSent)} sent
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-center">
+                      <p className="text-xs font-bold" style={{ color: GREEN }}>
+                        {((r.openRate || 0) * 100).toFixed(1)}%
+                      </p>
+                      <p className="text-[9px]" style={{ color: "var(--muted)" }}>opens</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-bold" style={{ color: ACCENT }}>
+                        {((r.clickRate || 0) * 100).toFixed(1)}%
+                      </p>
+                      <p className="text-[9px]" style={{ color: "var(--muted)" }}>clicks</p>
+                    </div>
+                    {r.unsubscribed > 0 && (
+                      <div className="text-center">
+                        <p className="text-xs font-bold" style={{ color: RED }}>
+                          {r.unsubscribed}
+                        </p>
+                        <p className="text-[9px]" style={{ color: "var(--muted)" }}>unsubs</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================= */}
+      {/* EMAIL CAMPAIGN ROI — GA4 Attribution */}
       {/* ============================================= */}
       <div
         className="rounded-xl border overflow-hidden"
@@ -832,7 +974,7 @@ export default function AnalyticsPage() {
       {/* GA4 link */}
       <div className="text-center pb-4">
         <a
-          href={`https://analytics.google.com/analytics/web/#/p${process.env.NEXT_PUBLIC_GA4_PROPERTY_ID ?? "375867523"}/reports`}
+          href={`https://analytics.google.com/analytics/web/#/p${process.env.NEXT_PUBLIC_GA4_PROPERTY_ID ?? "375866253"}/reports`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline"

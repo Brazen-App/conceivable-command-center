@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
-  Activity,
   Users,
   FileText,
   Mail,
@@ -11,24 +11,45 @@ import {
   UserCheck,
   DollarSign,
   ShieldCheck,
-  TrendingUp,
-  BarChart3,
   Star,
   Target,
+  Loader2,
+  TrendingUp,
+  ArrowUpRight,
+  Zap,
+  BarChart3,
+  PenTool,
+  Globe,
+  Megaphone,
 } from "lucide-react";
+import { colors, gradients } from "@/lib/theme";
 
-const ACCENT = "#5A6FFF";
+// ── Types ───────────────────────────────────────────────────
 
-// --- Mock Data ---
+interface SignupData {
+  totalSubscribers: number;
+  earlyAccess: { total: number; today: number; yesterday: number };
+  allSignups: { today: number; yesterday: number };
+}
 
-const HEALTH_SCORE = 74;
+interface MailchimpReport {
+  campaignId: string;
+  subject: string;
+  sendTime: string;
+  emailsSent: number;
+  openRate: number;
+  uniqueOpens: number;
+  clickRate: number;
+  unsubscribed: number;
+  bounces: number;
+}
+
+// ── Static Data (will be replaced with live data as we connect) ──
 
 const KPI_DATA = {
-  totalAudienceReach: 28905 + 220 + 400000, // 30K email + 220 Circle + 400K TikTok
+  totalAudienceReach: 28905 + 220 + 400000,
   weeklyContentOutput: 0,
   weeklyContentTarget: 100,
-  emailListSize: 28905,
-  emailListGrowthTrend: [27800, 28100, 28300, 28500, 28650, 28750, 28905],
   geoScore: 4,
   geoTarget: 10,
   topContent: {
@@ -38,142 +59,62 @@ const KPI_DATA = {
   },
   activeAffiliates: 0,
   activePartnerships: 0,
-  paidSpend: 0,
-  complianceStatus: "All Clear" as const,
 };
 
-function HealthScoreRing({ score }: { score: number }) {
-  const radius = 54;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (score / 100) * circumference;
-  const color =
-    score >= 80 ? "#1EAA55" : score >= 60 ? "#F1C028" : "#E24D47";
+// ── Components ──────────────────────────────────────────────
 
-  return (
-    <div className="relative w-36 h-36 mx-auto">
-      <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-        <circle
-          cx="60"
-          cy="60"
-          r={radius}
-          fill="none"
-          stroke="var(--border)"
-          strokeWidth="8"
-        />
-        <circle
-          cx="60"
-          cy="60"
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth="8"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 1s ease-out" }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span
-          className="text-3xl font-bold"
-          style={{ color: "var(--foreground)" }}
-        >
-          {score}
-        </span>
-        <span className="text-xs" style={{ color: "var(--muted)" }}>
-          / 100
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function MiniSparkline({ data }: { data: number[] }) {
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const width = 80;
-  const height = 24;
-  const points = data
-    .map((v, i) => {
-      const x = (i / (data.length - 1)) * width;
-      const y = height - ((v - min) / range) * height;
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  return (
-    <svg width={width} height={height} className="inline-block ml-2">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={ACCENT}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ProgressBar({
-  value,
-  max,
-  color,
-}: {
-  value: number;
-  max: number;
-  color: string;
-}) {
+function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = Math.min((value / max) * 100, 100);
   return (
-    <div
-      className="w-full h-2 rounded-full mt-2"
-      style={{ backgroundColor: "var(--border)" }}
-    >
+    <div className="w-full h-1.5 rounded-full mt-3" style={{ backgroundColor: `${color}15` }}>
       <div
-        className="h-full rounded-full transition-all duration-500"
-        style={{ width: `${pct}%`, backgroundColor: color }}
+        className="h-full rounded-full transition-all duration-700"
+        style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: color }}
       />
     </div>
   );
 }
 
-interface KPICardProps {
-  icon: React.ReactNode;
+function MetricCard({
+  icon: Icon,
+  iconColor,
+  label,
+  value,
+  subtext,
+  children,
+}: {
+  icon: React.ElementType;
+  iconColor: string;
   label: string;
   value: string | number;
   subtext?: string;
   children?: React.ReactNode;
-}
-
-function KPICard({ icon, label, value, subtext, children }: KPICardProps) {
+}) {
   return (
     <div
-      className="rounded-xl p-5 flex flex-col gap-2"
+      className="rounded-2xl p-5 flex flex-col gap-1 transition-shadow hover:shadow-md"
       style={{
         backgroundColor: "var(--surface)",
         border: "1px solid var(--border)",
       }}
     >
-      <div className="flex items-center gap-2 mb-1">
-        {icon}
-        <span
-          className="text-xs font-medium uppercase tracking-wider"
-          style={{ color: "var(--muted)" }}
-        >
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>
           {label}
         </span>
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: `${iconColor}12` }}
+        >
+          <Icon size={14} style={{ color: iconColor }} />
+        </div>
       </div>
       <div className="flex items-baseline gap-2">
-        <span
-          className="text-2xl font-bold"
-          style={{ color: "var(--foreground)" }}
-        >
+        <span className="text-2xl font-bold tracking-tight" style={{ color: "var(--foreground)" }}>
           {value}
         </span>
         {subtext && (
-          <span className="text-xs" style={{ color: "var(--muted)" }}>
+          <span className="text-[11px]" style={{ color: "var(--muted)" }}>
             {subtext}
           </span>
         )}
@@ -183,207 +124,341 @@ function KPICard({ icon, label, value, subtext, children }: KPICardProps) {
   );
 }
 
+// ── Main Page ───────────────────────────────────────────────
+
 export default function MarketingDashboard() {
+  const [signups, setSignups] = useState<SignupData | null>(null);
+  const [signupsLoading, setSignupsLoading] = useState(true);
+  const [campaigns, setCampaigns] = useState<MailchimpReport[]>([]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [signupsRes, campaignsRes] = await Promise.all([
+        fetch("/api/mailchimp/signups").then((r) => r.ok ? r.json() : null).catch(() => null),
+        fetch("/api/mailchimp/report").then((r) => r.ok ? r.json() : null).catch(() => null),
+      ]);
+      if (signupsRes) setSignups(signupsRes);
+      if (campaignsRes?.reports) setCampaigns(campaignsRes.reports.slice(0, 3));
+    } catch { /* ignore */ }
+    finally { setSignupsLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const earlyAccessTotal = signups?.earlyAccess?.total ?? 0;
+  const totalSubs = signups?.totalSubscribers ?? 0;
+  const pct = Math.max((earlyAccessTotal / 500) * 100, 0.5);
+
   return (
     <div className="space-y-6">
-      {/* Path to 5,000 Signups */}
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* HERO: Path to 5,000 Early Access Signups              */}
+      {/* ═══════════════════════════════════════════════════════ */}
       <div
-        className="rounded-2xl p-5"
-        style={{
-          background: "linear-gradient(135deg, #5A6FFF08 0%, #ACB7FF08 100%)",
-          border: "1px solid rgba(90, 111, 255, 0.15)",
-        }}
+        className="rounded-2xl overflow-hidden"
+        style={{ border: "1px solid rgba(90, 111, 255, 0.12)" }}
       >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Target size={16} style={{ color: "#5A6FFF" }} />
-            <span className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
-              Path to 5,000 Signups
+        {/* Gradient header strip */}
+        <div className="px-6 py-5" style={{ background: gradients.ocean }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+                <Target size={20} color="white" />
+              </div>
+              <div>
+                <p className="text-white text-sm font-bold tracking-wide">
+                  Early Access Signups
+                </p>
+                <p className="text-white/60 text-[11px]">
+                  Founding member popup — 500 founding member spots
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              {signupsLoading ? (
+                <Loader2 size={18} className="animate-spin text-white/60" />
+              ) : (
+                <>
+                  <p className="text-3xl font-bold text-white tracking-tight">
+                    {earlyAccessTotal.toLocaleString()}
+                  </p>
+                  <p className="text-white/50 text-[11px]">of 500</p>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4 w-full h-2.5 rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+            <div
+              className="h-full rounded-full transition-all duration-1000"
+              style={{
+                width: `${Math.min(pct, 100)}%`,
+                background: "linear-gradient(90deg, #ACB7FF 0%, #FFFFFF 100%)",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div
+          className="px-6 py-3 flex items-center justify-between"
+          style={{ backgroundColor: "var(--surface)" }}
+        >
+          <div className="flex items-center gap-5">
+            {signups ? (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <ArrowUpRight size={12} style={{ color: colors.green }} />
+                  <span className="text-xs font-semibold" style={{ color: colors.green }}>
+                    +{signups.earlyAccess.today} today
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>
+                    +{signups.earlyAccess.yesterday} yesterday
+                  </span>
+                </div>
+                <div className="w-px h-3" style={{ backgroundColor: "var(--border)" }} />
+                <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+                  {totalSubs.toLocaleString()} total list
+                </span>
+              </>
+            ) : (
+              <span className="text-xs" style={{ color: "var(--muted)" }}>Loading...</span>
+            )}
+          </div>
+          <span className="text-[11px] font-medium" style={{ color: colors.blue }}>
+            {earlyAccessTotal >= 500 ? "Goal reached!" : `${(500 - earlyAccessTotal).toLocaleString()} to go`}
+          </span>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* RECENT EMAIL PERFORMANCE (Live from Mailchimp)         */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {campaigns.length > 0 && (
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div className="flex items-center gap-2">
+              <Mail size={14} style={{ color: colors.pink }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>
+                Recent Campaigns
+              </span>
+            </div>
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${colors.green}12`, color: colors.green }}>
+              Live
             </span>
           </div>
-          <span className="text-sm font-bold" style={{ color: "#5A6FFF" }}>
-            0 / 5,000
-          </span>
+          <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+            {campaigns.map((c) => (
+              <div key={c.campaignId} className="px-5 py-3 flex items-center justify-between">
+                <div className="flex-1 min-w-0 mr-4">
+                  <p className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
+                    {c.subject || "Untitled"}
+                  </p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>
+                    {c.sendTime ? new Date(c.sendTime).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
+                    {" · "}
+                    {c.emailsSent?.toLocaleString()} sent
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 shrink-0">
+                  <div className="text-center">
+                    <p className="text-sm font-bold" style={{ color: colors.green }}>
+                      {((c.openRate || 0) * 100).toFixed(1)}%
+                    </p>
+                    <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>opens</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-bold" style={{ color: colors.blue }}>
+                      {((c.clickRate || 0) * 100).toFixed(1)}%
+                    </p>
+                    <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>clicks</p>
+                  </div>
+                  {c.unsubscribed > 0 && (
+                    <div className="text-center">
+                      <p className="text-sm font-bold" style={{ color: colors.red }}>
+                        {c.unsubscribed}
+                      </p>
+                      <p className="text-[9px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>unsubs</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="w-full h-3 rounded-full mb-2" style={{ backgroundColor: "var(--border)" }}>
-          <div className="h-3 rounded-full transition-all" style={{ width: "1%", backgroundColor: "#5A6FFF" }} />
-        </div>
-        <div className="flex items-center justify-between text-[10px]" style={{ color: "var(--muted)" }}>
-          <span>Total reach: {KPI_DATA.totalAudienceReach.toLocaleString()} (30K email + 220 Circle + 400K TikTok)</span>
-          <span>7 weeks to launch</span>
-        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* QUICK LINKS                                            */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { href: "/departments/marketing/content", icon: PenTool, label: "Content", color: colors.purple },
+          { href: "/departments/marketing/email-ops", icon: Mail, label: "Email Ops", color: colors.pink },
+          { href: "/departments/marketing/analytics", icon: BarChart3, label: "Analytics", color: colors.blue },
+          { href: "/departments/marketing/blog", icon: FileText, label: "Blog Engine", color: colors.yellow },
+          { href: "/departments/marketing/seo-geo", icon: Globe, label: "SEO & GEO", color: colors.paleBlue },
+          { href: "/departments/marketing/affiliates", icon: UserCheck, label: "Affiliates", color: colors.green },
+          { href: "/departments/marketing/partnerships", icon: Handshake, label: "Partnerships", color: colors.navy },
+          { href: "/departments/marketing/paid", icon: Megaphone, label: "Paid", color: colors.red },
+        ].map(({ href, icon: Icon, label, color }) => (
+          <Link
+            key={href}
+            href={href}
+            className="rounded-xl p-3.5 flex items-center gap-3 transition-all hover:shadow-md hover:scale-[1.02]"
+            style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+          >
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: `${color}12` }}
+            >
+              <Icon size={15} style={{ color }} />
+            </div>
+            <span className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
+              {label}
+            </span>
+          </Link>
+        ))}
       </div>
 
-      {/* Hero: Marketing Health Score */}
-      <div
-        className="rounded-2xl p-6 text-center"
-        style={{
-          backgroundColor: `${ACCENT}08`,
-          border: `1px solid ${ACCENT}20`,
-        }}
-      >
-        <p
-          className="text-xs font-medium uppercase tracking-widest mb-4"
-          style={{ color: ACCENT }}
-        >
-          Marketing Health Score
-        </p>
-        <HealthScoreRing score={HEALTH_SCORE} />
-        <p className="text-sm mt-4" style={{ color: "var(--muted)" }}>
-          Composite of content output, email performance, SEO visibility,
-          affiliate activity, and compliance
-        </p>
-        <div className="flex items-center justify-center gap-2 mt-3">
-          <TrendingUp size={14} style={{ color: "#1EAA55" }} />
-          <span className="text-xs font-medium" style={{ color: "#1EAA55" }}>
-            +8 pts from last week (The Gain: started at 31 in Week 1)
-          </span>
-        </div>
-      </div>
-
-      {/* KPI Grid */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* KPI GRID                                               */}
+      {/* ═══════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Total Audience Reach */}
-        <KPICard
-          icon={<Users size={16} style={{ color: ACCENT }} />}
-          label="Total Audience Reach"
-          value={KPI_DATA.totalAudienceReach.toLocaleString()}
-          subtext="email + social"
+        <MetricCard
+          icon={Users}
+          iconColor={colors.blue}
+          label="Total Audience"
+          value={totalSubs > 0 ? totalSubs.toLocaleString() : KPI_DATA.totalAudienceReach.toLocaleString()}
+          subtext={totalSubs > 0 ? "email subscribers" : "email + social"}
         />
 
-        {/* Weekly Content Output */}
-        <KPICard
-          icon={<FileText size={16} style={{ color: "#F1C028" }} />}
-          label="Weekly Content Output"
+        <MetricCard
+          icon={FileText}
+          iconColor={colors.yellow}
+          label="Content Output"
           value={KPI_DATA.weeklyContentOutput}
-          subtext={`/ ${KPI_DATA.weeklyContentTarget} target`}
+          subtext={`/ ${KPI_DATA.weeklyContentTarget} weekly target`}
         >
-          <ProgressBar
-            value={KPI_DATA.weeklyContentOutput}
-            max={KPI_DATA.weeklyContentTarget}
-            color="#F1C028"
-          />
-        </KPICard>
+          <ProgressBar value={KPI_DATA.weeklyContentOutput} max={KPI_DATA.weeklyContentTarget} color={colors.yellow} />
+        </MetricCard>
 
-        {/* Email List Growth */}
-        <KPICard
-          icon={<Mail size={16} style={{ color: "#E37FB1" }} />}
-          label="Email List Growth"
-          value={KPI_DATA.emailListSize.toLocaleString()}
-          subtext="subscribers"
-        >
-          <MiniSparkline data={KPI_DATA.emailListGrowthTrend} />
-        </KPICard>
-
-        {/* GEO Score */}
-        <KPICard
-          icon={<Search size={16} style={{ color: "#78C3BF" }} />}
+        <MetricCard
+          icon={Search}
+          iconColor={colors.paleBlue}
           label="GEO Score"
           value={`${KPI_DATA.geoScore} / ${KPI_DATA.geoTarget}`}
           subtext="AI queries citing Conceivable"
         >
-          <ProgressBar
-            value={KPI_DATA.geoScore}
-            max={KPI_DATA.geoTarget}
-            color="#78C3BF"
-          />
-        </KPICard>
+          <ProgressBar value={KPI_DATA.geoScore} max={KPI_DATA.geoTarget} color={colors.paleBlue} />
+        </MetricCard>
 
-        {/* Top Performing Content */}
-        <KPICard
-          icon={<Star size={16} style={{ color: "#9686B9" }} />}
-          label="Top Content This Week"
+        <MetricCard
+          icon={Star}
+          iconColor={colors.purple}
+          label="Top Content"
           value=""
         >
-          <div>
-            <p
-              className="text-sm font-semibold leading-snug"
-              style={{ color: "var(--foreground)" }}
+          <p className="text-sm font-semibold leading-snug" style={{ color: "var(--foreground)" }}>
+            {KPI_DATA.topContent.title}
+          </p>
+          <div className="flex items-center gap-2 mt-1.5">
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: `${colors.purple}12`, color: colors.purple }}
             >
-              {KPI_DATA.topContent.title}
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              <span
-                className="text-xs px-2 py-0.5 rounded-full"
-                style={{
-                  backgroundColor: `${ACCENT}14`,
-                  color: ACCENT,
-                }}
-              >
-                {KPI_DATA.topContent.platform}
-              </span>
-              <span className="text-xs" style={{ color: "var(--muted)" }}>
-                {KPI_DATA.topContent.engagement.toLocaleString()} engagements
-              </span>
-            </div>
+              {KPI_DATA.topContent.platform}
+            </span>
+            <span className="text-[11px]" style={{ color: "var(--muted)" }}>
+              {KPI_DATA.topContent.engagement.toLocaleString()} engagements
+            </span>
           </div>
-        </KPICard>
+        </MetricCard>
 
-        {/* Active Affiliates */}
-        <KPICard
-          icon={<UserCheck size={16} style={{ color: "#1EAA55" }} />}
+        <MetricCard
+          icon={UserCheck}
+          iconColor={colors.green}
           label="Active Affiliates"
           value={KPI_DATA.activeAffiliates}
           subtext="generating revenue"
         />
 
-        {/* Active Partnerships */}
-        <KPICard
-          icon={<Handshake size={16} style={{ color: "#356FB6" }} />}
-          label="Active Partnerships"
+        <MetricCard
+          icon={Handshake}
+          iconColor={colors.navy}
+          label="Partnerships"
           value={KPI_DATA.activePartnerships}
           subtext="experts + podcast hosts"
         />
 
-        {/* Paid Spend */}
-        <KPICard
-          icon={<DollarSign size={16} style={{ color: "#F1C028" }} />}
+        <MetricCard
+          icon={DollarSign}
+          iconColor={colors.yellow}
           label="Paid Spend"
           value="$0"
           subtext="launches post-validation"
         />
 
-        {/* Compliance */}
-        <KPICard
-          icon={<ShieldCheck size={16} style={{ color: "#1EAA55" }} />}
-          label="Compliance Status"
-          value={KPI_DATA.complianceStatus}
+        <MetricCard
+          icon={ShieldCheck}
+          iconColor={colors.green}
+          label="Compliance"
+          value="All Clear"
         >
-          <div className="flex items-center gap-2 mt-1">
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: "#1EAA55" }}
-            />
-            <span className="text-xs" style={{ color: "#1EAA55" }}>
+          <div className="flex items-center gap-1.5 mt-1">
+            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.green }} />
+            <span className="text-[11px]" style={{ color: colors.green }}>
               All content scanned before publish
             </span>
           </div>
-        </KPICard>
+        </MetricCard>
+
+        <MetricCard
+          icon={Mail}
+          iconColor={colors.pink}
+          label="Email Health"
+          value={campaigns.length > 0 ? `${((campaigns[0]?.openRate || 0) * 100).toFixed(1)}%` : "—"}
+          subtext="latest open rate"
+        />
       </div>
 
-      {/* Sullivan Principle: Multiplier Call-out */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* MULTIPLIER OPPORTUNITY                                 */}
+      {/* ═══════════════════════════════════════════════════════ */}
       <div
-        className="rounded-xl p-4"
+        className="rounded-2xl p-5"
         style={{
-          backgroundColor: "#9686B910",
-          border: "1px solid #9686B920",
+          background: gradients.subtlePink,
+          border: `1px solid ${colors.purple}15`,
         }}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
           <div
-            className="px-2 py-1 rounded text-xs font-bold shrink-0"
-            style={{ backgroundColor: "#9686B920", color: "#9686B9" }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: `${colors.purple}18` }}
           >
-            10x
+            <Zap size={18} style={{ color: colors.purple }} />
           </div>
           <div>
-            <p
-              className="text-sm font-semibold"
-              style={{ color: "var(--foreground)" }}
-            >
-              Multiplier Opportunity: GEO Optimization Sprint
-            </p>
-            <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
+                10x Multiplier: GEO Optimization Sprint
+              </p>
+              <span
+                className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: `${colors.purple}18`, color: colors.purple }}
+              >
+                HIGH LEVERAGE
+              </span>
+            </div>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
               Improving AI visibility from 4/10 to 8/10 queries would create a
               compounding organic acquisition channel. This impacts Content,
               SEO, Partnerships, and Fundraising narrative simultaneously.

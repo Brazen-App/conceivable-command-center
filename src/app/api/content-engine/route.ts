@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { globalVideoCache, globalVideoCacheTime } from "@/app/api/briefs/refresh/route";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -11,11 +14,19 @@ export async function GET() {
         prisma.calendarEntry.findMany({ orderBy: { date: "asc" } }),
       ]);
 
+    // Include cached video items (in-memory, populated by briefs/refresh)
+    const videoItems = globalVideoCache;
+    const videoCacheAge = globalVideoCacheTime
+      ? Date.now() - globalVideoCacheTime
+      : null;
+
     return NextResponse.json({
       newsItems,
       researchItems,
       redditPosts,
       calendarEntries,
+      videoItems,
+      videoCacheAge,
     });
   } catch (error) {
     console.error("[content-engine] GET", error);

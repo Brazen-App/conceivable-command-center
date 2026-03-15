@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import type { EmotionalTone } from "@/lib/data/pov-data";
 import { invokeAgent } from "@/lib/agents/invoke";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const povs = await prisma.pOV.findMany({

@@ -2,18 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getClient } from "@/lib/mailchimp";
 import { prisma } from "@/lib/prisma";
 
-function textToHtml(text: string): string {
-  const paragraphs = text.split(/\n\n+/);
-  const htmlParagraphs = paragraphs.map((para) => {
-    const withBreaks = para.split("\n").map((l) => l.trim()).filter((l) => l.length > 0).join("<br>\n");
-    return `<p style="margin: 0 0 16px 0; line-height: 1.6;">${withBreaks}</p>`;
-  });
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:16px;line-height:1.6;color:#2A2828;background-color:#F9F7F0;margin:0;padding:0}.container{max-width:600px;margin:0 auto;padding:40px 24px;background-color:#fff}p{margin:0 0 16px 0;line-height:1.6}a{color:#5A6FFF}</style></head><body><div class="container">${htmlParagraphs.join("")}</div></body></html>`;
-}
-
 /**
  * GET /api/mailchimp/warmup
- * Returns warmup schedule status and progress.
+ * Returns warmup schedule status and progress. (Read-only, still works.)
  */
 export async function GET() {
   if (!process.env.MAILCHIMP_API_KEY) {
@@ -23,7 +14,6 @@ export async function GET() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mc = getClient() as any;
-    // Get campaigns with warmup tag
     const campaignsResponse = await mc.campaigns.list({
       count: 50,
       sort_field: "send_time",
@@ -44,7 +34,6 @@ export async function GET() {
         emailsSent: c.emails_sent,
       }));
 
-    // Get approved emails ready for warmup
     const approvedEmails = await prisma.email.findMany({
       where: { status: "approved", complianceStatus: "approved" },
       orderBy: [{ week: "asc" }, { sequence: "asc" }],
@@ -54,11 +43,8 @@ export async function GET() {
     return NextResponse.json({
       warmupCampaigns,
       approvedEmailsReady: approvedEmails,
-      schedule: {
-        phase1: { name: "Hot List (30-day engaged)", targetSize: 3000, days: "1-3" },
-        phase2: { name: "Warm List (90-day engaged)", targetSize: 7000, days: "4-7" },
-        phase3: { name: "Cold List (4 batches of 5K)", targetSize: 20000, days: "8-14" },
-      },
+      blocked: true,
+      message: "EMAIL SENDING IS DISABLED. Read-only status view.",
     });
   } catch (err) {
     console.error("GET warmup error:", err);
@@ -70,112 +56,30 @@ export async function GET() {
 }
 
 /**
- * POST /api/mailchimp/warmup
- * Schedules a warmup send.
- * Body: { emailId, segmentId, sendTime: "immediate" | "optimal" | string (ISO date) }
+ * POST /api/mailchimp/warmup — DISABLED
+ *
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  DISABLED — ALL EMAIL SENDING IS LOCKED DOWN                   ║
+ * ║                                                                ║
+ * ║  After two incidents of accidental full-list sends (March 8    ║
+ * ║  and March 13, 2026), this endpoint is completely disabled.    ║
+ * ╚══════════════════════════════════════════════════════════════════╝
  */
 export async function POST(req: NextRequest) {
-  if (!process.env.MAILCHIMP_API_KEY) {
-    return NextResponse.json({ error: "Mailchimp not configured" }, { status: 503 });
-  }
+  const body = await req.json().catch(() => ({}));
 
-  try {
-    const body = await req.json();
-    const { emailId, segmentId, sendTime = "optimal", phase = 1 } = body;
+  console.error(
+    "[BLOCKED] warmup POST called but ALL email sending is disabled.",
+    "Body:", JSON.stringify(body),
+    "Time:", new Date().toISOString()
+  );
 
-    if (!emailId) {
-      return NextResponse.json({ error: "emailId is required" }, { status: 400 });
-    }
-
-    // Get the email from DB
-    const email = await prisma.email.findUnique({ where: { id: emailId } });
-    if (!email) {
-      return NextResponse.json({ error: "Email not found" }, { status: 404 });
-    }
-
-    if (email.status !== "approved") {
-      return NextResponse.json(
-        { error: "Email must be approved before scheduling" },
-        { status: 400 }
-      );
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mc = getClient() as any;
-    // Get list ID
-    const listsResponse = await mc.lists.getAllLists({ count: 1 });
-    const listId = listsResponse?.lists?.[0]?.id;
-    if (!listId) {
-      return NextResponse.json({ error: "No Mailchimp list found" }, { status: 404 });
-    }
-
-    // Create campaign with segment targeting
-    const campaignData: Record<string, unknown> = {
-      type: "regular",
-      recipients: segmentId
-        ? { list_id: listId, segment_opts: { saved_segment_id: segmentId } }
-        : { list_id: listId },
-      settings: {
-        subject_line: email.subject,
-        preview_text: email.preview,
-        title: `Warmup Phase ${phase} — ${email.subject}`,
-        from_name: "Kirsten at Conceivable",
-        reply_to: "kirsten@conceivable.com",
-      },
-    };
-
-    const campaign = await mc.campaigns.create(campaignData);
-    const campaignId = campaign.id;
-
-    // Set campaign content — convert plain text to formatted HTML
-    const htmlBody = textToHtml(email.body);
-    await mc.campaigns.setContent(campaignId, {
-      html: htmlBody,
-    });
-
-    // Schedule or send
-    if (sendTime === "immediate") {
-      await mc.campaigns.send(campaignId);
-    } else if (sendTime === "optimal") {
-      // Schedule for next appropriate time (Tuesday 10 AM EST)
-      const now = new Date();
-      const nextTuesday = new Date(now);
-      const daysUntilTuesday = (2 - now.getDay() + 7) % 7 || 7;
-      nextTuesday.setDate(now.getDate() + daysUntilTuesday);
-      nextTuesday.setHours(15, 0, 0, 0); // 10 AM EST = 15:00 UTC
-      await mc.campaigns.schedule(campaignId, {
-        schedule_time: nextTuesday.toISOString(),
-      });
-    } else {
-      // Custom time
-      await mc.campaigns.schedule(campaignId, {
-        schedule_time: new Date(sendTime).toISOString(),
-      });
-    }
-
-    // Update DB
-    await prisma.email.update({
-      where: { id: emailId },
-      data: {
-        status: "published",
-        publishedAt: new Date().toISOString(),
-        mailchimpId: campaignId,
-      },
-    });
-
-    return NextResponse.json({
-      ok: true,
-      campaignId,
-      emailId,
-      phase,
-      segmentId,
-      status: sendTime === "immediate" ? "sent" : "scheduled",
-    });
-  } catch (err) {
-    console.error("POST warmup error:", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to schedule warmup" },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    {
+      error: "EMAIL SENDING IS DISABLED. All email sending has been locked down after repeated accidental full-list sends. Contact the CEO to re-enable.",
+      blocked: true,
+      timestamp: new Date().toISOString(),
+    },
+    { status: 403 }
+  );
 }

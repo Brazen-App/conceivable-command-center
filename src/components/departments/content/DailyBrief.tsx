@@ -30,8 +30,10 @@ interface Props {
   onRefresh?: () => Promise<void>;
   isRefreshing?: boolean;
   lastRefreshed?: string;
+  refreshError?: string | null;
 }
 
+const TAG_FALLBACK = { label: "General", color: "#78C3BF" };
 const TAG_CONFIG: Record<string, { label: string; color: string }> = {
   competitor: { label: "Competitor", color: "#E24D47" },
   science: { label: "Science", color: "#5A6FFF" },
@@ -40,6 +42,7 @@ const TAG_CONFIG: Record<string, { label: string; color: string }> = {
   regulatory: { label: "Regulatory", color: "#9686B9" },
 };
 
+const RISK_FALLBACK = { label: "Unknown", color: "#78C3BF" };
 const RISK_CONFIG: Record<string, { label: string; color: string }> = {
   low: { label: "Low Risk", color: "#1EAA55" },
   medium: { label: "Medium Risk", color: "#F1C028" },
@@ -219,7 +222,7 @@ function NewsCard({
   onContentCreate: (sourceId: string, transcript: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const tag = TAG_CONFIG[item.tag];
+  const tag = TAG_CONFIG[item.tag] || TAG_FALLBACK;
   const twoSentences = getTwoSentences(item.brief);
 
   return (
@@ -591,7 +594,7 @@ function RedditCard({
   onAction: (id: string, action: "approved" | "skipped") => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const risk = RISK_CONFIG[post.riskLevel];
+  const risk = RISK_CONFIG[post.riskLevel] || RISK_FALLBACK;
 
   return (
     <div
@@ -793,6 +796,7 @@ export default function DailyBrief({
   onRefresh,
   isRefreshing,
   lastRefreshed,
+  refreshError,
 }: Props) {
   const [activeSection, setActiveSection] = useState<Section>("news");
 
@@ -829,7 +833,7 @@ export default function DailyBrief({
   const viralCount = newsItems.filter((n) => n.isViral).length;
   const gapCount = researchItems.filter((r) => r.fillsGap).length;
   const highPotential = redditPosts.filter(
-    (r) => r.engagementPotential >= 9
+    (r) => Number(r.engagementPotential) >= 9 || r.engagementPotential === "high"
   ).length;
 
   return (
@@ -871,6 +875,11 @@ export default function DailyBrief({
               <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
               {isRefreshing ? "Fetching real articles..." : "Refresh from Live Sources"}
             </button>
+          )}
+          {refreshError && (
+            <p className="text-xs px-3 py-1.5 rounded-lg bg-red-500/20 text-red-200 mt-2 md:mt-0">
+              {refreshError}
+            </p>
           )}
         </div>
         <div className="flex items-center gap-4 flex-wrap">

@@ -30,7 +30,7 @@ model Brief {
   department   Department @relation(fields: [departmentId], references: [id])
   weekOf       DateTime
   status       String
-  content      Json       // structured brief content
+  content      Json // structured brief content
   createdAt    DateTime   @default(now())
 }
 
@@ -55,7 +55,7 @@ model Metric {
   name         String
   value        Float
   target       Float?
-  trend        String?    // up, down, flat
+  trend        String? // up, down, flat
   recordedAt   DateTime   @default(now())
 }
 
@@ -63,9 +63,9 @@ model Alert {
   id            String     @id @default(cuid())
   sourceDeptId  String
   sourceDept    Department @relation(fields: [sourceDeptId], references: [id])
-  targetDeptIds String[]   // departments that need to see this
-  type          String     // compliance_flag, budget_alert, deadline, cross_dept
-  severity      String     // info, warning, critical
+  targetDeptIds String[] // departments that need to see this
+  type          String // compliance_flag, budget_alert, deadline, cross_dept
+  severity      String // info, warning, critical
   title         String
   description   String
   resolved      Boolean    @default(false)
@@ -81,10 +81,10 @@ model Email {
   id               String   @id @default(cuid())
   week             Int
   sequence         Int
-  phase            String   // re-engagement, education, launch, final-push, post-close
+  phase            String // re-engagement, education, launch, final-push, post-close
   flow             String   @default("launch") // launch, post-purchase, abandoned-cart, post-download, post-download-nudge
-  delayDays        Int?     // days after trigger to send (for automation flows)
-  delayHours       Int?     // hours after trigger to send (for abandoned cart)
+  delayDays        Int? // days after trigger to send (for automation flows)
+  delayHours       Int? // hours after trigger to send (for abandoned cart)
   subject          String
   preview          String
   body             String   @db.Text
@@ -92,11 +92,11 @@ model Email {
   segment          String?
   complianceStatus String   @default("not_reviewed") // not_reviewed, in_review, approved, flagged
   mailchimpId      String?
-  approvedAt       String?  // ISO string
-  publishedAt      String?  // ISO string
-  scheduledDate    String?  // YYYY-MM-DD from warmup schedule
-  scheduledSegment String?  // target segment from warmup schedule
-  metrics          Json?    // open rate, click rate, etc.
+  approvedAt       String? // ISO string
+  publishedAt      String? // ISO string
+  scheduledDate    String? // YYYY-MM-DD from warmup schedule
+  scheduledSegment String? // target segment from warmup schedule
+  metrics          Json? // open rate, click rate, etc.
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -107,16 +107,16 @@ model Email {
 
 model Content {
   id           String    @id @default(cuid())
-  type         String    // social_post, carousel, video_clip, thread, blog, email_segment
-  platform     String    // instagram, tiktok, linkedin, x, youtube, blog
-  sourceType   String    // podcast, research, email, original
-  sourceRef    String?   // reference to source material
+  type         String // social_post, carousel, video_clip, thread, blog, email_segment
+  platform     String // instagram, tiktok, linkedin, x, youtube, blog
+  sourceType   String // podcast, research, email, original
+  sourceRef    String? // reference to source material
   title        String
   body         String    @db.Text
   status       String    @default("draft") // draft, legal_review, approved, scheduled, published
   scheduledFor DateTime?
   publishedAt  DateTime?
-  metrics      Json?     // platform-specific engagement metrics
+  metrics      Json? // platform-specific engagement metrics
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 }
@@ -127,39 +127,39 @@ model NewsItem {
   source              String
   sourceUrl           String?
   brief               String
-  tag                 String   // competitor, science, industry, viral, regulatory
+  tag                 String // competitor, science, industry, viral, regulatory
   isViral             Boolean  @default(false)
   viralReason         String?
   summary             String   @db.Text
   fullArticle         String   @db.Text
   agentRecommendation String   @db.Text
   coverageAngle       String   @db.Text
-  timestamp           String   // ISO string
+  timestamp           String // ISO string
   povRecording        String?
   povTranscript       String?  @db.Text
-  generatedContent    Json?    // array of generated content pieces
+  generatedContent    Json? // array of generated content pieces
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
 
 model ResearchArticle {
-  id              String   @id @default(cuid())
-  title           String
-  journal         String
-  authors         String
-  doi             String?
-  brief           String
-  relevanceScore  Float
-  fillsGap        Boolean  @default(false)
-  gapDescription  String?
-  summary         Json     // {design, keyFindings, sampleSize, limitations, conceivableRelevance}
-  fullAbstract    String   @db.Text
-  timestamp       String   // ISO string
-  povRecording    String?
-  povTranscript   String?  @db.Text
+  id               String   @id @default(cuid())
+  title            String
+  journal          String
+  authors          String
+  doi              String?
+  brief            String
+  relevanceScore   Float
+  fillsGap         Boolean  @default(false)
+  gapDescription   String?
+  summary          Json // {design, keyFindings, sampleSize, limitations, conceivableRelevance}
+  fullAbstract     String   @db.Text
+  timestamp        String // ISO string
+  povRecording     String?
+  povTranscript    String?  @db.Text
   generatedContent Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model RedditPost {
@@ -170,25 +170,25 @@ model RedditPost {
   upvotes             Int      @default(0)
   comments            Int      @default(0)
   url                 String?
-  engagementPotential String   // low, medium, high
+  engagementPotential String // low, medium, high
   relevanceScore      Float
-  riskLevel           String   // low, medium, high
+  riskLevel           String // low, medium, high
   draftResponse       String   @db.Text
   status              String   @default("pending") // pending, approved, skipped, posted
-  timestamp           String   // ISO string
+  timestamp           String // ISO string
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
 
 model CalendarEntry {
   id             String   @id @default(cuid())
-  date           String   // ISO date string
+  date           String // ISO date string
   platform       String
   title          String
   excerpt        String   @db.Text
   status         String   @default("draft") // draft, scheduled, published
   sourceType     String
-  engagement     Json?    // {likes, comments, shares, reach}
+  engagement     Json? // {likes, comments, shares, reach}
   isMultiplier   Boolean  @default(false)
   multiplierNote String?
   createdAt      DateTime @default(now())
@@ -200,58 +200,58 @@ model CalendarEntry {
 // ============================================================
 
 model Patent {
-  id                   String   @id @default(cuid())
-  title                String
-  shortTitle           String?
-  patentNumber         String?
-  type                 String   // utility, provisional, continuation, design
-  status               String   // granted, pending, provisional, planned, urgent
-  filingDate           String?  // ISO string
-  grantDate            String?
-  expirationDate       String?
-  description          String   @db.Text
-  keyClaims            Json?    // string[]
-  assignedAttorney     String?
-  priorArtNotes        String?  @db.Text
+  id                     String   @id @default(cuid())
+  title                  String
+  shortTitle             String?
+  patentNumber           String?
+  type                   String // utility, provisional, continuation, design
+  status                 String // granted, pending, provisional, planned, urgent
+  filingDate             String? // ISO string
+  grantDate              String?
+  expirationDate         String?
+  description            String   @db.Text
+  keyClaims              Json? // string[]
+  assignedAttorney       String?
+  priorArtNotes          String?  @db.Text
   competitiveThreatLevel String? // high, medium, low
-  filingPriority       String?  // critical, high, medium, low
-  filingDeadline       String?  // ISO string
-  deadlineReason       String?  @db.Text
-  crossDeptConnections Json?    // string[]
-  notes                String?  @db.Text
-  claims               Json?    // legacy field
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  filingPriority         String? // critical, high, medium, low
+  filingDeadline         String? // ISO string
+  deadlineReason         String?  @db.Text
+  crossDeptConnections   Json? // string[]
+  notes                  String?  @db.Text
+  claims                 Json? // legacy field
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }
 
 model ComplianceClaim {
   id                String   @id @default(cuid())
   claim             String   @db.Text
-  category          String   // efficacy, safety, testimonial, comparison, mechanism, general
-  status            String   // approved, restricted, prohibited
+  category          String // efficacy, safety, testimonial, comparison, mechanism, general
+  status            String // approved, restricted, prohibited
   citation          String?  @db.Text
   studyDetails      String?  @db.Text
   disclaimer        String?  @db.Text
   restrictionReason String?  @db.Text
-  lastReviewed      String?  // ISO string
+  lastReviewed      String? // ISO string
   notes             String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
 
 model PendingReview {
-  id           String   @id @default(cuid())
-  source       String   // content, email, social, website
-  title        String
-  flagReason   String
-  flagType     String   // health_claim, testimonial, comparison, outcome, pregnancy_rate, missing_disclaimer
-  severity     String   // critical, warning, info
-  content      String   @db.Text
-  submittedAt  String   // ISO string
-  status       String   @default("pending") // pending, approved, rejected, needs_revision
+  id            String   @id @default(cuid())
+  source        String // content, email, social, website
+  title         String
+  flagReason    String
+  flagType      String // health_claim, testimonial, comparison, outcome, pregnancy_rate, missing_disclaimer
+  severity      String // critical, warning, info
+  content       String   @db.Text
+  submittedAt   String // ISO string
+  status        String   @default("pending") // pending, approved, rejected, needs_revision
   reviewerNotes String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 // ============================================================
@@ -259,21 +259,21 @@ model PendingReview {
 // ============================================================
 
 model Investor {
-  id             String   @id @default(cuid())
-  name           String
-  firm           String?
-  tier           String   // movement, venture, strategic
-  type           String   // angel, seed, series_a, strategic
-  status         String   @default("prospect") // prospect, contacted, meeting_scheduled, etc.
-  checkSize      String?
-  thesisAlignment String? @db.Text
-  notes          String?  @db.Text
-  lastContact    DateTime?
-  nextAction     String?
-  nextActionDate DateTime?
-  extras         Json?    // tier-specific fields (portfolio, partnerName, partnershipType, etc.)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String    @id @default(cuid())
+  name            String
+  firm            String?
+  tier            String // movement, venture, strategic
+  type            String // angel, seed, series_a, strategic
+  status          String    @default("prospect") // prospect, contacted, meeting_scheduled, etc.
+  checkSize       String?
+  thesisAlignment String?   @db.Text
+  notes           String?   @db.Text
+  lastContact     DateTime?
+  nextAction      String?
+  nextActionDate  DateTime?
+  extras          Json? // tier-specific fields (portfolio, partnerName, partnershipType, etc.)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 // ============================================================
@@ -284,7 +284,7 @@ model POV {
   id              String   @id @default(cuid())
   topic           String
   transcript      String   @db.Text
-  sourceType      String   // voice, text, quick-capture
+  sourceType      String // voice, text, quick-capture
   sourceId        String?
   durationSeconds Int?
   keyPositions    Json     @default("[]") // string[]
@@ -300,10 +300,10 @@ model POV {
 
 model Capture {
   id         String   @id @default(cuid())
-  type       String   // voice, text, file, link
+  type       String // voice, text, file, link
   content    String   @db.Text
   summary    String?
-  department String   // content-engine, research, ideas-parking-lot, etc.
+  department String // content-engine, research, ideas-parking-lot, etc.
   fileName   String?
   fileSize   Int?
   createdAt  DateTime @default(now())
@@ -318,18 +318,18 @@ model PatentClaim {
   claimNumber     Int
   claimText       String   @db.Text
   claimType       String   @default("independent") // independent, dependent
-  dependsOn       Int?     // claim number this depends on
-  parentPatentId  String?  // references Patent.id
-  parentPatentRef String?  // human-readable patent reference
+  dependsOn       Int? // claim number this depends on
+  parentPatentId  String? // references Patent.id
+  parentPatentRef String? // human-readable patent reference
   valueTier       String   @default("MEDIUM") // HIGH, MEDIUM, LOW
-  estimatedValue  Int?     // in dollars
+  estimatedValue  Int? // in dollars
   rationale       String?  @db.Text // why pursue this
   status          String   @default("not_drafted") // not_drafted, drafted, filed, granted
   priority        Boolean  @default(false)
   archived        Boolean  @default(false)
-  category        String?  // wearable, software_ai, supplement, data_privacy, method, design
-  urgency         String?  // file_now, monitor, exploratory
-  priorArtRisk    String?  // low, medium, high
+  category        String? // wearable, software_ai, supplement, data_privacy, method, design
+  urgency         String? // file_now, monitor, exploratory
+  priorArtRisk    String? // low, medium, high
   followOnNote    String?  @db.Text // notes on needed improvements/expansions
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -341,9 +341,9 @@ model PatentClaim {
 
 model Rejection {
   id                 String   @id @default(cuid())
-  recommendationId   String   // ID of the rejected item
-  recommendationType String   // email, patent, task, content, outreach, etc.
-  reasonCategory     String   // not_priority, wrong_timing, disagree_approach, needs_modification, other
+  recommendationId   String // ID of the rejected item
+  recommendationType String // email, patent, task, content, outreach, etc.
+  reasonCategory     String // not_priority, wrong_timing, disagree_approach, needs_modification, other
   reasonText         String?  @db.Text
   userId             String   @default("kirsten")
   createdAt          DateTime @default(now())
@@ -354,15 +354,15 @@ model Rejection {
 // ============================================================
 
 model ImageFeedback {
-  id           String   @id @default(cuid())
-  platform     String
-  contentType  String
-  topic        String
-  prompt       String   @db.Text
-  feedback     String   // too_clinical, too_casual, wrong_vibe, wrong_demographics, doesnt_match, custom
-  customNote   String?  @db.Text
-  wasApproved  Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  platform    String
+  contentType String
+  topic       String
+  prompt      String   @db.Text
+  feedback    String // too_clinical, too_casual, wrong_vibe, wrong_demographics, doesnt_match, custom
+  customNote  String?  @db.Text
+  wasApproved Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }
 
 // ============================================================
@@ -376,7 +376,7 @@ model ContentQueue {
   body         String    @db.Text
   imageData    String?   @db.Text // base64 data URI
   imagePrompt  String?   @db.Text
-  hashtags     Json?     // string[]
+  hashtags     Json? // string[]
   scheduledFor DateTime?
   status       String    @default("queued") // queued, posted, failed
   postedAt     DateTime?
@@ -392,12 +392,12 @@ model ContentQueue {
 
 model ChatLog {
   id          String   @id @default(cuid())
-  contextType String   // email, patent, general, task, content, etc.
-  contextId   String?  // ID of the thing being discussed
-  role        String   // user, assistant
+  contextType String // email, patent, general, task, content, etc.
+  contextId   String? // ID of the thing being discussed
+  role        String // user, assistant
   message     String   @db.Text
   createdAt   DateTime @default(now())
-  sessionId   String   // groups messages in same conversation
+  sessionId   String // groups messages in same conversation
 }
 
 // ============================================================
@@ -406,10 +406,10 @@ model ChatLog {
 
 model PatentDraft {
   id           String   @id @default(cuid())
-  claimId      String   // references PatentClaim.id
-  sessionId    String   // links to ChatLog sessionId
+  claimId      String // references PatentClaim.id
+  sessionId    String // links to ChatLog sessionId
   title        String?
-  sections     Json?    // array of { title: string, content: string }
+  sections     Json? // array of { title: string, content: string }
   phase        String   @default("discovery") // discovery, strategy, drafting
   messageCount Int      @default(0)
   createdAt    DateTime @default(now())
@@ -422,9 +422,9 @@ model PatentDraft {
 
 model DepartmentData {
   id         String   @id @default(cuid())
-  department String   // clinical, community, strategy, product, finance, fundraising, legal
-  key        String   // e.g. "factors", "postingCalendar", "currentBrief"
-  value      Json     // the actual data blob
+  department String // clinical, community, strategy, product, finance, fundraising, legal
+  key        String // e.g. "factors", "postingCalendar", "currentBrief"
+  value      Json // the actual data blob
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -459,10 +459,47 @@ model Feature {
   priority        String     @default("should_have") // must_have, should_have, nice_to_have
   complexity      String     @default("medium") // small, medium, large
   status          String     @default("idea") // idea, designing, wireframed, coded, shipped
-  careTeamMembers Json?      // string[]
+  careTeamMembers Json? // string[]
   uxSpec          String?    @db.Text
   generatedCode   String?    @db.Text
   notes           String?    @db.Text
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
+}
+
+// ============================================================
+// Early Access & Growth
+// ============================================================
+
+model EarlyAccessSignup {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  firstName       String?
+  quizAnswers     Json // full quiz response data
+  score           Int // calculated fertility readiness score (0-100)
+  scoreBreakdown  Json? // per-category scores
+  tier            String   @default("early_access") // early_access, founding_member
+  referralCode    String?  @unique // their unique referral code
+  referredBy      String? // referral code of person who referred them
+  referralCount   Int      @default(0) // how many people they've referred
+  mailchimpStatus String   @default("pending") // pending, subscribed, error
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model FoundingMember {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  firstName        String?
+  signupId         String? // references EarlyAccessSignup.id
+  spotNumber       Int // 1-200
+  status           String   @default("active") // active, cancelled, upgraded
+  monthlyRate      Int      @default(900) // cents — $9/mo locked rate
+  stripeCustomerId String?
+  stripeSubId      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

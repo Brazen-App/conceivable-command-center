@@ -3,14 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Users,
-  FileText,
   Mail,
   Search,
-  Handshake,
-  UserCheck,
   DollarSign,
   ShieldCheck,
-  Star,
   Target,
   Loader2,
   ArrowUpRight,
@@ -38,21 +34,10 @@ interface MailchimpReport {
   bounces: number;
 }
 
-// ── Static Data (will be replaced with live data as we connect) ──
-
-const KPI_DATA = {
-  totalAudienceReach: 28905 + 220 + 400000,
-  weeklyContentOutput: 0,
-  weeklyContentTarget: 100,
-  geoScore: 4,
+// Static KPI defaults (shown before live data loads)
+const KPI_DEFAULTS = {
+  weeklyContentTarget: 21, // 3 posts/day across platforms
   geoTarget: 10,
-  topContent: {
-    title: "TikTok viral video — 3.4M views this week",
-    platform: "TikTok",
-    engagement: 3400000,
-  },
-  activeAffiliates: 0,
-  activePartnerships: 0,
 };
 
 // ── Components ──────────────────────────────────────────────
@@ -426,75 +411,35 @@ export default function MarketingDashboard() {
         <MetricCard
           icon={Users}
           iconColor={colors.blue}
-          label="Total Audience"
-          value={totalSubs > 0 ? totalSubs.toLocaleString() : KPI_DATA.totalAudienceReach.toLocaleString()}
-          subtext={totalSubs > 0 ? "email subscribers" : "email + social"}
+          label="Mailchimp List"
+          value={totalSubs > 0 ? totalSubs.toLocaleString() : "—"}
+          subtext="email subscribers"
         />
 
         <MetricCard
-          icon={FileText}
-          iconColor={colors.yellow}
-          label="Content Output"
-          value={KPI_DATA.weeklyContentOutput}
-          subtext={`/ ${KPI_DATA.weeklyContentTarget} weekly target`}
+          icon={Target}
+          iconColor={colors.green}
+          label="Early Access Signups"
+          value={earlyAccessTotal}
+          subtext="since Mar 12 launch"
         >
-          <ProgressBar value={KPI_DATA.weeklyContentOutput} max={KPI_DATA.weeklyContentTarget} color={colors.yellow} />
+          <ProgressBar value={earlyAccessTotal} max={500} color={colors.green} />
         </MetricCard>
+
+        <MetricCard
+          icon={Mail}
+          iconColor={colors.pink}
+          label="Email Health"
+          value={campaigns.length > 0 ? `${((campaigns[0]?.openRate || 0) * 100).toFixed(1)}%` : "—"}
+          subtext={campaigns.length > 0 ? `${campaigns[0]?.uniqueOpens?.toLocaleString()} unique opens` : "no campaigns yet"}
+        />
 
         <MetricCard
           icon={Search}
           iconColor={colors.paleBlue}
           label="GEO Score"
-          value={`${KPI_DATA.geoScore} / ${KPI_DATA.geoTarget}`}
-          subtext="AI queries citing Conceivable"
-        >
-          <ProgressBar value={KPI_DATA.geoScore} max={KPI_DATA.geoTarget} color={colors.paleBlue} />
-        </MetricCard>
-
-        <MetricCard
-          icon={Star}
-          iconColor={colors.purple}
-          label="Top Content"
-          value=""
-        >
-          <p className="text-sm font-semibold leading-snug" style={{ color: "var(--foreground)" }}>
-            {KPI_DATA.topContent.title}
-          </p>
-          <div className="flex items-center gap-2 mt-1.5">
-            <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: `${colors.purple}12`, color: colors.purple }}
-            >
-              {KPI_DATA.topContent.platform}
-            </span>
-            <span className="text-[11px]" style={{ color: "var(--muted)" }}>
-              {KPI_DATA.topContent.engagement.toLocaleString()} engagements
-            </span>
-          </div>
-        </MetricCard>
-
-        <MetricCard
-          icon={UserCheck}
-          iconColor={colors.green}
-          label="Active Affiliates"
-          value={KPI_DATA.activeAffiliates}
-          subtext="generating revenue"
-        />
-
-        <MetricCard
-          icon={Handshake}
-          iconColor={colors.navy}
-          label="Partnerships"
-          value={KPI_DATA.activePartnerships}
-          subtext="experts + podcast hosts"
-        />
-
-        <MetricCard
-          icon={DollarSign}
-          iconColor={colors.yellow}
-          label="Paid Spend"
-          value="$0"
-          subtext="launches post-validation"
+          value={`—`}
+          subtext={`/ ${KPI_DEFAULTS.geoTarget} target — needs audit`}
         />
 
         <MetricCard
@@ -512,11 +457,11 @@ export default function MarketingDashboard() {
         </MetricCard>
 
         <MetricCard
-          icon={Mail}
-          iconColor={colors.pink}
-          label="Email Health"
-          value={campaigns.length > 0 ? `${((campaigns[0]?.openRate || 0) * 100).toFixed(1)}%` : "—"}
-          subtext="latest open rate"
+          icon={DollarSign}
+          iconColor={colors.yellow}
+          label="Paid Spend"
+          value="$0"
+          subtext="launches post-validation"
         />
       </div>
 

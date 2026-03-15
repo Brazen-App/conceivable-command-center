@@ -35,11 +35,12 @@ export async function GET() {
 
     // Fetch all members since popup launched — these are the only ones
     // that could possibly be popup signups
-    let popupTotal = 0;
-    let popupToday = 0;
-    let popupYesterday = 0;
+    let earlyAccessTotal = 0;
+    let earlyAccessToday = 0;
+    let earlyAccessYesterday = 0;
     let allToday = 0;
     let allYesterday = 0;
+    const sourceCounts: Record<string, number> = {};
     let offset = 0;
     const pageSize = 500;
     let hasMore = true;
@@ -66,30 +67,32 @@ export async function GET() {
         if (isYesterday) allYesterday++;
 
         // Count ALL new signups since popup launch as early access
-        // Sources include: "Popup Form", "Conceivable", "Embed Form", Stan Store imports, etc.
-        popupTotal++;
-        if (isToday) popupToday++;
-        if (isYesterday) popupYesterday++;
+        earlyAccessTotal++;
+        if (isToday) earlyAccessToday++;
+        if (isYesterday) earlyAccessYesterday++;
+
+        // Track source breakdown
+        const src = m.source || "unknown";
+        sourceCounts[src] = (sourceCounts[src] || 0) + 1;
       }
 
       offset += pageSize;
       if (members.length < pageSize) hasMore = false;
-      // Safety cap
       if (offset >= 5000) hasMore = false;
     }
 
     return NextResponse.json({
       totalSubscribers,
       earlyAccess: {
-        total: popupTotal,
-        today: popupToday,
-        yesterday: popupYesterday,
-        source: "all (since Mar 12 popup launch)",
+        total: earlyAccessTotal,
+        today: earlyAccessToday,
+        yesterday: earlyAccessYesterday,
       },
       allSignups: {
         today: allToday,
         yesterday: allYesterday,
       },
+      sources: sourceCounts,
     });
   } catch (err) {
     console.error("[signups] Error:", err);

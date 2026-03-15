@@ -271,25 +271,35 @@ export default function DailySocial() {
     }));
   };
 
-  // Generate hero image in POV section (before drafting)
+  // Generate hero image using REAL AI image generation (FAL.ai Flux)
+  // Only available AFTER POV/angle is provided (the button is disabled until then)
   const generateHeroImage = async (itemId: string, topic: string) => {
     setState(itemId, (s) => ({ ...s, heroImageLoading: true }));
 
     try {
       const state = getState(itemId);
-      const res = await fetch("/api/content/smart-image", {
+      const povText = state.povText || "";
+
+      // Build a rich prompt from the topic + POV angle
+      const prompt = povText
+        ? `${topic}. Visual angle: ${povText.slice(0, 300)}. Create a striking, professional image for a fertility health brand.`
+        : `${topic}. Create a warm, professional image for a fertility health brand called Conceivable.`;
+
+      const res = await fetch("/api/content/ai-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "generate",
-          content: state.povText.slice(0, 800) || topic,
+          prompt,
+          overlayText: state.heroTitle || topic,
           platform: "linkedin",
-          topic,
-          title: state.heroTitle || topic,
+          style: "photography",
         }),
       });
 
-      if (!res.ok) throw new Error("Image generation failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: "Image generation failed" }));
+        throw new Error(errData.error || `Image API error (${res.status})`);
+      }
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
@@ -342,12 +352,11 @@ export default function DailySocial() {
     }
   };
 
-  // Smart image generation
+  // AI image generation using FAL.ai Flux
   const generateSmartImage = async (
     itemId: string, cardId: string, platform: string, topic: string, content: string,
     customPrompt?: string, feedback?: string, feedbackText?: string
   ) => {
-    // Find the card title for text overlay
     const itemState = itemStates[itemId];
     const card = itemState?.cards.find((c) => c.id === cardId);
     const cardTitle = card?.title || topic;
@@ -358,41 +367,26 @@ export default function DailySocial() {
     }));
 
     try {
-      const res = await fetch("/api/content/smart-image", {
+      // Build prompt incorporating feedback if provided
+      let prompt = customPrompt || `${topic}. Context: ${content.slice(0, 300)}. Professional image for a fertility health brand.`;
+      if (feedback) {
+        prompt = `${prompt}. Feedback on previous version: ${feedback}. ${feedbackText || ""}`;
+      }
+
+      const res = await fetch("/api/content/ai-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: feedback ? "feedback" : customPrompt ? "regenerate" : "generate",
-          content: content.slice(0, 800),
-          platform, topic, customPrompt, feedback,
-          previousPrompt: customPrompt,
-          title: cardTitle,
+          prompt,
+          overlayText: cardTitle,
+          platform,
+          style: "photography",
         }),
       });
 
       if (!res.ok) {
-        // Fallback to old endpoint
-        const oldRes = await fetch("/api/content/generate-image-actual", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prompt: customPrompt || `Professional ${platform} image for Conceivable fertility health brand about: ${topic}. Brand colors: Blue #5A6FFF, Baby Blue #ACB7FF, Pink #E37FB1. No text in image. Modern, warm, empowering. Target: women 25-40.`,
-            aspectRatio: "1:1", style: "photography",
-            title: cardTitle,
-          }),
-        });
-        if (!oldRes.ok) throw new Error("Image generation failed");
-        const oldData = await oldRes.json();
-        if (oldData.error) throw new Error(oldData.error);
-
-        setState(itemId, (s) => ({
-          ...s,
-          cards: s.cards.map((c) => c.id === cardId ? {
-            ...c, imageUrl: oldData.imageData, imageLoading: false,
-            imagePrompt: customPrompt || `${topic} - ${platform}`, imageVersion: c.imageVersion + 1,
-          } : c),
-        }));
-        return;
+        const errData = await res.json().catch(() => ({ error: "Image generation failed" }));
+        throw new Error(errData.error || `Image API error (${res.status})`);
       }
 
       const data = await res.json();

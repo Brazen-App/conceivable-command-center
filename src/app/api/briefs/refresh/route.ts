@@ -68,35 +68,70 @@ export async function POST() {
       analyzeRedditPosts(topReddit),
     ]);
 
-    // 5. Clear old items and insert new verified ones
+    // 5. Delete items older than 7 days, then add new ones
+    //    (Don't delete everything — keep recent content so the page isn't empty
+    //    and so articles accumulate over multiple refreshes)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     await prisma.$transaction([
-      prisma.newsItem.deleteMany({}),
-      prisma.researchArticle.deleteMany({}),
-      prisma.redditPost.deleteMany({}),
+      prisma.newsItem.deleteMany({ where: { createdAt: { lt: sevenDaysAgo } } }),
+      prisma.researchArticle.deleteMany({ where: { createdAt: { lt: sevenDaysAgo } } }),
+      prisma.redditPost.deleteMany({ where: { createdAt: { lt: sevenDaysAgo } } }),
     ]);
 
-    // Insert new verified items
-    if (analyzedNews.length > 0) {
-      await prisma.newsItem.createMany({ data: analyzedNews });
+    // Deduplicate against existing items by title
+    const existingNewsTitles = new Set(
+      (await prisma.newsItem.findMany({ select: { title: true } })).map((n) => n.title)
+    );
+    const existingResearchTitles = new Set(
+      (await prisma.researchArticle.findMany({ select: { title: true } })).map((r) => r.title)
+    );
+    const existingRedditTitles = new Set(
+      (await prisma.redditPost.findMany({ select: { title: true } })).map((r) => r.title)
+    );
+
+    const newNews = analyzedNews.filter((n) => !existingNewsTitles.has(n.title));
+    const newResearch = analyzedResearch.filter((r) => !existingResearchTitles.has(r.title));
+    const newReddit = analyzedReddit.filter((r) => !existingRedditTitles.has(r.title));
+
+    // Insert only genuinely new items
+    if (newNews.length > 0) {
+      await prisma.newsItem.createMany({ data: newNews });
     }
-    if (analyzedResearch.length > 0) {
-      await prisma.researchArticle.createMany({ data: analyzedResearch });
+    if (newResearch.length > 0) {
+      await prisma.researchArticle.createMany({ data: newResearch });
     }
-    if (analyzedReddit.length > 0) {
-      await prisma.redditPost.createMany({ data: analyzedReddit });
+    if (newReddit.length > 0) {
+      await prisma.redditPost.createMany({ data: newReddit });
+    }
+
+    // Cap at 50 items per type (keep most recent)
+    const allNews = await prisma.newsItem.findMany({ orderBy: { createdAt: "desc" }, select: { id: true } });
+    if (allNews.length > 50) {
+      const idsToDelete = allNews.slice(50).map((n) => n.id);
+      await prisma.newsItem.deleteMany({ where: { id: { in: idsToDelete } } });
     }
 
     const durationMs = Date.now() - startTime;
+
+    // Get final totals
+    const finalNewsCount = await prisma.newsItem.count();
+    const finalResearchCount = await prisma.researchArticle.count();
+    const finalRedditCount = await prisma.redditPost.count();
 
     return NextResponse.json({
       ok: true,
       refreshedAt: new Date().toISOString(),
       durationMs,
       counts: {
-        news: analyzedNews.length,
-        research: analyzedResearch.length,
-        reddit: analyzedReddit.length,
+        news: finalNewsCount,
+        research: finalResearchCount,
+        reddit: finalRedditCount,
         video: videoItems.length,
+      },
+      newItems: {
+        news: newNews.length,
+        research: newResearch.length,
+        reddit: newReddit.length,
       },
       stats: fetchResult.stats,
     });

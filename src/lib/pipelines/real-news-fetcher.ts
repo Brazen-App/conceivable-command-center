@@ -51,16 +51,49 @@ export interface RealRedditPost {
 // GOOGLE NEWS RSS
 // ────────────────────────────────────────────
 
-const NEWS_QUERIES = [
-  "fertility health technology",
-  "PCOS treatment research",
-  "endometriosis diagnosis",
-  "women's health AI",
-  "fertility wearable",
-  "reproductive health research",
-  "infertility treatment",
-  "IVF outcomes research",
+// Rotate queries daily so content stays fresh
+// Core queries (always included) + rotating queries (change daily)
+const CORE_QUERIES = [
+  "fertility treatment",
+  "women's health",
+  "PCOS",
+  "endometriosis",
 ];
+
+const ROTATING_QUERIES = [
+  "IVF success rates",
+  "egg freezing",
+  "fertility supplements research",
+  "ovulation tracking technology",
+  "reproductive health AI",
+  "fertility wearable device",
+  "prenatal vitamins study",
+  "menstrual cycle research",
+  "infertility causes",
+  "fertility diet nutrition",
+  "perimenopause symptoms",
+  "hormone testing",
+  "fertility clinic news",
+  "miscarriage prevention",
+  "sperm quality research",
+  "fertility app technology",
+  "birth control side effects",
+  "AMH levels fertility",
+  "uterine health",
+  "progesterone fertility",
+];
+
+function getTodaysQueries(): string[] {
+  // Pick 4 rotating queries based on the day of year (changes daily)
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  const rotated: string[] = [];
+  for (let i = 0; i < 4; i++) {
+    rotated.push(ROTATING_QUERIES[(dayOfYear + i) % ROTATING_QUERIES.length]);
+  }
+  return [...CORE_QUERIES, ...rotated];
+}
+
+const NEWS_QUERIES = getTodaysQueries();
 
 /**
  * Parse Google News RSS XML into news items.
@@ -123,7 +156,8 @@ export async function fetchGoogleNews(maxPerQuery = 3): Promise<RealNewsItem[]> 
   // Fetch from multiple queries in parallel
   const results = await Promise.allSettled(
     NEWS_QUERIES.map(async (query) => {
-      const encoded = encodeURIComponent(query);
+      // Add "when:3d" to get articles from the last 3 days (not all-time)
+      const encoded = encodeURIComponent(query + " when:3d");
       const url = `https://news.google.com/rss/search?q=${encoded}&hl=en-US&gl=US&ceid=US:en`;
 
       try {
@@ -162,11 +196,13 @@ export async function fetchGoogleNews(maxPerQuery = 3): Promise<RealNewsItem[]> 
 // ────────────────────────────────────────────
 
 const PUBMED_QUERIES = [
-  "fertility AND (wearable OR biomarker)",
-  "PCOS AND (treatment OR diagnosis) AND 2025[pdat]",
-  "endometriosis AND (AI OR machine learning)",
-  "reproductive health AND heart rate variability",
-  "ovulation AND (prediction OR tracking)",
+  "fertility AND (wearable OR biomarker) AND 2026[pdat]",
+  "PCOS AND (treatment OR diagnosis) AND 2026[pdat]",
+  "endometriosis AND (biomarker OR diagnosis) AND 2026[pdat]",
+  "reproductive health AND (AI OR machine learning) AND 2026[pdat]",
+  "ovulation AND (prediction OR tracking) AND 2026[pdat]",
+  "infertility AND supplements AND 2026[pdat]",
+  "menstrual cycle AND (HRV OR sleep) AND 2026[pdat]",
 ];
 
 export async function fetchPubMedArticles(maxPerQuery = 2): Promise<RealResearchItem[]> {

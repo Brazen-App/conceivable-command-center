@@ -111,17 +111,14 @@ export default function ContentDepartmentPage() {
         await fetchData(false);
         console.log("[REFRESH] Content re-fetched. News:", newsItems.length);
 
-        // Build success message from data.counts (the actual response shape)
+        // Build success message showing NEW items added
+        const n = data.newItems || {};
         const c = data.counts || {};
-        const parts: string[] = [];
-        if (c.news) parts.push(`${c.news} news`);
-        if (c.research) parts.push(`${c.research} research`);
-        if (c.reddit) parts.push(`${c.reddit} reddit`);
-        if (c.video) parts.push(`${c.video} videos`);
+        const newTotal = (n.news || 0) + (n.research || 0) + (n.reddit || 0);
         const duration = data.durationMs ? ` (${(data.durationMs / 1000).toFixed(0)}s)` : "";
-        const msg = parts.length > 0
-          ? `Refreshed${duration}: ${parts.join(", ")}.${c.reddit === 0 ? " Reddit blocked from server." : ""}`
-          : `Content refreshed${duration}.`;
+        const msg = newTotal > 0
+          ? `Found ${newTotal} new items${duration}: ${n.news || 0} news, ${n.research || 0} research, ${n.reddit || 0} reddit. Total in library: ${c.news || 0} news, ${c.research || 0} research.`
+          : `No new articles found${duration}. Sources haven't published new content since last refresh. Total in library: ${c.news || 0} news, ${c.research || 0} research.`;
         setRefreshSuccess(msg);
         setTimeout(() => setRefreshSuccess(null), 12000);
       } else {

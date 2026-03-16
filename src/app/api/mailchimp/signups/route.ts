@@ -11,8 +11,9 @@ const POPUP_LAUNCH_DATE = "2026-03-12T00:00:00Z";
 
 // Sources that represent REAL early access signups
 const EARLY_ACCESS_SOURCES = new Set(["Popup Form", "Embed Form", "API - Generic"]);
-// Tags that mark someone as early access (e.g. Stan Store imports)
-const EARLY_ACCESS_TAGS = new Set(["Early Access", "Stan Store", "early-access", "quiz-completed"]);
+// Tags that mark someone as a VERIFIED early access signup
+// NOT "Early Access" (too broad — got applied to 417 people in bulk)
+const EARLY_ACCESS_TAGS = new Set(["Stan Store", "quiz-completed"]);
 
 /**
  * GET /api/mailchimp/signups

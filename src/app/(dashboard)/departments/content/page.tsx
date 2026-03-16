@@ -81,6 +81,7 @@ export default function ContentDepartmentPage() {
   const [refreshElapsed, setRefreshElapsed] = useState(0);
 
   const handleRefresh = async () => {
+    console.log("[REFRESH] Button clicked at", new Date().toISOString());
     setIsRefreshing(true);
     setRefreshError(null);
     setRefreshSuccess(null);
@@ -90,8 +91,10 @@ export default function ContentDepartmentPage() {
     const timer = setInterval(() => setRefreshElapsed((e) => e + 1), 1000);
 
     try {
+      console.log("[REFRESH] Calling /api/briefs/refresh...");
       const res = await fetch("/api/briefs/refresh", { method: "POST" });
       clearInterval(timer);
+      console.log("[REFRESH] Got response:", res.status);
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({ error: `Server error (${res.status})` }));
@@ -99,11 +102,14 @@ export default function ContentDepartmentPage() {
         return;
       }
       const data = await res.json();
+      console.log("[REFRESH] Response data:", JSON.stringify(data).slice(0, 200));
       if (data.ok) {
         setLastRefreshed(data.refreshedAt || new Date().toISOString());
 
         // Force re-fetch from DB with cache-busting
+        console.log("[REFRESH] Re-fetching content from DB...");
         await fetchData(false);
+        console.log("[REFRESH] Content re-fetched. News:", newsItems.length);
 
         // Build success message from data.counts (the actual response shape)
         const c = data.counts || {};
@@ -259,7 +265,7 @@ export default function ContentDepartmentPage() {
           onRefresh={handleRefresh}
           isRefreshing={isRefreshing}
           lastRefreshed={lastRefreshed}
-          refreshError={refreshError}
+          refreshError={refreshError || (isRefreshing ? `Fetching fresh content... ${refreshElapsed}s` : null)}
         />
       )}
       {activeTab === "pipeline" && <ContentPipeline queue={pipelineQueue} />}

@@ -9,9 +9,10 @@ const LIST_ID = "3c920d5bed";
 // The early access popup launched on March 12, 2026
 const POPUP_LAUNCH_DATE = "2026-03-12T00:00:00Z";
 
-// Only these sources represent REAL early access signups (quiz completers, popup, API).
-// "Conceivable" source = existing list members re-appearing, NOT new early access signups.
+// Sources that represent REAL early access signups
 const EARLY_ACCESS_SOURCES = new Set(["Popup Form", "Embed Form", "API - Generic"]);
+// Tags that mark someone as early access (e.g. Stan Store imports)
+const EARLY_ACCESS_TAGS = new Set(["Early Access", "Stan Store", "early-access", "quiz-completed"]);
 
 /**
  * GET /api/mailchimp/signups
@@ -74,9 +75,13 @@ export async function GET() {
         const src = m.source || "unknown";
         sourceCounts[src] = (sourceCounts[src] || 0) + 1;
 
-        // Only count real early access sources (Popup Form, Embed Form, API - Generic)
-        // "Conceivable" source = existing list members, not new early access signups
-        if (EARLY_ACCESS_SOURCES.has(src)) {
+        // Count as early access if:
+        // 1. Source is from popup/embed/API, OR
+        // 2. Member has an early access tag (Stan Store imports, quiz completers, etc.)
+        const memberTags = (m.tags as Array<{ name: string }> || []).map((t: { name: string }) => t.name);
+        const hasEarlyAccessTag = memberTags.some((t: string) => EARLY_ACCESS_TAGS.has(t));
+
+        if (EARLY_ACCESS_SOURCES.has(src) || hasEarlyAccessTag) {
           earlyAccessTotal++;
           if (isToday) earlyAccessToday++;
           if (isYesterday) earlyAccessYesterday++;

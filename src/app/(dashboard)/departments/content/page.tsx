@@ -78,39 +78,55 @@ export default function ContentDepartmentPage() {
     return () => clearInterval(id);
   }, [fetchData]);
 
+  const [refreshElapsed, setRefreshElapsed] = useState(0);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     setRefreshError(null);
     setRefreshSuccess(null);
+    setRefreshElapsed(0);
+
+    // Show elapsed time so user knows it's working (refresh takes ~30s)
+    const timer = setInterval(() => setRefreshElapsed((e) => e + 1), 1000);
+
     try {
       const res = await fetch("/api/briefs/refresh", { method: "POST" });
+      clearInterval(timer);
+
       if (!res.ok) {
         const errData = await res.json().catch(() => ({ error: `Server error (${res.status})` }));
         setRefreshError(errData.error || `Refresh failed (${res.status})`);
         return;
       }
       const data = await res.json();
-      if (data.ok || data.saved) {
+      if (data.ok) {
         setLastRefreshed(data.refreshedAt || new Date().toISOString());
+
+        // Force re-fetch from DB with cache-busting
         await fetchData(false);
-        // Build success message with counts
+
+        // Build success message from data.counts (the actual response shape)
+        const c = data.counts || {};
         const parts: string[] = [];
-        if (data.news) parts.push(`${data.news} news`);
-        if (data.research) parts.push(`${data.research} research`);
-        if (data.videos) parts.push(`${data.videos} videos`);
+        if (c.news) parts.push(`${c.news} news`);
+        if (c.research) parts.push(`${c.research} research`);
+        if (c.reddit) parts.push(`${c.reddit} reddit`);
+        if (c.video) parts.push(`${c.video} videos`);
+        const duration = data.durationMs ? ` (${(data.durationMs / 1000).toFixed(0)}s)` : "";
         const msg = parts.length > 0
-          ? `Refreshed: ${parts.join(", ")}. Reddit is blocked from server — use local fetch if needed.`
-          : "Content refreshed successfully.";
+          ? `Refreshed${duration}: ${parts.join(", ")}.${c.reddit === 0 ? " Reddit blocked from server." : ""}`
+          : `Content refreshed${duration}.`;
         setRefreshSuccess(msg);
-        // Auto-clear after 8 seconds
-        setTimeout(() => setRefreshSuccess(null), 8000);
+        setTimeout(() => setRefreshSuccess(null), 12000);
       } else {
         setRefreshError(data.error || "Refresh returned no data");
       }
     } catch (err) {
+      clearInterval(timer);
       setRefreshError(err instanceof Error ? err.message : "Network error — check connection and try again");
     } finally {
       setIsRefreshing(false);
+      setRefreshElapsed(0);
     }
   };
 
@@ -153,33 +169,20 @@ export default function ContentDepartmentPage() {
               {lastRefreshed && <span> &middot; Last refreshed {new Date(lastRefreshed).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>}
             </p>
           </div>
-          {isRefreshing ? (
-            <span
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shrink-0 opacity-60"
-              style={{ backgroundColor: "#F1C028", color: "#000" }}
-            >
-              <RefreshCw size={14} className="animate-spin" />
-              Fetching...
-            </span>
-          ) : (
-            <a
-              href="/api/briefs/refresh?redirect=1"
-              onClick={(e) => {
-                e.preventDefault();
-                handleRefresh();
-              }}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shrink-0 no-underline"
-              style={{ backgroundColor: "#F1C028", color: "#000" }}
-            >
-              <RefreshCw size={14} />
-              Refresh Content
-            </a>
-          )}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shrink-0 disabled:opacity-60"
+            style={{ backgroundColor: "#F1C028", color: "#000" }}
+          >
+            <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+            {isRefreshing ? `Fetching... ${refreshElapsed}s` : "Refresh Content"}
+          </button>
         </div>
         {isRefreshing && (
           <div className="mt-3 px-4 py-2.5 rounded-xl text-xs flex items-center gap-2" style={{ backgroundColor: "#F1C02808", border: "1px solid #F1C02818", color: "var(--muted)" }}>
             <Loader2 size={12} className="animate-spin" style={{ color: "#F1C028" }} />
-            Fetching real articles from Google News, PubMed, and Reddit — this takes about a minute...
+            Fetching real articles from Google News, PubMed, and Reddit — usually takes 20-40 seconds...
           </div>
         )}
         {refreshError && (

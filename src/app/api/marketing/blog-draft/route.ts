@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const SYSTEM_PROMPT = `You are Conceivable's content engine. You write blog posts that are simultaneously:
 
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     const client = getClient();
 
     const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 8000,
       system: SYSTEM_PROMPT,
       messages: messages.map((m: { role: string; content: string }) => ({

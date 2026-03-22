@@ -89,7 +89,7 @@ function ResponseCard({ r, isExpanded, onToggle }: { r: QuizResponse; isExpanded
               {r.name || "Anonymous"}
             </span>
             {hasNotes && (
-              <MessageCircle size={12} style={{ color: PINK }} title="Has notes/questions" />
+              <span title="Has notes/questions"><MessageCircle size={12} style={{ color: PINK }} /></span>
             )}
           </div>
           <span className="text-xs truncate block" style={{ color: "var(--muted)" }}>

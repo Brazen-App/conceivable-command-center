@@ -28,6 +28,11 @@ import {
   Search,
   Globe,
   Code2,
+  Plus,
+  Trash2,
+  Upload,
+  SquareCheck,
+  Square,
 } from "lucide-react";
 import { FERTILITY_SUPPLEMENTS_POST_HTML } from "@/lib/data/blog-posts-data";
 
@@ -40,7 +45,7 @@ const YELLOW = "#F1C028";
 const PINK = "#E37FB1";
 const CREAM = "#F9F7F0";
 
-type TabKey = "workspace" | "calendar" | "template";
+type TabKey = "queue" | "workspace" | "calendar" | "template";
 type PostStatus = "idea" | "outline" | "draft" | "review" | "ready" | "published";
 
 interface BlogPost {
@@ -259,15 +264,17 @@ Page head elements (generate per post):
 - FAQ schema markup (JSON-LD) from FAQ section
 
 Brand typography in HTML:
-- H1: font-family: 'Georgia', serif; font-size: 38px; line-height: 1.2; color: #2A2828;
-- H2: font-family: 'Georgia', serif; font-size: 28px; color: #2A2828; margin-top: 48px;
-- H3: font-size: 22px; color: #2A2828; margin-top: 32px;
-- Body: font-size: 17px; line-height: 1.7; color: #444;
+- H1: font-family: 'Georgia', serif; font-size: 42px; line-height: 1.15; color: #2A2828;
+- Category/Eyebrow above H1: font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: #5A6FFF; font-weight: 700;
+- Author/Date line below H1: font-size: 15px; color: #666;
+- H2: font-family: 'Georgia', serif; font-size: 30px; color: #2A2828; margin-top: 48px;
+- H3: font-size: 24px; color: #2A2828; margin-top: 32px;
+- Body: font-size: 17px; line-height: 1.75; color: #444;
 - Background: #F9F7F0 for TOC, cards, About block
 
 Brand colors: Primary #5A6FFF, Background #F9F7F0, Text #2A2828, Secondary #555, Meta #888, Pink #E37FB1, Green #1EAA55, CTA gradient: linear-gradient(135deg, #5A6FFF 0%, #9686B9 100%)
 
-If Shopify theme uses custom fonts, replace Georgia with the actual theme font so posts look native.
+EDITORIAL ELEMENTS — use 3-5 throughout every post: Insight Boxes (blue #EEF0FF bg, blue left border), Stat Callouts (big number centered), Pull Quotes (pink left border), Warning Boxes (yellow), Clinical Evidence Boxes (green), Image Placeholders. Spread naturally throughout the post to break up text.
 
 Required structural elements in every post:
 a) Breadcrumb: Home > Category > Title (14px, #888, links #5A6FFF)
@@ -277,8 +284,8 @@ d) TOC box: bg #F9F7F0, border-radius 12px, numbered anchor links in #5A6FFF
 e) Heading hierarchy: H1 > H2 > H3 (never skip)
 f) Data tables: header bg #5A6FFF white text, alternating white/#F9F7F0 rows
 g) Comparison cards: bg #F9F7F0, border-radius 12px, Pros/Cons/Verdict
-h) FAQ section: min 5 questions as H3, 2-3 sentence answers, border-bottom 1px #eee
-i) CTA block: gradient bg, white text centered, white button with #5A6FFF text
+h) TWO CTA BLOCKS at ~40% and ~80% through the post. Each has 2 buttons: "Take the Quiz →" (links to https://conceivable-quiz.vercel.app) and "Check Out the App →" (links to https://conceivable.com). First CTA: gradient blue bg. Second CTA: dark bg (#2A2828).
+i) FAQ section: EXACTLY 6 questions. First 3 are UNIQUE to the post topic. Last 3 are ALWAYS the same: "How does the Conceivable system actually work?" / "How do I know which supplements I actually need?" / "Do I need the Halo Ring to use Conceivable?" — with standardized answers about the system, the quiz, and the ring.
 j) Disclaimer: italic, 13px, #999
 k) About Conceivable: bg #F9F7F0, company description + 240K data points + 150-260% improvement`;
 
@@ -316,9 +323,10 @@ function ValidationBadge({ ok, label }: { ok: boolean; label: string }) {
 /* ──────────────────────────── main page ──────────────────────────── */
 
 export default function BlogPublishingPage() {
-  const [tab, setTab] = useState<TabKey>("workspace");
+  const [tab, setTab] = useState<TabKey>("queue");
 
   const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
+    { key: "queue", label: "Publishing Queue", icon: <Upload size={14} /> },
     { key: "workspace", label: "Blog Workspace", icon: <FileText size={14} /> },
     { key: "calendar", label: "Content Calendar", icon: <Calendar size={14} /> },
     { key: "template", label: "Template & Rules", icon: <BookOpen size={14} /> },
@@ -355,9 +363,496 @@ export default function BlogPublishingPage() {
         ))}
       </div>
 
+      {tab === "queue" && <QueueTab />}
       {tab === "workspace" && <WorkspaceTab />}
       {tab === "calendar" && <CalendarTab />}
       {tab === "template" && <TemplateTab />}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   TAB 0: PUBLISHING QUEUE
+   ════════════════════════════════════════════════════════════════════ */
+
+interface BlogDraft {
+  id: string;
+  title: string;
+  body: string;
+  status: string;
+  createdAt: string;
+  publishedAt: string | null;
+  metrics: {
+    metaTitle?: string;
+    metaDescription?: string;
+    faqBlock?: string;
+    tags?: string[];
+    shopifyUrl?: string;
+    shopifyHandle?: string;
+  } | null;
+}
+
+function QueueTab() {
+  const [drafts, setDrafts] = useState<BlogDraft[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishResult, setPublishResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+
+  // Form state
+  const [formTitle, setFormTitle] = useState("");
+  const [formBody, setFormBody] = useState("");
+  const [formMetaTitle, setFormMetaTitle] = useState("");
+  const [formMetaDesc, setFormMetaDesc] = useState("");
+  const [formFaq, setFormFaq] = useState("");
+  const [formTags, setFormTags] = useState("");
+
+  const fetchDrafts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/marketing/blog-queue");
+      const data = await res.json();
+      setDrafts(data.drafts || []);
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchDrafts(); }, [fetchDrafts]);
+
+  const resetForm = () => {
+    setFormTitle("");
+    setFormBody("");
+    setFormMetaTitle("");
+    setFormMetaDesc("");
+    setFormFaq("");
+    setFormTags("");
+    setShowForm(false);
+  };
+
+  const saveDraft = async () => {
+    if (!formTitle.trim() || !formBody.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/marketing/blog-queue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formTitle.trim(),
+          body: formBody.trim(),
+          metaTitle: formMetaTitle.trim() || undefined,
+          metaDescription: formMetaDesc.trim() || undefined,
+          faqBlock: formFaq.trim() || undefined,
+          tags: formTags.trim() ? formTags.split(",").map((t) => t.trim()).filter(Boolean) : undefined,
+        }),
+      });
+      if (res.ok) {
+        resetForm();
+        fetchDrafts();
+      }
+    } catch { /* ignore */ }
+    finally { setSaving(false); }
+  };
+
+  const deleteDraft = async (id: string) => {
+    await fetch(`/api/marketing/blog-queue/${id}`, { method: "DELETE" });
+    setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    fetchDrafts();
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    const draftIds = drafts.filter((d) => d.status === "draft").map((d) => d.id);
+    if (draftIds.every((id) => selected.has(id))) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(draftIds));
+    }
+  };
+
+  const bulkPublish = async () => {
+    if (selected.size === 0) return;
+    setPublishing(true);
+    setPublishResult(null);
+    try {
+      const res = await fetch("/api/marketing/blog-queue/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setPublishResult({ ok: false, message: data.error });
+      } else {
+        const { succeeded, failed } = data.summary;
+        setPublishResult({
+          ok: failed === 0,
+          message: `${succeeded} published${failed > 0 ? `, ${failed} failed` : ""}`,
+        });
+        setSelected(new Set());
+        fetchDrafts();
+      }
+    } catch {
+      setPublishResult({ ok: false, message: "Network error" });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const draftCount = drafts.filter((d) => d.status === "draft").length;
+  const publishedCount = drafts.filter((d) => d.status === "published").length;
+  const previewDraft = previewId ? drafts.find((d) => d.id === previewId) : null;
+
+  return (
+    <div className="space-y-6">
+      {/* Stats + New Draft button */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: YELLOW }} />
+            <span className="text-sm" style={{ color: "var(--muted)" }}>
+              <strong style={{ color: "var(--foreground)" }}>{draftCount}</strong> drafts
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: GREEN }} />
+            <span className="text-sm" style={{ color: "var(--muted)" }}>
+              <strong style={{ color: "var(--foreground)" }}>{publishedCount}</strong> published
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          style={{ backgroundColor: ACCENT, color: "#fff" }}
+        >
+          <Plus size={14} />
+          New Draft
+        </button>
+      </div>
+
+      {/* Paste Form */}
+      {showForm && (
+        <div
+          className="rounded-xl p-6 space-y-4"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold" style={{ color: "var(--foreground)" }}>
+              Paste New Blog Draft
+            </h2>
+            <button onClick={resetForm}>
+              <X size={18} style={{ color: "var(--muted)" }} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                Blog Post Title *
+              </label>
+              <input
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder="The Best Smart Ring for Fertility Tracking"
+                className="w-full text-sm rounded-lg px-3 py-2"
+                style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+                SEO Title (meta title)
+              </label>
+              <input
+                value={formMetaTitle}
+                onChange={(e) => setFormMetaTitle(e.target.value)}
+                placeholder="Best Smart Ring for Fertility | Conceivable"
+                className="w-full text-sm rounded-lg px-3 py-2"
+                style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Meta Description
+            </label>
+            <input
+              value={formMetaDesc}
+              onChange={(e) => setFormMetaDesc(e.target.value)}
+              placeholder="Under 160 chars — what shows in Google search results"
+              maxLength={160}
+              className="w-full text-sm rounded-lg px-3 py-2"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+            />
+            <span className="text-[10px]" style={{ color: formMetaDesc.length > 155 ? RED : "var(--muted)" }}>
+              {formMetaDesc.length}/160
+            </span>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Body Content (HTML or Rich Text) *
+            </label>
+            <textarea
+              value={formBody}
+              onChange={(e) => setFormBody(e.target.value)}
+              placeholder="Paste your blog post HTML here..."
+              rows={12}
+              className="w-full text-sm rounded-lg px-3 py-2 font-mono"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              FAQ Block <span className="normal-case font-normal">(Q: / A: pairs — auto-generates JSON-LD schema)</span>
+            </label>
+            <textarea
+              value={formFaq}
+              onChange={(e) => setFormFaq(e.target.value)}
+              placeholder={`Q: What is the best smart ring for fertility?\nA: The Halo Ring by Conceivable tracks temperature, HRV, sleep, and blood glucose.\n\nQ: How much does it cost?\nA: $250 one-time purchase with optional $15/month AI coaching.`}
+              rows={6}
+              className="w-full text-sm rounded-lg px-3 py-2 font-mono"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Tags <span className="normal-case font-normal">(comma-separated)</span>
+            </label>
+            <input
+              value={formTags}
+              onChange={(e) => setFormTags(e.target.value)}
+              placeholder="smart ring, fertility tracking, wearables, halo ring"
+              className="w-full text-sm rounded-lg px-3 py-2"
+              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+            />
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              onClick={saveDraft}
+              disabled={saving || !formTitle.trim() || !formBody.trim()}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+              style={{ backgroundColor: ACCENT, color: "#fff" }}
+            >
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+              {saving ? "Saving..." : "Save as Draft"}
+            </button>
+            <button
+              onClick={resetForm}
+              className="px-4 py-2.5 rounded-lg text-sm"
+              style={{ color: "var(--muted)" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Publish Result */}
+      {publishResult && (
+        <div
+          className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm"
+          style={{
+            backgroundColor: publishResult.ok ? `${GREEN}15` : `${RED}15`,
+            border: `1px solid ${publishResult.ok ? GREEN : RED}30`,
+            color: publishResult.ok ? GREEN : RED,
+          }}
+        >
+          {publishResult.ok ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+          {publishResult.message}
+          <button onClick={() => setPublishResult(null)} className="ml-auto">
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Bulk actions bar */}
+      {drafts.filter((d) => d.status === "draft").length > 0 && (
+        <div
+          className="flex items-center justify-between rounded-lg px-4 py-3"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-center gap-3">
+            <button onClick={toggleAll} className="flex items-center gap-2 text-sm" style={{ color: "var(--muted)" }}>
+              {drafts.filter((d) => d.status === "draft").every((d) => selected.has(d.id))
+                ? <SquareCheck size={16} style={{ color: ACCENT }} />
+                : <Square size={16} />
+              }
+              Select all drafts
+            </button>
+            {selected.size > 0 && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: `${ACCENT}15`, color: ACCENT }}>
+                {selected.size} selected
+              </span>
+            )}
+          </div>
+          <button
+            onClick={bulkPublish}
+            disabled={selected.size === 0 || publishing}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-40"
+            style={{ backgroundColor: GREEN, color: "#fff" }}
+          >
+            {publishing ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            {publishing ? "Publishing..." : `Publish ${selected.size > 0 ? selected.size : ""} to Shopify`}
+          </button>
+        </div>
+      )}
+
+      {/* Drafts list */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 size={20} className="animate-spin" style={{ color: ACCENT }} />
+        </div>
+      ) : drafts.length === 0 ? (
+        <div className="text-center py-16">
+          <FileText size={32} className="mx-auto mb-3" style={{ color: "var(--muted)", opacity: 0.3 }} />
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
+            No blog drafts yet. Click &quot;New Draft&quot; to paste your first blog post.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {drafts.map((draft) => {
+            const meta = draft.metrics || {};
+            const isDraft = draft.status === "draft";
+            const isSelected = selected.has(draft.id);
+            return (
+              <div
+                key={draft.id}
+                className="rounded-xl p-4 transition-all"
+                style={{
+                  backgroundColor: "var(--surface)",
+                  border: `1px solid ${isSelected ? ACCENT : "var(--border)"}`,
+                  boxShadow: isSelected ? `0 0 0 1px ${ACCENT}40` : "none",
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  {/* Checkbox */}
+                  {isDraft && (
+                    <button onClick={() => toggleSelect(draft.id)} className="mt-0.5">
+                      {isSelected
+                        ? <SquareCheck size={18} style={{ color: ACCENT }} />
+                        : <Square size={18} style={{ color: "var(--muted)" }} />
+                      }
+                    </button>
+                  )}
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-sm font-bold truncate" style={{ color: "var(--foreground)" }}>
+                        {draft.title}
+                      </h3>
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0"
+                        style={
+                          isDraft
+                            ? { border: `1px solid ${YELLOW}`, color: YELLOW }
+                            : { backgroundColor: GREEN, color: "#fff" }
+                        }
+                      >
+                        {draft.status}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 text-xs" style={{ color: "var(--muted)" }}>
+                      {meta.metaDescription && (
+                        <span className="truncate max-w-[400px]">{meta.metaDescription}</span>
+                      )}
+                      <span>{new Date(draft.createdAt).toLocaleDateString()}</span>
+                      {meta.tags && meta.tags.length > 0 && (
+                        <span className="flex gap-1">
+                          {meta.tags.slice(0, 3).map((tag: string) => (
+                            <span key={tag} className="px-1.5 py-0.5 rounded text-[10px]"
+                              style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}>
+                              {tag}
+                            </span>
+                          ))}
+                          {meta.tags.length > 3 && <span>+{meta.tags.length - 3}</span>}
+                        </span>
+                      )}
+                      {meta.shopifyUrl && (
+                        <a
+                          href={meta.shopifyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                          style={{ color: ACCENT }}
+                        >
+                          View on Shopify
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => setPreviewId(previewId === draft.id ? null : draft.id)}
+                      className="p-1.5 rounded-lg transition-all hover:opacity-70"
+                      style={{ color: previewId === draft.id ? ACCENT : "var(--muted)" }}
+                      title="Preview"
+                    >
+                      <Eye size={16} />
+                    </button>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(draft.body)}
+                      className="p-1.5 rounded-lg transition-all hover:opacity-70"
+                      style={{ color: "var(--muted)" }}
+                      title="Copy HTML"
+                    >
+                      <Copy size={16} />
+                    </button>
+                    {isDraft && (
+                      <button
+                        onClick={() => deleteDraft(draft.id)}
+                        className="p-1.5 rounded-lg transition-all hover:opacity-70"
+                        style={{ color: RED }}
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Inline Preview */}
+                {previewId === draft.id && (
+                  <div
+                    className="mt-4 rounded-lg overflow-hidden"
+                    style={{ border: "1px solid var(--border)" }}
+                  >
+                    <div
+                      className="p-4 text-xs font-medium flex items-center gap-2"
+                      style={{ borderBottom: "1px solid var(--border)", color: "var(--muted)" }}
+                    >
+                      <Eye size={12} style={{ color: ACCENT }} />
+                      Preview
+                    </div>
+                    <div
+                      className="p-6 max-h-[500px] overflow-y-auto"
+                      style={{ backgroundColor: "#fff", color: "#333" }}
+                      dangerouslySetInnerHTML={{ __html: draft.body }}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

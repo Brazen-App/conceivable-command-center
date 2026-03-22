@@ -635,6 +635,22 @@ export default function QuizAnalyticsPage() {
           {/* Quick Links */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Link
+              href="/departments/marketing/quiz/responses"
+              className="flex items-center gap-3 rounded-xl p-4 transition-all hover:shadow-md"
+              style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+            >
+              <Mail size={20} style={{ color: "#356FB6" }} />
+              <div>
+                <p className="text-sm font-bold" style={{ color: "var(--foreground)" }}>
+                  Quiz Responses
+                </p>
+                <p className="text-xs" style={{ color: "var(--muted)" }}>
+                  Emails, answers, notes & questions
+                </p>
+              </div>
+              <ArrowRight size={14} className="ml-auto" style={{ color: "var(--muted)" }} />
+            </Link>
+            <Link
               href="/departments/marketing/quiz/answers"
               className="flex items-center gap-3 rounded-xl p-4 transition-all hover:shadow-md"
               style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}

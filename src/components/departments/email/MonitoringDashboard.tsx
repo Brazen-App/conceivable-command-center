@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import {
   Target,
   TrendingUp,
@@ -11,82 +12,14 @@ import {
   ShieldCheck,
   Zap,
   ArrowRight,
+  BarChart3,
+  RefreshCw,
+  Loader2,
+  ExternalLink,
+  Mail,
+  Play,
+  Pause,
 } from "lucide-react";
-
-// Default mock data (fallback when no props provided)
-const DEFAULT_METRICS = {
-  openRate: 34.2,
-  clickRate: 4.1,
-  unsubscribeRate: 0.3,
-  deliverability: 97.8,
-  signups: 0,
-  listSize: 29000,
-  signupTarget: 5000,
-};
-
-const WEEKLY_TREND = [
-  { week: "W-4", openRate: 28.1, clickRate: 2.8, unsub: 0.5 },
-  { week: "W-3", openRate: 30.5, clickRate: 3.2, unsub: 0.4 },
-  { week: "W-2", openRate: 32.8, clickRate: 3.7, unsub: 0.3 },
-  { week: "W-1", openRate: 34.2, clickRate: 4.1, unsub: 0.3 },
-];
-
-const ALERTS = [
-  {
-    type: "success" as const,
-    message: "Open rate trending up 6.1% over 4 weeks — warming strategy is working",
-  },
-  {
-    type: "success" as const,
-    message: "Unsubscribe rate at 0.3% — well below 1% threshold",
-  },
-  {
-    type: "info" as const,
-    message: "Deliverability at 97.8% — healthy for launch readiness",
-  },
-  {
-    type: "warning" as const,
-    message: "Click rate (4.1%) has room for growth — test stronger CTAs in Week 3",
-  },
-];
-
-const AI_RECOMMENDATIONS = [
-  {
-    label: "10x",
-    title: "Move launch email to Tuesday 10 AM based on engagement data",
-    description:
-      "Your highest open rates correlate with Tuesday/Wednesday mornings. Shifting the launch email from default scheduling to your peak window could significantly increase Day 1 signups. The first email sets the conversion trajectory for the entire sequence.",
-    impact: "Potential 15-25% higher open rate on the most important email of the sequence",
-  },
-  {
-    label: "10x",
-    title: "Segment launch announcement by engagement tier",
-    description:
-      "Send the launch email 6 hours early to your top 20% engagers (opened 3+ warmup emails). Their immediate signups become social proof for the broader list send. Include real-time signup counter in the second-wave email.",
-    impact: "Creates FOMO momentum. Early converters prove demand for the remaining 80% of list.",
-  },
-  {
-    label: "2x",
-    title: "A/B test subject lines on re-engagement emails",
-    description:
-      "Test curiosity-gap vs. direct-value subject lines on Week 1 emails. Your current subjects lean curiosity-gap. Test a direct variant like 'Your fertility data is telling a story nobody's reading' vs current.",
-    impact: "Incremental open rate improvement. Good practice but won't 10x the outcome.",
-  },
-  {
-    label: "10x",
-    title: "Add forward-to-friend CTA with incentive in Week 2",
-    description:
-      "Your list is 29K but your TAM is much larger. Add a 'Know someone on this journey? Forward this email' CTA with a meaningful incentive (priority access, extended trial). Each forward has a 10-15% conversion rate to new subscriber.",
-    impact: "Multiplier: grows list beyond current 29K. 10% forward rate = 2,900 new potential signups.",
-  },
-  {
-    label: "2x",
-    title: "Optimize preview text for mobile",
-    description:
-      "62% of email opens are mobile. Some preview texts are too long and get truncated. Shorten to 40 characters max for mobile optimization.",
-    impact: "Marginal improvement to open rates on mobile. Worth doing but not transformative.",
-  },
-];
 
 export interface MonitoringDashboardProps {
   listStats?: { totalSubscribers: number };
@@ -95,8 +28,41 @@ export interface MonitoringDashboardProps {
     clickRate: number;
     unsubscribeRate: number;
     deliverability: number;
+    totalSent?: number;
+    campaignCount?: number;
+  };
+  campaignDetails?: {
+    id: string;
+    title: string;
+    subject: string;
+    sendTime: string;
+    emailsSent: number;
+    openRate: number;
+    clickRate: number;
+    unsubscribed: number;
+  }[];
+  automationStats?: {
+    total: number;
+    active: number;
+    paused: number;
   };
   isMock?: boolean;
+  period?: string;
+}
+
+interface AutomationDetail {
+  id: string;
+  title: string;
+  status: string;
+  emailsSent: number;
+  emails: {
+    id: string;
+    position: number;
+    subject: string;
+    emailsSent: number;
+    openRate: number;
+    clickRate: number;
+  }[];
 }
 
 function DataBadge({ isMock }: { isMock: boolean }) {
@@ -108,7 +74,7 @@ function DataBadge({ isMock }: { isMock: boolean }) {
         color: isMock ? "#B8930A" : "#1EAA55",
       }}
     >
-      {isMock ? "MOCK" : "LIVE"}
+      {isMock ? "NO DATA" : "LIVE"}
     </span>
   );
 }
@@ -116,127 +82,117 @@ function DataBadge({ isMock }: { isMock: boolean }) {
 export default function MonitoringDashboard({
   listStats,
   campaignStats,
+  campaignDetails,
+  automationStats,
   isMock,
+  period,
 }: MonitoringDashboardProps) {
-  // If props are provided, merge with defaults; otherwise use defaults
   const isUsingMock = isMock ?? !campaignStats;
+  const [automationData, setAutomationData] = useState<AutomationDetail[] | null>(null);
+  const [loadingAutomations, setLoadingAutomations] = useState(false);
+  const [showAutomationDetail, setShowAutomationDetail] = useState<string | null>(null);
+
   const metrics = {
-    openRate: campaignStats?.openRate ?? DEFAULT_METRICS.openRate,
-    clickRate: campaignStats?.clickRate ?? DEFAULT_METRICS.clickRate,
-    unsubscribeRate: campaignStats?.unsubscribeRate ?? DEFAULT_METRICS.unsubscribeRate,
-    deliverability: campaignStats?.deliverability ?? DEFAULT_METRICS.deliverability,
-    signups: DEFAULT_METRICS.signups,
-    listSize: listStats?.totalSubscribers ?? DEFAULT_METRICS.listSize,
-    signupTarget: DEFAULT_METRICS.signupTarget,
+    openRate: campaignStats?.openRate ?? 0,
+    clickRate: campaignStats?.clickRate ?? 0,
+    unsubscribeRate: campaignStats?.unsubscribeRate ?? 0,
+    deliverability: campaignStats?.deliverability ?? 0,
+    totalSent: campaignStats?.totalSent ?? 0,
+    campaignCount: campaignStats?.campaignCount ?? 0,
+    listSize: listStats?.totalSubscribers ?? 0,
   };
 
-  const funnelSteps = [
-    { label: "Delivered", value: metrics.listSize, pct: 100 },
-    { label: "Opened", value: Math.round(metrics.listSize * (metrics.openRate / 100)), pct: metrics.openRate },
-    { label: "Clicked", value: Math.round(metrics.listSize * (metrics.clickRate / 100)), pct: metrics.clickRate },
-    { label: "Landed", value: Math.round(metrics.listSize * (metrics.clickRate / 100) * 0.7), pct: Math.round(metrics.clickRate * 0.7 * 10) / 10 },
-    { label: "Signed Up", value: metrics.signups, pct: 0 },
-  ];
-
-  const alertStyles = {
-    success: { bg: "#1EAA5510", border: "#1EAA5530", icon: "text-green-600" },
-    warning: { bg: "#F1C02810", border: "#F1C02830", icon: "text-yellow-600" },
-    info: { bg: "#5A6FFF10", border: "#5A6FFF30", icon: "text-blue-500" },
-    error: { bg: "#E24D4710", border: "#E24D4730", icon: "text-red-500" },
-  };
+  const fetchAutomationDetails = useCallback(async () => {
+    setLoadingAutomations(true);
+    try {
+      const res = await fetch("/api/mailchimp/automations/status");
+      if (res.ok) {
+        const data = await res.json();
+        setAutomationData(data.automations || []);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setLoadingAutomations(false);
+    }
+  }, []);
 
   return (
     <div>
-      {/* Signup hero metric */}
-      <div
-        className="rounded-2xl p-6 mb-6 text-center"
-        style={{
-          background: "linear-gradient(135deg, #E37FB108 0%, #E24D4708 100%)",
-          borderColor: "#E37FB120",
-          border: "1px solid #E37FB120",
-        }}
-      >
-        <p
-          className="text-[10px] uppercase tracking-[0.15em] mb-1"
-          style={{ color: "var(--muted)" }}
-        >
-          The Only Metric That Matters
-        </p>
-        <div className="flex items-baseline justify-center gap-2">
-          <span className="text-5xl font-bold" style={{ color: "var(--foreground)" }}>
-            {metrics.signups}
+      {/* Period indicator */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: "var(--muted)" }}>
+            Reporting Period: Last 30 Days
           </span>
-          <span className="text-lg" style={{ color: "var(--muted-light)" }}>
-            / {metrics.signupTarget.toLocaleString()}
+          <DataBadge isMock={isUsingMock} />
+        </div>
+        {!isUsingMock && metrics.campaignCount > 0 && (
+          <span className="text-[10px]" style={{ color: "var(--muted)" }}>
+            {metrics.campaignCount} campaign{metrics.campaignCount !== 1 ? "s" : ""} · {metrics.totalSent.toLocaleString()} emails sent
           </span>
-        </div>
-        <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-          Early access signups — launches in 5 weeks
-        </p>
-        {/* Progress bar */}
-        <div className="mt-3 mx-auto max-w-md">
-          <div className="h-2 rounded-full" style={{ backgroundColor: "var(--border)" }}>
-            <div
-              className="h-2 rounded-full transition-all"
-              style={{
-                backgroundColor: "#E37FB1",
-                width: `${Math.max(1, (metrics.signups / metrics.signupTarget) * 100)}%`,
-              }}
-            />
-          </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-[9px]" style={{ color: "var(--muted-light)" }}>
-              Gain: {metrics.signups} signups from 0
-            </span>
-            <span className="text-[9px]" style={{ color: "var(--muted-light)" }}>
-              Target: {metrics.signupTarget.toLocaleString()}
-            </span>
-          </div>
-        </div>
+        )}
       </div>
+
+      {/* No data state */}
+      {isUsingMock && (
+        <div
+          className="rounded-xl p-6 mb-6 text-center"
+          style={{ backgroundColor: "#F1C02808", border: "1px solid #F1C02818" }}
+        >
+          <Mail size={24} className="mx-auto mb-2" style={{ color: "#F1C028" }} />
+          <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+            No campaign data yet
+          </p>
+          <p className="text-xs mt-1" style={{ color: "var(--muted)" }}>
+            Mailchimp is connected but no campaigns have been sent in the last 30 days.
+            Once the warmup automation starts, real-time metrics will appear here.
+          </p>
+        </div>
+      )}
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         {[
           {
-            label: "Open Rate",
-            value: `${metrics.openRate}%`,
-            trend: "up",
+            label: "Open Rate (30d)",
+            value: metrics.openRate > 0 ? `${metrics.openRate}%` : "—",
             threshold: "20%",
-            ok: metrics.openRate >= 20,
+            ok: metrics.openRate === 0 || metrics.openRate >= 20,
             icon: Eye,
+            trend: metrics.openRate > 0 ? "up" : null,
           },
           {
-            label: "Click Rate",
-            value: `${metrics.clickRate}%`,
-            trend: "up",
+            label: "Click Rate (30d)",
+            value: metrics.clickRate > 0 ? `${metrics.clickRate}%` : "—",
             threshold: null,
             ok: true,
             icon: MousePointer,
+            trend: metrics.clickRate > 0 ? "up" : null,
           },
           {
             label: "Unsubscribe",
-            value: `${metrics.unsubscribeRate}%`,
-            trend: "down",
+            value: metrics.unsubscribeRate > 0 ? `${metrics.unsubscribeRate}%` : "—",
             threshold: "< 1%",
-            ok: metrics.unsubscribeRate < 1,
+            ok: metrics.unsubscribeRate === 0 || metrics.unsubscribeRate < 1,
             icon: UserMinus,
+            trend: null,
           },
           {
             label: "Deliverability",
-            value: `${metrics.deliverability}%`,
-            trend: "flat",
+            value: metrics.deliverability > 0 ? `${metrics.deliverability}%` : "—",
             threshold: "> 95%",
-            ok: metrics.deliverability > 95,
+            ok: metrics.deliverability === 0 || metrics.deliverability > 95,
             icon: ShieldCheck,
+            trend: null,
           },
           {
             label: "List Size",
-            value: metrics.listSize.toLocaleString(),
-            trend: "flat",
+            value: metrics.listSize > 0 ? metrics.listSize.toLocaleString() : "—",
             threshold: null,
             ok: true,
             icon: Target,
+            trend: null,
           },
         ].map((kpi) => {
           const Icon = kpi.icon;
@@ -264,7 +220,6 @@ export default function MonitoringDashboard({
               </p>
               <div className="flex items-center gap-1 mt-1">
                 {kpi.trend === "up" && <TrendingUp size={10} className="text-green-500" />}
-                {kpi.trend === "down" && <TrendingDown size={10} className="text-green-500" />}
                 {kpi.threshold && (
                   <span className="text-[9px]" style={{ color: "var(--muted-light)" }}>
                     Threshold: {kpi.threshold}
@@ -276,41 +231,191 @@ export default function MonitoringDashboard({
         })}
       </div>
 
-      {/* Trend mini-chart */}
+      {/* Campaign details table (real data) */}
+      {!isUsingMock && campaignDetails && campaignDetails.length > 0 && (
+        <div
+          className="rounded-xl border p-4 mb-6"
+          style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
+        >
+          <h3 className="text-xs font-semibold mb-3" style={{ color: "var(--foreground)" }}>
+            Campaign Performance (Last 30 Days)
+          </h3>
+          <div className="space-y-1.5">
+            {campaignDetails.map((campaign) => (
+              <div
+                key={campaign.id}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                style={{ backgroundColor: "var(--background)" }}
+              >
+                <Mail size={12} style={{ color: "#E37FB1" }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate" style={{ color: "var(--foreground)" }}>
+                    {campaign.subject || campaign.title}
+                  </p>
+                  <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+                    {campaign.sendTime
+                      ? new Date(campaign.sendTime).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "—"}{" "}
+                    · {campaign.emailsSent.toLocaleString()} sent
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-[10px] font-medium" style={{ color: "#1EAA55" }}>
+                    {campaign.openRate}% open
+                  </span>
+                  <span className="text-[10px] font-medium" style={{ color: "#5A6FFF" }}>
+                    {campaign.clickRate}% click
+                  </span>
+                  {campaign.unsubscribed > 0 && (
+                    <span className="text-[10px]" style={{ color: "#E24D47" }}>
+                      {campaign.unsubscribed} unsub
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Automation performance section */}
       <div
         className="rounded-xl border p-4 mb-6"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
       >
-        <h3 className="text-xs font-semibold mb-3" style={{ color: "var(--foreground)" }}>
-          4-Week Warming Trend
-        </h3>
-        <div className="grid grid-cols-4 gap-2">
-          {WEEKLY_TREND.map((w) => (
-            <div key={w.week} className="text-center">
-              <p className="text-[10px] font-medium mb-2" style={{ color: "var(--muted)" }}>
-                {w.week}
-              </p>
-              {/* Simple bar */}
-              <div className="mx-auto w-8 h-16 rounded-t-md relative" style={{ backgroundColor: "var(--background)" }}>
-                <div
-                  className="absolute bottom-0 w-full rounded-t-md"
-                  style={{
-                    backgroundColor: "#E37FB1",
-                    height: `${(w.openRate / 50) * 100}%`,
-                    opacity: 0.8,
-                  }}
-                />
-              </div>
-              <p className="text-[10px] font-semibold mt-1" style={{ color: "var(--foreground)" }}>
-                {w.openRate}%
-              </p>
-              <p className="text-[8px]" style={{ color: "var(--muted-light)" }}>open</p>
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Zap size={14} style={{ color: "#5A6FFF" }} />
+            <h3 className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
+              Automation Status
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={fetchAutomationDetails}
+            disabled={loadingAutomations}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all"
+            style={{ backgroundColor: "#5A6FFF10", color: "#5A6FFF" }}
+          >
+            {loadingAutomations ? (
+              <Loader2 size={11} className="animate-spin" />
+            ) : (
+              <RefreshCw size={11} />
+            )}
+            Load Automation Data
+          </button>
         </div>
+
+        {/* Summary stats */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="rounded-lg p-3 text-center" style={{ backgroundColor: "var(--background)" }}>
+            <p className="text-lg font-bold" style={{ color: "#5A6FFF" }}>
+              {automationStats?.total ?? 0}
+            </p>
+            <p className="text-[8px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Total Automations
+            </p>
+          </div>
+          <div className="rounded-lg p-3 text-center" style={{ backgroundColor: "var(--background)" }}>
+            <p className="text-lg font-bold" style={{ color: "#1EAA55" }}>
+              {automationStats?.active ?? 0}
+            </p>
+            <p className="text-[8px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Active
+            </p>
+          </div>
+          <div className="rounded-lg p-3 text-center" style={{ backgroundColor: "var(--background)" }}>
+            <p className="text-lg font-bold" style={{ color: "#F1C028" }}>
+              {automationStats?.paused ?? 0}
+            </p>
+            <p className="text-[8px] uppercase tracking-wider" style={{ color: "var(--muted)" }}>
+              Paused
+            </p>
+          </div>
+        </div>
+
+        {/* Automation detail list */}
+        {automationData && automationData.length > 0 && (
+          <div className="space-y-2">
+            {automationData.map((auto) => (
+              <div key={auto.id} className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAutomationDetail(showAutomationDetail === auto.id ? null : auto.id)}
+                  className="w-full px-3 py-2.5 flex items-center gap-2 text-left"
+                  style={{ backgroundColor: "var(--background)" }}
+                >
+                  {auto.status === "sending" ? (
+                    <Play size={12} style={{ color: "#1EAA55" }} />
+                  ) : (
+                    <Pause size={12} style={{ color: "#F1C028" }} />
+                  )}
+                  <span className="text-xs font-medium flex-1 truncate" style={{ color: "var(--foreground)" }}>
+                    {auto.title}
+                  </span>
+                  <span className="text-[10px]" style={{ color: "var(--muted)" }}>
+                    {auto.emailsSent.toLocaleString()} sent
+                  </span>
+                  <span
+                    className="text-[9px] px-1.5 py-0.5 rounded-full"
+                    style={{
+                      backgroundColor: auto.status === "sending" ? "#1EAA5514" : "#F1C02814",
+                      color: auto.status === "sending" ? "#1EAA55" : "#B8930A",
+                    }}
+                  >
+                    {auto.status === "sending" ? "Active" : auto.status}
+                  </span>
+                </button>
+
+                {showAutomationDetail === auto.id && auto.emails.length > 0 && (
+                  <div className="px-3 pb-3 space-y-1">
+                    {auto.emails.map((e) => (
+                      <div
+                        key={e.id}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded text-xs"
+                        style={{ backgroundColor: "var(--surface)" }}
+                      >
+                        <span className="font-mono text-[10px] w-4 shrink-0" style={{ color: "var(--muted)" }}>
+                          #{e.position}
+                        </span>
+                        <span className="flex-1 truncate" style={{ color: "var(--foreground)" }}>
+                          {e.subject}
+                        </span>
+                        <span className="text-[10px] shrink-0" style={{ color: "var(--muted)" }}>
+                          {e.emailsSent} sent
+                        </span>
+                        <span className="text-[10px] shrink-0" style={{ color: "#1EAA55" }}>
+                          {e.openRate}%
+                        </span>
+                        <span className="text-[10px] shrink-0" style={{ color: "#5A6FFF" }}>
+                          {e.clickRate}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {automationData && automationData.length === 0 && (
+          <p className="text-xs text-center py-3" style={{ color: "var(--muted)" }}>
+            No automations found in Mailchimp. Set up automations first, then they&apos;ll appear here.
+          </p>
+        )}
+
+        {!automationData && (
+          <p className="text-xs text-center py-3" style={{ color: "var(--muted)" }}>
+            Click &quot;Load Automation Data&quot; to fetch real-time performance from Mailchimp.
+          </p>
+        )}
       </div>
 
-      {/* Alerts */}
+      {/* Health alerts based on real data */}
       <div
         className="rounded-xl border p-4 mb-6"
         style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
@@ -319,199 +424,66 @@ export default function MonitoringDashboard({
           Health Alerts
         </h3>
         <div className="space-y-2">
-          {ALERTS.map((alert, i) => {
-            const style = alertStyles[alert.type];
-            return (
-              <div
-                key={i}
-                className="flex items-start gap-2 p-2.5 rounded-lg"
-                style={{ backgroundColor: style.bg, border: `1px solid ${style.border}` }}
-              >
-                {alert.type === "warning" ? (
-                  <AlertTriangle size={13} className={`${style.icon} mt-0.5 shrink-0`} />
-                ) : alert.type === "success" ? (
-                  <TrendingUp size={13} className={`${style.icon} mt-0.5 shrink-0`} />
-                ) : (
-                  <ShieldCheck size={13} className={`${style.icon} mt-0.5 shrink-0`} />
-                )}
-                <p className="text-xs" style={{ color: "var(--foreground)" }}>
-                  {alert.message}
-                </p>
-              </div>
-            );
-          })}
+          {!isUsingMock && metrics.openRate > 0 && metrics.openRate >= 20 && (
+            <HealthAlert type="success" message={`Open rate at ${metrics.openRate}% — above 20% threshold`} />
+          )}
+          {!isUsingMock && metrics.openRate > 0 && metrics.openRate < 20 && (
+            <HealthAlert type="warning" message={`Open rate at ${metrics.openRate}% — below 20% threshold. Review subject lines and send times.`} />
+          )}
+          {!isUsingMock && metrics.unsubscribeRate > 0 && metrics.unsubscribeRate < 1 && (
+            <HealthAlert type="success" message={`Unsubscribe rate at ${metrics.unsubscribeRate}% — well below 1% threshold`} />
+          )}
+          {!isUsingMock && metrics.unsubscribeRate >= 1 && (
+            <HealthAlert type="error" message={`Unsubscribe rate at ${metrics.unsubscribeRate}% — above 1% threshold. Investigate immediately.`} />
+          )}
+          {!isUsingMock && metrics.deliverability > 95 && (
+            <HealthAlert type="success" message={`Deliverability at ${metrics.deliverability}% — healthy`} />
+          )}
+          {!isUsingMock && metrics.deliverability > 0 && metrics.deliverability <= 95 && (
+            <HealthAlert type="warning" message={`Deliverability at ${metrics.deliverability}% — below 95%. Check bounce rates.`} />
+          )}
+          {isUsingMock && (
+            <HealthAlert type="info" message="No campaign data available. Health alerts will appear once campaigns start sending." />
+          )}
+          <HealthAlert type="info" message="Email sending is currently disabled. All automations are paused pending CEO approval." />
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Conversion funnel */}
-      <div
-        className="rounded-xl border p-4 mb-6"
-        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-      >
-        <div className="flex items-center mb-4">
-          <h3 className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
-            Conversion Funnel
-          </h3>
-          <DataBadge isMock={isUsingMock} />
-        </div>
-        <div className="space-y-2">
-          {funnelSteps.map((step, i) => {
-            const widthPct = Math.max(8, step.pct);
-            const isLast = i === funnelSteps.length - 1;
-            return (
-              <div key={step.label}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-medium" style={{ color: "var(--foreground)" }}>
-                    {step.label}
-                  </span>
-                  <span className="text-[11px]" style={{ color: "var(--muted)" }}>
-                    {step.value.toLocaleString()} ({step.pct}%)
-                  </span>
-                </div>
-                <div className="h-6 rounded-lg overflow-hidden" style={{ backgroundColor: "var(--background)" }}>
-                  <div
-                    className="h-full rounded-lg transition-all flex items-center justify-end pr-2"
-                    style={{
-                      width: `${widthPct}%`,
-                      backgroundColor: isLast ? "#E24D47" : "#E37FB1",
-                      opacity: isLast && step.value === 0 ? 0.3 : 0.7 + (i * 0.05),
-                    }}
-                  >
-                    {step.pct > 10 && (
-                      <span className="text-[9px] text-white font-medium">{step.pct}%</span>
-                    )}
-                  </div>
-                </div>
-                {i < funnelSteps.length - 1 && (
-                  <div className="flex items-center justify-center my-0.5">
-                    <ArrowRight size={10} style={{ color: "var(--muted-light)", transform: "rotate(90deg)" }} />
-                    <span className="text-[8px] ml-1" style={{ color: "var(--muted-light)" }}>
-                      {funnelSteps[i + 1].value > 0
-                        ? `${((funnelSteps[i + 1].value / step.value) * 100).toFixed(1)}% conversion`
-                        : "—"}
-                    </span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+function HealthAlert({
+  type,
+  message,
+}: {
+  type: "success" | "warning" | "info" | "error";
+  message: string;
+}) {
+  const styles = {
+    success: { bg: "#1EAA5510", border: "#1EAA5530", icon: "text-green-600" },
+    warning: { bg: "#F1C02810", border: "#F1C02830", icon: "text-yellow-600" },
+    info: { bg: "#5A6FFF10", border: "#5A6FFF30", icon: "text-blue-500" },
+    error: { bg: "#E24D4710", border: "#E24D4730", icon: "text-red-500" },
+  };
+  const style = styles[type];
 
-      {/* AI Recommendations (Sullivan Framework) */}
-      <div
-        className="rounded-xl border p-4 mb-6"
-        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <Zap size={14} style={{ color: "#E37FB1" }} />
-          <h3 className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
-            AI Agent Recommendations
-          </h3>
-          <span
-            className="text-[9px] px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: "#E37FB110", color: "#C4609A" }}
-          >
-            Sullivan Framework
-          </span>
-        </div>
-        <div className="space-y-3">
-          {AI_RECOMMENDATIONS.map((rec, i) => (
-            <div
-              key={i}
-              className="p-3 rounded-lg"
-              style={{
-                backgroundColor: rec.label === "10x" ? "#E37FB106" : "var(--background)",
-                border: rec.label === "10x" ? "1px solid #E37FB115" : "1px solid transparent",
-              }}
-            >
-              <div className="flex items-start gap-2">
-                <span
-                  className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0 mt-0.5"
-                  style={{
-                    backgroundColor: rec.label === "10x" ? "#E37FB120" : "#F1C02820",
-                    color: rec.label === "10x" ? "#C4609A" : "#B8930A",
-                  }}
-                >
-                  {rec.label}
-                </span>
-                <div>
-                  <p className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
-                    {rec.title}
-                  </p>
-                  <p className="text-[11px] mt-1 leading-relaxed" style={{ color: "var(--muted)" }}>
-                    {rec.description}
-                  </p>
-                  <p className="text-[10px] mt-1.5 font-medium" style={{ color: "#E37FB1" }}>
-                    Impact: {rec.impact}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Cross-Department Multipliers */}
-      <div
-        className="rounded-xl border p-4"
-        style={{ borderColor: "var(--border)", backgroundColor: "var(--surface)" }}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <Zap size={14} style={{ color: "#5A6FFF" }} />
-          <h3 className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
-            Multiplier Opportunities
-          </h3>
-        </div>
-        <div className="space-y-2">
-          {[
-            {
-              title: "Email → Content Engine",
-              desc: "Top-performing email subjects and angles should feed the content calendar. The education emails (W3-4) are pre-tested content topics.",
-              label: "10x",
-            },
-            {
-              title: "Email → Fundraising",
-              desc: "Email list growth rate + open rate + signup conversion = investor traction metrics. Every email performance data point strengthens the fundraise narrative.",
-              label: "10x",
-            },
-            {
-              title: "Email → Operations",
-              desc: "Signup velocity is the #1 company KPI during launch. Email performance directly feeds the Operations dashboard.",
-              label: "10x",
-            },
-            {
-              title: "Email → Legal",
-              desc: "Health claims in emails #8, #9, #11, #15 need compliance review. Route these through Legal before the education phase starts.",
-              label: "2x",
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-2 p-2.5 rounded-lg"
-              style={{ backgroundColor: "var(--background)" }}
-            >
-              <span
-                className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0 mt-0.5"
-                style={{
-                  backgroundColor: item.label === "10x" ? "#5A6FFF18" : "#F1C02818",
-                  color: item.label === "10x" ? "#5A6FFF" : "#B8930A",
-                }}
-              >
-                {item.label}
-              </span>
-              <div>
-                <p className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
-                  {item.title}
-                </p>
-                <p className="text-[11px] mt-0.5" style={{ color: "var(--muted)" }}>
-                  {item.desc}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+  return (
+    <div
+      className="flex items-start gap-2 p-2.5 rounded-lg"
+      style={{ backgroundColor: style.bg, border: `1px solid ${style.border}` }}
+    >
+      {type === "warning" ? (
+        <AlertTriangle size={13} className={`${style.icon} mt-0.5 shrink-0`} />
+      ) : type === "success" ? (
+        <TrendingUp size={13} className={`${style.icon} mt-0.5 shrink-0`} />
+      ) : type === "error" ? (
+        <AlertTriangle size={13} className={`${style.icon} mt-0.5 shrink-0`} />
+      ) : (
+        <ShieldCheck size={13} className={`${style.icon} mt-0.5 shrink-0`} />
+      )}
+      <p className="text-xs" style={{ color: "var(--foreground)" }}>
+        {message}
+      </p>
     </div>
   );
 }

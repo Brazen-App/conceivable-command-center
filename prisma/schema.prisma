@@ -9,6 +9,47 @@ datasource db {
 }
 
 // ============================================================
+// Users & Auth
+// ============================================================
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  passwordHash  String?
+  role          String   @default("team") // admin, team, investor
+  inviteToken   String?  @unique
+  inviteExpires DateTime?
+  invitedBy     String?
+  lastLoginAt   DateTime?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============================================================
+// Data Room (Investor Documents)
+// ============================================================
+
+model DataRoomDocument {
+  id          String   @id @default(cuid())
+  folder      String   // 00-09 folder codes
+  title       String
+  description String?
+  url         String?  // external link (Google Drive, Dropbox, etc.)
+  fileName    String?  // original file name if uploaded
+  fileUrl     String?  // stored file URL (Vercel Blob, S3, etc.)
+  fileSize    Int?     // bytes
+  mimeType    String?
+  status      String   @default("missing") // missing, draft, ready, uploaded
+  sortOrder   Int      @default(0)
+  uploadedBy  String?
+  notes       String?  @db.Text // admin notes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================================
 // Core — Departments & Cross-Department Systems
 // ============================================================
 
@@ -488,6 +529,25 @@ model EarlyAccessSignup {
   utmCampaign     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model QuizResponse {
+  id           String   @id @default(cuid())
+  email        String
+  name         String?
+  answers      Json // full quiz answers object
+  products     Json // recommended supplement keys
+  cartUrl      String?
+  kaiMessage   String?  @db.Text
+  // Extracted free-text fields for easy viewing
+  medical      String?  @db.Text
+  medications  String?  @db.Text
+  otherNotes   String?  @db.Text
+  // Extracted key answers
+  topConcern   String?
+  ageRange     String?
+  energy       String?
+  createdAt    DateTime @default(now())
 }
 
 model FoundingMember {

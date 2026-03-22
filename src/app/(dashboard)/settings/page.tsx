@@ -7,6 +7,7 @@ import {
   Loader2,
   XCircle,
   Unlink,
+  Users,
   Linkedin,
   Instagram,
   Twitter,
@@ -253,6 +254,22 @@ export default function SettingsPage() {
     <>
       <Header title="Settings" subtitle="Configure your command center" />
       <div className="p-8 max-w-3xl">
+        {/* Team Management Link */}
+        <a
+          href="/settings/team"
+          className="flex items-center gap-3 rounded-xl border p-4 mb-6 hover:opacity-90 transition-opacity"
+          style={{ borderColor: "#5A6FFF30", backgroundColor: "#5A6FFF06" }}
+        >
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#5A6FFF14" }}>
+            <Users size={18} style={{ color: "#5A6FFF" }} />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Team &amp; Access</p>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>Invite team members and investors, manage access</p>
+          </div>
+          <span className="text-xs" style={{ color: "#5A6FFF" }}>→</span>
+        </a>
+
         {/* API Keys */}
         <section
           className="rounded-xl border p-6 mb-6"

@@ -1,0 +1,394 @@
+{% comment %}
+  Conceivable — Cart Exit-Intent Popup
+  Include on cart page: {% render 'cart-exit-intent-popup' %}
+  Only fires when Personalized Pack (product ID 9233888346344) is in the cart.
+{% endcomment %}
+
+{% assign has_personalized_pack = false %}
+{% for item in cart.items %}
+  {% if item.product_id == 9233888346344 %}
+    {% assign has_personalized_pack = true %}
+    {% break %}
+  {% endif %}
+{% endfor %}
+
+{% if has_personalized_pack %}
+
+<style>
+  /* ── Reset & Overlay ── */
+  .ceiv-exit-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    background: rgba(42, 40, 40, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: ceiv-fade-in 0.25s ease-out;
+  }
+  .ceiv-exit-overlay.is-visible {
+    display: flex;
+  }
+
+  @keyframes ceiv-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes ceiv-slide-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Modal ── */
+  .ceiv-exit-modal {
+    background: #F9F7F0;
+    color: #2A2828;
+    max-width: 480px;
+    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 24px 64px rgba(42, 40, 40, 0.25);
+    overflow: hidden;
+    animation: ceiv-slide-up 0.35s ease-out;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Top accent bar ── */
+  .ceiv-exit-modal__bar {
+    height: 6px;
+    background: linear-gradient(90deg, #5A6FFF 0%, #8B9AFF 100%);
+  }
+
+  .ceiv-exit-modal__body {
+    padding: 36px 32px 28px;
+    text-align: center;
+  }
+
+  .ceiv-exit-modal__heading {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 8px;
+    color: #2A2828;
+  }
+
+  .ceiv-exit-modal__sub {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #5a5757;
+    margin: 0 0 20px;
+  }
+
+  /* ── Supplement list ── */
+  .ceiv-exit-modal__supplements {
+    background: #ffffff;
+    border: 1px solid #e8e5df;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 0 0 20px;
+    text-align: left;
+  }
+  .ceiv-exit-modal__supplements-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #5A6FFF;
+    margin: 0 0 10px;
+  }
+  .ceiv-exit-modal__supplements-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ceiv-exit-modal__supplements-list li {
+    background: #eef0ff;
+    color: #5A6FFF;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+
+  /* ── Personalization note ── */
+  .ceiv-exit-modal__note {
+    font-size: 13px;
+    line-height: 1.55;
+    color: #2A2828;
+    margin: 0 0 22px;
+    font-style: italic;
+  }
+  .ceiv-exit-modal__note strong {
+    font-weight: 700;
+    font-style: normal;
+  }
+
+  /* ── Timer ── */
+  .ceiv-exit-modal__timer-wrap {
+    margin: 0 0 24px;
+  }
+  .ceiv-exit-modal__timer-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #5a5757;
+    margin: 0 0 4px;
+  }
+  .ceiv-exit-modal__timer {
+    font-size: 28px;
+    font-weight: 700;
+    color: #5A6FFF;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── CTA ── */
+  .ceiv-exit-modal__cta {
+    display: inline-block;
+    width: 100%;
+    padding: 15px 24px;
+    background: #5A6FFF;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s ease, transform 0.15s ease;
+    box-sizing: border-box;
+  }
+  .ceiv-exit-modal__cta:hover {
+    background: #4a5de6;
+    transform: translateY(-1px);
+  }
+  .ceiv-exit-modal__cta:active {
+    transform: translateY(0);
+  }
+
+  /* ── Dismiss ── */
+  .ceiv-exit-modal__dismiss {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 13px;
+    color: #918e8a;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    transition: color 0.15s ease;
+  }
+  .ceiv-exit-modal__dismiss:hover {
+    color: #2A2828;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 600px) {
+    .ceiv-exit-modal {
+      border-radius: 16px;
+      max-width: 100%;
+    }
+    .ceiv-exit-modal__body {
+      padding: 28px 22px 22px;
+    }
+    .ceiv-exit-modal__heading {
+      font-size: 19px;
+    }
+    .ceiv-exit-modal__timer {
+      font-size: 24px;
+    }
+  }
+</style>
+
+<div class="ceiv-exit-overlay" id="ceivExitOverlay" role="dialog" aria-modal="true" aria-label="Your personalized pack is ready">
+  <div class="ceiv-exit-modal">
+    <div class="ceiv-exit-modal__bar"></div>
+    <div class="ceiv-exit-modal__body">
+
+      <h2 class="ceiv-exit-modal__heading">Wait&nbsp;&mdash; your personalized pack is&nbsp;ready</h2>
+
+      <p class="ceiv-exit-modal__sub">Don&rsquo;t lose the supplements picked just for you.</p>
+
+      <div class="ceiv-exit-modal__supplements" id="ceivSupplementsList">
+        <p class="ceiv-exit-modal__supplements-label">Your Personalized Pack</p>
+        <ul class="ceiv-exit-modal__supplements-list" id="ceivSupplementItems">
+          {% comment %}
+            Pull supplement names from cart attributes.
+            Expects cart.attributes.supplements as a comma-separated string
+            e.g. "CoQ10, Folate, Vitamin D3, Omega-3, Iron"
+            Falls back to line-item properties if present.
+          {% endcomment %}
+          {% assign supplement_source = '' %}
+          {% if cart.attributes.supplements and cart.attributes.supplements != blank %}
+            {% assign supplement_source = cart.attributes.supplements %}
+          {% else %}
+            {% for item in cart.items %}
+              {% if item.product_id == 9233888346344 %}
+                {% if item.properties['supplements'] and item.properties['supplements'] != blank %}
+                  {% assign supplement_source = item.properties['supplements'] %}
+                {% elsif item.properties['Supplements'] and item.properties['Supplements'] != blank %}
+                  {% assign supplement_source = item.properties['Supplements'] %}
+                {% endif %}
+                {% break %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          {% if supplement_source != blank %}
+            {% assign supps = supplement_source | split: ',' %}
+            {% for supp in supps %}
+              <li>{{ supp | strip }}</li>
+            {% endfor %}
+          {% else %}
+            {%- comment -%} If no attribute data, hide the whole block via JS {%- endcomment -%}
+            <li data-ceiv-empty>Your custom blend</li>
+          {% endif %}
+        </ul>
+      </div>
+
+      <p class="ceiv-exit-modal__note">
+        Your pack was built from your unique quiz results.
+        These exact supplements were selected for <strong>YOUR</strong>&nbsp;body.
+      </p>
+
+      <div class="ceiv-exit-modal__timer-wrap">
+        <p class="ceiv-exit-modal__timer-label">Reserved for</p>
+        <span class="ceiv-exit-modal__timer" id="ceivTimer">15:00</span>
+        <p class="ceiv-exit-modal__timer-label" style="margin-top:2px;">minutes</p>
+      </div>
+
+      <a href="/checkout" class="ceiv-exit-modal__cta">Complete My Order</a>
+
+      <button type="button" class="ceiv-exit-modal__dismiss" id="ceivDismiss">No thanks</button>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var SESSION_KEY = 'ceiv_exit_shown';
+  var TIMER_KEY   = 'ceiv_exit_timer';
+  var overlay     = document.getElementById('ceivExitOverlay');
+  var timerEl     = document.getElementById('ceivTimer');
+  var dismissBtn  = document.getElementById('ceivDismiss');
+  var interval    = null;
+
+  /* ── Already shown this session? ── */
+  if (sessionStorage.getItem(SESSION_KEY)) return;
+
+  /* ── Hide empty supplement block ── */
+  var emptyMarker = document.querySelector('[data-ceiv-empty]');
+  if (emptyMarker) {
+    var suppBlock = document.getElementById('ceivSupplementsList');
+    if (suppBlock) suppBlock.style.display = 'none';
+  }
+
+  /* ── Show / Hide helpers ── */
+  function show() {
+    if (sessionStorage.getItem(SESSION_KEY)) return;
+    sessionStorage.setItem(SESSION_KEY, '1');
+    overlay.classList.add('is-visible');
+    document.body.style.overflow = 'hidden';
+    startTimer();
+  }
+
+  function hide() {
+    overlay.classList.remove('is-visible');
+    document.body.style.overflow = '';
+    if (interval) clearInterval(interval);
+  }
+
+  /* ── Countdown timer (persists across re-opens via sessionStorage) ── */
+  function startTimer() {
+    var remaining = parseInt(sessionStorage.getItem(TIMER_KEY), 10);
+    if (!remaining || remaining <= 0) remaining = 900; /* 15 minutes */
+
+    function tick() {
+      if (remaining <= 0) {
+        timerEl.textContent = '0:00';
+        clearInterval(interval);
+        return;
+      }
+      remaining--;
+      sessionStorage.setItem(TIMER_KEY, remaining);
+      var m = Math.floor(remaining / 60);
+      var s = remaining % 60;
+      timerEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    /* Set initial display */
+    var m = Math.floor(remaining / 60);
+    var s = remaining % 60;
+    timerEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+
+    interval = setInterval(tick, 1000);
+  }
+
+  /* ── Desktop: exit intent (mouse leaves viewport top) ── */
+  function onMouseLeave(e) {
+    if (e.clientY <= 0) {
+      show();
+      document.removeEventListener('mouseleave', onMouseLeave);
+    }
+  }
+
+  /* ── Mobile: scroll-up detection ── */
+  var lastScrollY   = window.scrollY || window.pageYOffset;
+  var scrollUpDelta = 0;
+  var SCROLL_THRESHOLD = 200; /* px of upward scroll to trigger */
+
+  function onScroll() {
+    var currentY = window.scrollY || window.pageYOffset;
+    if (currentY < lastScrollY) {
+      scrollUpDelta += (lastScrollY - currentY);
+    } else {
+      scrollUpDelta = 0;
+    }
+    lastScrollY = currentY;
+
+    if (scrollUpDelta >= SCROLL_THRESHOLD && currentY < 100) {
+      show();
+      window.removeEventListener('scroll', onScroll);
+    }
+  }
+
+  /* ── Attach listeners based on device ── */
+  var isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (isMobile) {
+    window.addEventListener('scroll', onScroll, { passive: true });
+  } else {
+    document.addEventListener('mouseleave', onMouseLeave);
+  }
+
+  /* ── Dismiss ── */
+  dismissBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    hide();
+  });
+
+  /* ── Close on overlay click (outside modal) ── */
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) hide();
+  });
+
+  /* ── Close on Escape ── */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('is-visible')) {
+      hide();
+    }
+  });
+
+})();
+</script>
+
+{% endif %}

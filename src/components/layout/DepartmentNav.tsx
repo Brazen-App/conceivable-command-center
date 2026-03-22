@@ -14,6 +14,7 @@ import {
   Heart,
   Brain,
   Settings,
+  Lock,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -295,6 +296,48 @@ export default function DepartmentNav() {
             System
           </p>
         )}
+        <Link
+          href="/data-room"
+          onClick={() => setMobileOpen(false)}
+          className={`
+            group flex items-center gap-3 px-3 py-2 rounded-lg
+            transition-all duration-150
+            ${isActive("/data-room") ? "" : "hover:bg-white/[0.06]"}
+          `}
+          style={
+            isActive("/data-room")
+              ? { backgroundColor: "rgba(255,255,255,0.12)" }
+              : undefined
+          }
+          title={collapsed ? "Data Room" : undefined}
+        >
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+            style={
+              isActive("/data-room")
+                ? { backgroundColor: "rgba(255,255,255,0.18)" }
+                : { backgroundColor: "rgba(255,255,255,0.04)" }
+            }
+          >
+            <Lock
+              size={15}
+              style={{
+                color: isActive("/data-room") ? "#FFFFFF" : "rgba(255,255,255,0.5)",
+              }}
+              strokeWidth={1.8}
+            />
+          </div>
+          {!collapsed && (
+            <span
+              className={`text-[13px] ${
+                isActive("/data-room") ? "text-white font-semibold" : "font-medium"
+              }`}
+              style={isActive("/data-room") ? undefined : { color: "rgba(255,255,255,0.75)" }}
+            >
+              Data Room
+            </span>
+          )}
+        </Link>
         <Link
           href="/settings"
           onClick={() => setMobileOpen(false)}

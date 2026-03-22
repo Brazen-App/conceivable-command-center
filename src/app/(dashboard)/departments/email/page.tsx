@@ -13,16 +13,20 @@ import {
   CheckCircle2,
   AlertTriangle,
   Sparkles,
+  Zap,
 } from "lucide-react";
 import EmailContentManager from "@/components/departments/email/EmailContentManager";
 import ComplianceScanner from "@/components/departments/email/ComplianceScanner";
 import DeploymentControls from "@/components/departments/email/DeploymentControls";
 import SendStrategyCalendar from "@/components/departments/email/SendStrategyCalendar";
 import MonitoringDashboard from "@/components/departments/email/MonitoringDashboard";
+import AutomationManager from "@/components/departments/email/AutomationManager";
 import type { MonitoringDashboardProps } from "@/components/departments/email/MonitoringDashboard";
-import type { LaunchEmail } from "@/lib/data/launch-emails";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type EmailData = any; // API returns full DB objects with flow, delayDays etc.
 
 const TABS = [
+  { id: "automations", label: "Automations", icon: Zap },
   { id: "content", label: "Content", icon: FileText },
   { id: "compliance", label: "Compliance", icon: Shield },
   { id: "deploy", label: "Deploy", icon: Rocket },
@@ -33,8 +37,8 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 export default function EmailDepartmentPage() {
-  const [activeTab, setActiveTab] = useState<TabId>("content");
-  const [emails, setEmails] = useState<LaunchEmail[]>([]);
+  const [activeTab, setActiveTab] = useState<TabId>("automations");
+  const [emails, setEmails] = useState<EmailData[]>([]);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [seedError, setSeedError] = useState<string | null>(null);
@@ -47,16 +51,13 @@ export default function EmailDepartmentPage() {
       const data = await res.json();
       if (Array.isArray(data)) {
         setEmails(data);
-        // If empty, auto-seed
         if (data.length === 0) {
           await seedEmails();
         }
       } else if (data.error) {
-        // DB might not be seeded yet
         await seedEmails();
       }
     } catch {
-      // Network error — try seeding
       await seedEmails();
     } finally {
       setLoading(false);
@@ -70,7 +71,6 @@ export default function EmailDepartmentPage() {
       const res = await fetch("/api/seed", { method: "POST" });
       const result = await res.json();
       if (result.success) {
-        // Re-fetch emails after seeding
         const emailRes = await fetch("/api/emails");
         const emailData = await emailRes.json();
         if (Array.isArray(emailData)) {
@@ -99,15 +99,18 @@ export default function EmailDepartmentPage() {
         setMonitoringData({
           listStats: data.listStats,
           campaignStats: data.campaignStats,
+          campaignDetails: data.campaignDetails,
+          automationStats: data.automationStats,
           isMock: data.isMock,
+          period: data.period,
         });
       })
       .catch(() => {
-        // Silently fall back to defaults in the dashboard
+        // Silently fall back to defaults
       });
   }, [activeTab]);
 
-  const handleUpdate = async (id: string, updates: Partial<LaunchEmail>) => {
+  const handleUpdate = async (id: string, updates: Partial<EmailData>) => {
     const res = await fetch("/api/emails", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -125,7 +128,6 @@ export default function EmailDepartmentPage() {
     });
     const result = await res.json();
     if (result.updated !== undefined) {
-      // Bulk action — re-fetch all
       await fetchEmails();
     } else {
       setEmails((prev) => prev.map((e) => (e.id === id ? result : e)));
@@ -191,7 +193,6 @@ export default function EmailDepartmentPage() {
   const readyToDeploy = emails.filter(
     (e) => e.status === "approved" && e.complianceStatus === "approved"
   ).length;
-  const weeksToLaunch = 7;
 
   return (
     <div className="p-6 md:p-8 lg:p-10 max-w-7xl">
@@ -213,7 +214,7 @@ export default function EmailDepartmentPage() {
                 color: "var(--foreground)",
               }}
             >
-              Email Deployment
+              Email Department
             </h1>
             <p
               className="mt-0.5"
@@ -225,7 +226,7 @@ export default function EmailDepartmentPage() {
                 color: "var(--muted)",
               }}
             >
-              8-Week Launch Sequence — {emails.length} Emails — View, Edit, Approve, Deploy
+              Automations · Campaigns · Monitoring — All connected to Mailchimp
             </p>
           </div>
           <button
@@ -252,22 +253,28 @@ export default function EmailDepartmentPage() {
             <Target size={20} style={{ color: "#E37FB1" }} strokeWidth={2} />
             <div>
               <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-                {weeksToLaunch} weeks to launch
+                Email system status
               </p>
               <p className="text-xs" style={{ color: "var(--muted)" }}>
-                {approved} / {emails.length} approved &middot; {complianceCleared} compliance cleared &middot; {readyToDeploy} ready to deploy
+                {emails.length} emails · {approved} approved · {complianceCleared} compliance cleared · Sending: <span style={{ color: "#E24D47", fontWeight: 600 }}>DISABLED</span>
               </p>
             </div>
           </div>
 
           {/* Status pills */}
           <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className="text-[10px] font-bold px-2.5 py-1 rounded-full"
+              style={{ backgroundColor: "#E24D4718", color: "#E24D47" }}
+            >
+              Sending Disabled
+            </span>
             {pending > 0 && (
               <span
                 className="text-[10px] font-bold px-2.5 py-1 rounded-full"
                 style={{ backgroundColor: "#F1C02818", color: "#B8930A" }}
               >
-                {pending} pending
+                {pending} pending review
               </span>
             )}
             {flagged > 0 && (
@@ -278,23 +285,6 @@ export default function EmailDepartmentPage() {
                 {flagged} flagged
               </span>
             )}
-            {readyToDeploy > 0 && (
-              <span
-                className="text-[10px] font-bold px-2.5 py-1 rounded-full"
-                style={{ backgroundColor: "#1EAA5518", color: "#1EAA55" }}
-              >
-                {readyToDeploy} ready
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold" style={{ color: "#E37FB1" }}>
-              0
-            </span>
-            <span className="text-sm" style={{ color: "var(--muted)" }}>
-              / 5,000 signups
-            </span>
           </div>
         </div>
 
@@ -363,7 +353,6 @@ export default function EmailDepartmentPage() {
         {TABS.map((tab) => {
           const active = activeTab === tab.id;
           const Icon = tab.icon;
-          // Badge counts
           let badge: number | null = null;
           if (tab.id === "compliance" && flagged > 0) badge = flagged;
           if (tab.id === "deploy" && readyToDeploy > 0) badge = readyToDeploy;
@@ -425,7 +414,7 @@ export default function EmailDepartmentPage() {
             No Emails Found
           </h3>
           <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-            The email database needs to be seeded with the 23 launch sequence emails.
+            The email database needs to be seeded with the launch sequence emails.
           </p>
           {seedError && (
             <p className="text-xs mb-3" style={{ color: "#E24D47" }}>
@@ -444,6 +433,7 @@ export default function EmailDepartmentPage() {
         </div>
       ) : (
         <>
+          {activeTab === "automations" && <AutomationManager emails={emails} />}
           {activeTab === "content" && (
             <EmailContentManager
               emails={emails}

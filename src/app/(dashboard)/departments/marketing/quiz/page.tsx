@@ -186,12 +186,15 @@ export default function QuizAnalyticsPage() {
   const funnel = data?.funnel;
   const started = funnel?.quiz_started ?? 0;
   const completed = funnel?.quiz_completed ?? 0;
+  // email_collected was added later — quiz_completed is the reliable count
+  // since you can't complete without entering email at step 23
   const emails = funnel?.email_collected ?? 0;
+  const emailCount = Math.max(emails, completed); // use whichever is higher
   const carted = funnel?.cart_clicked ?? 0;
   const purchases = funnel?.purchases ?? 0;
   const revenue = funnel?.revenue ?? 0;
   const completionRate = started > 0 ? Math.round((completed / started) * 100) : 0;
-  const emailRate = started > 0 ? Math.round((emails / started) * 100) : 0;
+  const emailRate = started > 0 ? Math.round((emailCount / started) * 100) : 0;
   const cartRate = completed > 0 ? Math.round((carted / completed) * 100) : 0;
   const purchaseRate = carted > 0 ? Math.round((purchases / carted) * 100) : 0;
 
@@ -304,7 +307,7 @@ export default function QuizAnalyticsPage() {
             />
             <MetricCard
               label="Emails"
-              value={emails.toLocaleString()}
+              value={emailCount.toLocaleString()}
               icon={Mail}
               color="#356FB6"
               sub={`${emailRate}% of starts`}
@@ -379,7 +382,7 @@ export default function QuizAnalyticsPage() {
               </div>
               <FunnelBar
                 label="Emails"
-                value={emails}
+                value={emailCount}
                 total={started}
                 color="#356FB6"
                 icon={Mail}

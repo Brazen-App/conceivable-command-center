@@ -121,9 +121,15 @@ export default function EmailContentManager({ emails, onUpdate, onAction }: Prop
     );
   };
 
-  // Get first 3 lines of body as preview
+  // Get first 3 lines of body as preview — strip markdown and stray quotes
   const bodyPreview = (body: string) => {
-    const lines = body.split("\n").filter((l) => l.trim().length > 0);
+    const cleaned = body
+      .replace(/\*\|FNAME\|\*/g, "Friend")
+      .replace(/\*\*(.*?)\*\*/gs, "$1")
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/^"+|"+$/gm, "")
+      .replace(/^"(.+)"$/gm, "$1");
+    const lines = cleaned.split("\n").filter((l) => l.trim().length > 0);
     return lines.slice(0, 3).join("\n");
   };
 
@@ -226,7 +232,7 @@ export default function EmailContentManager({ emails, onUpdate, onAction }: Prop
                       {/* Body preview — shows Hi *|FNAME|*, and first lines */}
                       {!isEditing && (
                         <div
-                          className="mt-2 rounded-lg p-3 text-xs leading-relaxed"
+                          className="mt-2 rounded-lg p-3 text-sm leading-relaxed"
                           style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
                         >
                           <pre className="whitespace-pre-wrap font-sans">{bodyPreview(email.body)}</pre>

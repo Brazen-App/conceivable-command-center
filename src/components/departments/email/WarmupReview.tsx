@@ -49,11 +49,19 @@ interface SchedulePreview {
   alreadyScheduled: boolean;
 }
 
-function textToPreviewHtml(text: string): string {
+function cleanEmailBody(text: string): string {
   return text
-    .replace(/\*\|FNAME\|\*/g, "Friend")
+    .replace(/\*\|FNAME\|\*/g, "Friend")   // merge tag → placeholder (do first)
+    .replace(/\*\*(.*?)\*\*/gs, "$1")       // strip **bold**
+    .replace(/^#{1,6}\s+/gm, "")            // strip # headings
+    .replace(/^"+|"+$/gm, "")              // strip leading/trailing quotes on every line
+    .replace(/^"(.+)"$/gm, "$1");          // strip quotes wrapping whole lines (fallback)
+}
+
+function textToPreviewHtml(text: string): string {
+  return cleanEmailBody(text)
     .split(/\n\n+/)
-    .map((p) => `<p style="margin:0 0 14px 0;line-height:1.6;font-size:15px;color:#2A2828;">${p.replace(/\n/g, "<br>")}</p>`)
+    .map((p) => `<p style="margin:0 0 20px 0;line-height:1.8;font-size:17px;color:#2A2828;">${p.replace(/\n/g, "<br>")}</p>`)
     .join("");
 }
 
@@ -323,7 +331,7 @@ export default function WarmupReview() {
                   {isExpanded && (
                     <div className="px-4 pb-4">
                       <div className="rounded-lg p-3 text-sm leading-relaxed" style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}>
-                        {email.body.replace(/\*\|FNAME\|\*/g, "Friend").slice(0, 500)}...
+                        {cleanEmailBody(email.body).slice(0, 500)}...
                       </div>
                       <button type="button" onClick={() => setPreviewEmail(email)} className="flex items-center gap-1.5 mt-2 text-xs font-medium" style={{ color: ACCENT }}>
                         <Eye size={12} /> Full Preview

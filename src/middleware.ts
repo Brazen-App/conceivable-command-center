@@ -11,6 +11,8 @@ const PUBLIC_PATHS = [
   "/api/auth",
   "/api/partner-tag",
   "/api/early-access/count",
+  "/api/kai",
+  "/api/kai-chats",
   "/early-access",
   "/partners",
   "/_next",

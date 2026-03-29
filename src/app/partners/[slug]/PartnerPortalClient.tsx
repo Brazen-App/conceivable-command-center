@@ -13,7 +13,7 @@ const YELLOW = "#F1C028";
 const PURPLE = "#9686B9";
 
 const CALENDLY = "https://calendly.com/kirstenk/free-fertility-assessment";
-const REFERSION = "https://conceivable.refersion.com"; // TODO: swap with real affiliate signup URL
+const REFERSION = "https://cliq3ee01.refersion.com/affiliate/registration";
 const PARTNERS_EMAIL = "partners@conceivable.com";
 
 type CollabAction = (partner: Partner) => void;

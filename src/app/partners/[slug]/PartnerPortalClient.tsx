@@ -12,6 +12,20 @@ const PINK = "#E37FB1";
 const YELLOW = "#F1C028";
 const PURPLE = "#9686B9";
 
+const CALENDLY = "https://calendly.com/kirstenk/free-fertility-assessment";
+const REFERSION = "https://conceivable.refersion.com"; // TODO: swap with real affiliate signup URL
+const PARTNERS_EMAIL = "partners@conceivable.com";
+
+type CollabAction = (partner: Partner) => void;
+
+function mailtoLink(to: string, subject: string, body: string) {
+  return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function openUrl(url: string): CollabAction {
+  return () => window.open(url, "_blank");
+}
+
 const COLLAB_OPTIONS = [
   {
     id: "affiliate",
@@ -22,13 +36,17 @@ const COLLAB_OPTIONS = [
     desc: "Share your unique link. Every time someone subscribes through you, you earn $27.25/month per subscriber — recurring, forever.",
     valueForThem: "Passive income. One link. Your audience already trusts you.",
     nextSteps: [
-      "Your affiliate link is ready instantly below",
+      "Sign up for your affiliate account — takes 2 minutes",
       "Grab the caption pack — written to convert, not to sound like an ad",
       "Dashboard shows your earnings in real time",
     ],
-    cta: "Get My Link",
-    ctaLink: "#affiliate-link",
-    assets: ["Caption Pack", "Story Templates", "Email Swipe Copy"],
+    cta: "Get My Affiliate Link",
+    ctaAction: openUrl(REFERSION),
+    assets: [
+      { label: "Caption Pack", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Caption Pack Request — ${partner.show}`, `Hi Kirsten's team,\n\nI just signed up as an affiliate for Conceivable. Can you send me the caption pack?\n\nThanks!`), "_blank") },
+      { label: "Story Templates", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Story Templates Request — ${partner.show}`, `Hi Kirsten's team,\n\nCan you send me the Instagram story templates?\n\nThanks!`), "_blank") },
+      { label: "Email Swipe Copy", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Email Swipe Copy Request — ${partner.show}`, `Hi Kirsten's team,\n\nCan you send me the email swipe copy for promoting Conceivable?\n\nThanks!`), "_blank") },
+    ],
   },
   {
     id: "blog",
@@ -44,8 +62,12 @@ const COLLAB_OPTIONS = [
       "Both posts go live same week for max cross-traffic",
     ],
     cta: "Start the Swap",
-    ctaLink: "#blog-brief",
-    assets: ["Blog Brief Template", "SEO Checklist", "Author Bio"],
+    ctaAction: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Blog Swap — ${partner.show}`, `Hi Kirsten's team,\n\nI'd love to do a blog swap. Here's my topic idea:\n\n[YOUR TOPIC HERE]\n\nLooking forward to working together!\n\n${partner.name}`), "_blank"),
+    assets: [
+      { label: "Blog Brief Template", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Blog Brief Request — ${partner.show}`, `Hi team, can you send me the blog brief template? Thanks!`), "_blank") },
+      { label: "SEO Checklist", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `SEO Checklist Request — ${partner.show}`, `Hi team, can you send me the SEO checklist? Thanks!`), "_blank") },
+      { label: "Author Bio", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Author Bio Request — ${partner.show}`, `Hi team, can you send me Kirsten's author bio for my site? Thanks!`), "_blank") },
+    ],
   },
   {
     id: "review",
@@ -61,8 +83,12 @@ const COLLAB_OPTIONS = [
       "Record your honest take via the link we'll send",
     ],
     cta: "Get Free Access",
-    ctaLink: "#free-access",
-    assets: ["Review Prompts", "Loom Recording Guide", "ROLA Submission Link"],
+    ctaAction: openUrl("https://conceivable-command-center.vercel.app/early-access"),
+    assets: [
+      { label: "Review Prompts", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Review Prompts Request — ${partner.show}`, `Hi team, I'd love the review prompt guide before I record. Thanks!`), "_blank") },
+      { label: "Loom Recording Guide", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Loom Guide Request — ${partner.show}`, `Hi team, can you send me the Loom recording guide? Thanks!`), "_blank") },
+      { label: "Submit My Review", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Video Review Submission — ${partner.show}`, `Hi Kirsten's team,\n\nHere is my video review of Conceivable:\n\n[PASTE YOUR LOOM/VIDEO LINK HERE]\n\nLooking forward to seeing Kirsten's review of ${partner.show}!\n\n${partner.name}`), "_blank") },
+    ],
   },
   {
     id: "community",
@@ -73,13 +99,17 @@ const COLLAB_OPTIONS = [
     desc: "A live 30-45 min Q&A with Conceivable subscribers — women actively working on their fertility, periods, and hormonal health. Your topic. Your expertise. We handle everything else.",
     valueForThem: "Direct access to a highly engaged, health-motivated audience who are actively looking for experts like you.",
     nextSteps: [
-      "Pick a date using the scheduler below",
+      "Book a time using the scheduler below",
       "We send the prep guide — takes 20 min to prepare",
       "We promote it to our full list and social",
     ],
     cta: "Book Your Session",
-    ctaLink: "#book-community",
-    assets: ["Session Prep Guide", "Promotional Graphics", "Post-Event Recap Template"],
+    ctaAction: openUrl(CALENDLY),
+    assets: [
+      { label: "Session Prep Guide", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Session Prep Guide — ${partner.show}`, `Hi team, I just booked my community session. Can you send me the prep guide? Thanks!`), "_blank") },
+      { label: "Promotional Graphics", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Promo Graphics Request — ${partner.show}`, `Hi team, can you send me the promotional graphics for my community session? Thanks!`), "_blank") },
+      { label: "Post-Event Recap Template", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Recap Template Request — ${partner.show}`, `Hi team, can you send me the post-event recap template? Thanks!`), "_blank") },
+    ],
   },
   {
     id: "swap",
@@ -87,16 +117,20 @@ const COLLAB_OPTIONS = [
     title: "Podcast Guest Swap",
     tagline: "You come on ours. Kirsten comes on yours.",
     color: BLUE,
-    desc: "Cross-promote both episodes the same week. Your listeners meet Kirsten. Her listeners meet you. Two Calendly links. Done in 5 minutes.",
+    desc: "Cross-promote both episodes the same week. Your listeners meet Kirsten. Her listeners meet you. Done in 5 minutes.",
     valueForThem: "Kirsten brings clinical depth, 25 years of stories, and an audience that is your exact demographic.",
     nextSteps: [
-      "Book Kirsten for your show (link below)",
-      "Book your slot on Conceivable's podcast",
+      "Book Kirsten for your show using the link below",
+      "We'll send you a booking link for your slot on Conceivable's podcast",
       "We align release dates for maximum cross-exposure",
     ],
-    cta: "Schedule Both",
-    ctaLink: "#schedule",
-    assets: ["Guest Brief", "Episode Talking Points", "Promo Graphics Pack"],
+    cta: "Book Kirsten for Your Show",
+    ctaAction: openUrl(CALENDLY),
+    assets: [
+      { label: "Guest Brief", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Guest Brief Request — ${partner.show}`, `Hi team, I just booked Kirsten for my podcast. Can you send me the guest brief? Thanks!`), "_blank") },
+      { label: "Episode Talking Points", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Talking Points Request — ${partner.show}`, `Hi team, can you send me suggested talking points for my episode with Kirsten? Thanks!`), "_blank") },
+      { label: "Promo Graphics Pack", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Promo Graphics Request — ${partner.show}`, `Hi team, can you send me the promo graphics for our podcast swap? Thanks!`), "_blank") },
+    ],
   },
   {
     id: "social",
@@ -107,13 +141,17 @@ const COLLAB_OPTIONS = [
     desc: "No recording required. We post about your show to our 410K+ followers. You share our launch with your audience. One week of mutual exposure.",
     valueForThem: "410K followers + 29K email subscribers see your show. We write the caption for you.",
     nextSteps: [
-      "Send us your show name + best episode link + one sentence",
-      "We write your post, you approve it",
+      "Send us your best episode link + one sentence about your show",
+      "We write your caption for the Conceivable post — you approve it",
       "Download our launch assets below and post whenever you're ready",
     ],
-    cta: "Get Launch Assets",
-    ctaLink: "#assets",
-    assets: ["Launch Graphics Pack", "Caption Templates", "Story Assets"],
+    cta: "Send My Show Info",
+    ctaAction: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Social Swap — ${partner.show}`, `Hi Kirsten's team,\n\nI'm in for the social promo swap! Here's my show info:\n\nShow: ${partner.show}\nBest episode link: [YOUR BEST EPISODE URL]\nOne sentence about my show: [YOUR ONE SENTENCE]\n\nLooking forward to it!\n${partner.name}`), "_blank"),
+    assets: [
+      { label: "Launch Graphics Pack", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Launch Graphics Request — ${partner.show}`, `Hi team, can you send me the launch graphics pack to share with my audience? Thanks!`), "_blank") },
+      { label: "Caption Templates", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Caption Templates Request — ${partner.show}`, `Hi team, can you send me the caption templates? Thanks!`), "_blank") },
+      { label: "Story Assets", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Story Assets Request — ${partner.show}`, `Hi team, can you send me the Instagram story assets? Thanks!`), "_blank") },
+    ],
   },
   {
     id: "cocreate",
@@ -125,12 +163,15 @@ const COLLAB_OPTIONS = [
     valueForThem: "You bring the idea. We bring the audience and the clinical credibility. Together we make something neither of us could alone.",
     nextSteps: [
       "Book a 20-min brainstorm call below",
-      "Or drop your idea in the text box — no call needed",
+      "Or drop your idea in the email — no call needed",
       "We respond within 48 hours",
     ],
-    cta: "Start the Conversation",
-    ctaLink: "#brainstorm",
-    assets: ["Conceivable Brand Kit", "Co-Brand Guidelines"],
+    cta: "Book a Brainstorm Call",
+    ctaAction: openUrl(CALENDLY),
+    assets: [
+      { label: "Conceivable Brand Kit", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Brand Kit Request — ${partner.show}`, `Hi team, can you send me the Conceivable brand kit? Thanks!`), "_blank") },
+      { label: "Co-Brand Guidelines", action: (partner: Partner) => window.open(mailtoLink(PARTNERS_EMAIL, `Co-Brand Guidelines Request — ${partner.show}`, `Hi team, can you send me the co-brand guidelines? Thanks!`), "_blank") },
+    ],
   },
 ];
 
@@ -445,24 +486,31 @@ export default function PartnerPortalClient({ partner }: Props) {
                     {/* Asset pills */}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 16 }}>
                       {opt.assets.map((asset, i) => (
-                        <div key={i} style={{
-                          background: opt.color + "15",
-                          border: `1px solid ${opt.color}40`,
-                          borderRadius: 20, padding: "5px 12px",
-                          fontFamily: "sans-serif", fontSize: 11, color: opt.color,
-                          cursor: "pointer",
-                        }}>
-                          ↓ {asset}
-                        </div>
+                        <button
+                          key={i}
+                          onClick={() => asset.action(partner)}
+                          style={{
+                            background: opt.color + "15",
+                            border: `1px solid ${opt.color}40`,
+                            borderRadius: 20, padding: "5px 12px",
+                            fontFamily: "sans-serif", fontSize: 11, color: opt.color,
+                            cursor: "pointer",
+                          }}
+                        >
+                          ↓ {asset.label}
+                        </button>
                       ))}
                     </div>
 
-                    <button style={{
-                      marginTop: 16, background: opt.color, color: "white",
-                      border: "none", borderRadius: 10, padding: "12px 24px",
-                      fontFamily: "sans-serif", fontSize: 14, fontWeight: 600,
-                      cursor: "pointer", width: "100%",
-                    }}>
+                    <button
+                      onClick={() => opt.ctaAction(partner)}
+                      style={{
+                        marginTop: 16, background: opt.color, color: "white",
+                        border: "none", borderRadius: 10, padding: "12px 24px",
+                        fontFamily: "sans-serif", fontSize: 14, fontWeight: 600,
+                        cursor: "pointer", width: "100%",
+                      }}
+                    >
                       {opt.cta} →
                     </button>
                   </div>

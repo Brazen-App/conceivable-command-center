@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   ClipboardList,
-  Users,
   CheckCircle2,
   ShoppingCart,
   TrendingUp,
@@ -16,6 +15,7 @@ import {
   ArrowRight,
   Zap,
   Mail,
+  Calendar,
 } from "lucide-react";
 
 const ACCENT = "#5A6FFF";
@@ -38,6 +38,8 @@ interface QuizAnalytics {
     steps_total?: number;
     purchases?: number;
     revenue?: number;
+    video_plays?: number;
+    video_completions?: number;
   };
   stepDropoff?: Record<string, number> | null;
   topConcerns?: Record<string, number> | null;
@@ -146,18 +148,52 @@ interface AnswersResponse { configured: boolean; questions: QuestionData[]; tota
 
 const Q_COLORS = [ACCENT, GREEN, PINK, YELLOW, PURPLE, "#356FB6", "#78C3BF", "#E24D47", ACCENT, GREEN, PINK, YELLOW];
 
+const PRESETS = [
+  { label: "Today", days: 0 },
+  { label: "Last 7 days", days: 7 },
+  { label: "Last 14 days", days: 14 },
+  { label: "Last 30 days", days: 30 },
+  { label: "Last 90 days", days: 90 },
+  { label: "Since launch", days: null },
+];
+
+function toDateStr(d: Date) {
+  return d.toISOString().split("T")[0];
+}
+
 export default function QuizAnalyticsPage() {
   const [data, setData] = useState<QuizAnalytics | null>(null);
   const [answersData, setAnswersData] = useState<AnswersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activePreset, setActivePreset] = useState<number | null>(null); // null = "Since launch"
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [showCustom, setShowCustom] = useState(false);
+
+  const buildParams = useCallback(() => {
+    if (showCustom && customFrom) {
+      const p = new URLSearchParams();
+      p.set("from", customFrom);
+      if (customTo) p.set("to", customTo);
+      return `?${p.toString()}`;
+    }
+    if (activePreset !== null) {
+      const from = new Date();
+      from.setDate(from.getDate() - activePreset);
+      return `?from=${toDateStr(from)}&to=${toDateStr(new Date())}`;
+    }
+    return ""; // default: since launch cutoff
+  }, [activePreset, customFrom, customTo, showCustom]);
 
   const fetchData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
+    const params = buildParams();
     try {
-      const [funnelRes, answersRes] = await Promise.all([
-        fetch("/api/analytics/quiz"),
-        fetch("/api/analytics/quiz-answers"),
+      const [funnelRes, answersRes, shopifyRes] = await Promise.all([
+        fetch(`/api/analytics/quiz${params}`),
+        fetch(`/api/analytics/quiz-answers${params}`),
+        fetch(`/api/shopify/orders${params}`),
       ]);
       if (!funnelRes.ok) {
         console.error("[quiz-dashboard] funnel API error:", funnelRes.status, await funnelRes.text().catch(() => ""));
@@ -165,10 +201,22 @@ export default function QuizAnalyticsPage() {
       if (!answersRes.ok) {
         console.error("[quiz-dashboard] answers API error:", answersRes.status, await answersRes.text().catch(() => ""));
       }
-      const [funnelJson, answersJson] = await Promise.all([
+      if (!shopifyRes.ok) {
+        console.error("[quiz-dashboard] shopify API error:", shopifyRes.status, await shopifyRes.text().catch(() => ""));
+      }
+      const [funnelJson, answersJson, shopifyJson] = await Promise.all([
         funnelRes.ok ? funnelRes.json() : { configured: false, funnel: { quiz_started: 0, quiz_completed: 0, cart_clicked: 0, purchases: 0, revenue: 0 } },
         answersRes.ok ? answersRes.json() : { configured: false, questions: [], totalCompletions: 0 },
+        shopifyRes.ok ? shopifyRes.json() : { configured: false, count: 0, revenue: 0, orders: [] },
       ]);
+      // Override the funnel's purchases/revenue with real Shopify numbers — source of truth.
+      // The PostHog `quiz_purchase` event is not currently fired anywhere on the public site, so it
+      // would otherwise always show 0. Shopify is the actual register.
+      // We use pack-only counts (orders containing a "pack" line item) since that's what the quiz funnel produces.
+      if (shopifyJson?.configured && funnelJson?.funnel) {
+        funnelJson.funnel.purchases = shopifyJson.packCount ?? shopifyJson.count ?? 0;
+        funnelJson.funnel.revenue = shopifyJson.packRevenue ?? shopifyJson.revenue ?? 0;
+      }
       setData(funnelJson);
       setAnswersData(answersJson);
     } catch (err) {
@@ -177,7 +225,7 @@ export default function QuizAnalyticsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [buildParams]);
 
   useEffect(() => {
     fetchData();
@@ -193,10 +241,13 @@ export default function QuizAnalyticsPage() {
   const carted = funnel?.cart_clicked ?? 0;
   const purchases = funnel?.purchases ?? 0;
   const revenue = funnel?.revenue ?? 0;
+  const videoPlays = funnel?.video_plays ?? 0;
+  const videoCompletions = funnel?.video_completions ?? 0;
   const completionRate = started > 0 ? Math.round((completed / started) * 100) : 0;
   const emailRate = started > 0 ? Math.round((emailCount / started) * 100) : 0;
   const cartRate = completed > 0 ? Math.round((carted / completed) * 100) : 0;
   const purchaseRate = carted > 0 ? Math.round((purchases / carted) * 100) : 0;
+  const videoPlayRate = completed > 0 ? Math.round((videoPlays / completed) * 100) : 0;
 
   // Step dropoff labels for the quiz
   const STEP_LABELS: Record<number, string> = {
@@ -223,7 +274,7 @@ export default function QuizAnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold" style={{ color: "var(--foreground)" }}>
             Supplement Quiz Analytics
@@ -232,7 +283,50 @@ export default function QuizAnalyticsPage() {
             Funnel performance, conversion tracking, and user behavior from PostHog
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* TODAY — prominent standalone button */}
+          <button
+            onClick={() => { setActivePreset(0); setShowCustom(false); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+            style={{
+              backgroundColor: !showCustom && activePreset === 0 ? ACCENT : "var(--background)",
+              color: !showCustom && activePreset === 0 ? "#fff" : ACCENT,
+              border: `1.5px solid ${!showCustom && activePreset === 0 ? ACCENT : ACCENT + "40"}`,
+            }}
+          >
+            <Calendar size={14} />
+            Today
+          </button>
+
+          {/* Date range presets */}
+          <div className="flex items-center gap-1 rounded-lg p-1" style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)" }}>
+            {PRESETS.filter((p) => p.days !== 0).map((p) => {
+              const isActive = !showCustom && activePreset === p.days;
+              return (
+                <button
+                  key={p.label}
+                  onClick={() => { setActivePreset(p.days); setShowCustom(false); }}
+                  className="px-2.5 py-1 rounded text-xs font-medium transition-all"
+                  style={{
+                    backgroundColor: isActive ? ACCENT : "transparent",
+                    color: isActive ? "#fff" : "var(--muted)",
+                  }}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setShowCustom(true)}
+              className="px-2.5 py-1 rounded text-xs font-medium transition-all"
+              style={{
+                backgroundColor: showCustom ? ACCENT : "transparent",
+                color: showCustom ? "#fff" : "var(--muted)",
+              }}
+            >
+              Custom
+            </button>
+          </div>
           <button
             onClick={() => fetchData(true)}
             disabled={refreshing}
@@ -254,6 +348,29 @@ export default function QuizAnalyticsPage() {
           </a>
         </div>
       </div>
+
+      {/* Custom date inputs */}
+      {showCustom && (
+        <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}>
+          <Calendar size={14} style={{ color: ACCENT }} />
+          <span className="text-sm font-medium" style={{ color: "var(--foreground)" }}>Custom range:</span>
+          <input
+            type="date"
+            value={customFrom}
+            onChange={(e) => setCustomFrom(e.target.value)}
+            className="px-2 py-1 rounded-lg text-sm"
+            style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+          />
+          <span className="text-xs" style={{ color: "var(--muted)" }}>to</span>
+          <input
+            type="date"
+            value={customTo}
+            onChange={(e) => setCustomTo(e.target.value)}
+            className="px-2 py-1 rounded-lg text-sm"
+            style={{ backgroundColor: "var(--background)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+          />
+        </div>
+      )}
 
       {/* PostHog Status */}
       <div
@@ -339,6 +456,20 @@ export default function QuizAnalyticsPage() {
               icon={TrendingUp}
               color={PURPLE}
               sub="Quiz start \u2192 purchase"
+            />
+            <MetricCard
+              label="Video Plays"
+              value={videoPlays.toLocaleString()}
+              icon={Target}
+              color="#78C3BF"
+              sub={`${videoPlayRate}% of completions`}
+            />
+            <MetricCard
+              label="Video Completed"
+              value={videoCompletions.toLocaleString()}
+              icon={CheckCircle2}
+              color="#356FB6"
+              sub={videoPlays > 0 ? `${Math.round((videoCompletions / videoPlays) * 100)}% watch-through` : "No plays yet"}
             />
           </div>
 
@@ -543,7 +674,7 @@ export default function QuizAnalyticsPage() {
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp size={16} style={{ color: GREEN }} />
                 <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: "var(--muted)" }}>
-                  Last 7 Days
+                  Daily Trend
                 </h3>
               </div>
               {data?.dailyTrend && data.dailyTrend.length > 0 ? (
@@ -609,6 +740,8 @@ export default function QuizAnalyticsPage() {
                 { event: "email_collected", desc: "User submits their email address at the end of the quiz", color: "#356FB6" },
                 { event: "quiz_completed", desc: "Quiz fully completed — results shown with supplement list", color: GREEN },
                 { event: "quiz_cart_clicked", desc: "User clicks 'Add All to Cart' with their personalized supplement pack", color: PINK },
+                { event: "kirsten_video_played", desc: "User plays Kirsten's intro video on the results page", color: "#78C3BF" },
+                { event: "kirsten_video_completed", desc: "User watches the full video to the end", color: "#356FB6" },
               ].map((e) => (
                 <div
                   key={e.event}
@@ -734,7 +867,7 @@ export default function QuizAnalyticsPage() {
                   Answer Distributions
                 </h2>
                 <span className="text-xs ml-2" style={{ color: "var(--muted)" }}>
-                  Last 30 days &middot; {answersData.totalCompletions} completions
+                  {showCustom && customFrom ? `${customFrom}${customTo ? ` → ${customTo}` : ""}` : activePreset ? `Last ${activePreset} days` : "Since launch"} &middot; {answersData.totalCompletions} completions
                 </span>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

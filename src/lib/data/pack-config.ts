@@ -16,9 +16,22 @@ export type PackVariant = "A" | "B";
 export const PACK_SHOPIFY_VARIANT_ID = "47733105623272";
 export const SHOPIFY_STORE_DOMAIN = "conceivable.com";
 
-/** Cart URL that pre-loads the personalized pack and goes to checkout. */
+/**
+ * Permanent discount code applied to every quiz checkout.
+ * Created in Shopify (price_rule 1481879060712, discount_code 19293000696040)
+ * — fixed -$51 off, restricted to the personalized pack variant, no expiration.
+ * Brings $109 → $58 (founding member quiz price).
+ */
+export const QUIZ_DISCOUNT_CODE = "QUIZ-PACK58";
+
+/**
+ * Cart URL that pre-loads the personalized pack and applies the quiz discount.
+ * Uses Shopify's /discount/{code} permalink which applies the code and then
+ * redirects to the cart, so the price is already $58 when the buyer lands.
+ */
 export function buildPackCartUrl(): string {
-  return `https://${SHOPIFY_STORE_DOMAIN}/cart/${PACK_SHOPIFY_VARIANT_ID}:1?utm_source=quiz&utm_medium=results&utm_campaign=personalized_pack`;
+  const cartPath = `/cart/${PACK_SHOPIFY_VARIANT_ID}:1?utm_source=quiz&utm_medium=results&utm_campaign=personalized_pack`;
+  return `https://${SHOPIFY_STORE_DOMAIN}/discount/${QUIZ_DISCOUNT_CODE}?redirect=${encodeURIComponent(cartPath)}`;
 }
 
 export interface PackConfig {

@@ -19,10 +19,10 @@ export const SHOPIFY_STORE_DOMAIN = "conceivable.com";
 /**
  * Permanent discount code applied to every quiz checkout.
  * Created in Shopify (price_rule 1481879060712, discount_code 19293000696040)
- * — fixed -$51 off, restricted to the personalized pack variant, no expiration.
- * Brings $109 → $58 (founding member quiz price).
+ * — fixed -$41 off, restricted to the personalized pack variant, no expiration.
+ * Brings $109 → $68 (founding member quiz price).
  */
-export const QUIZ_DISCOUNT_CODE = "QUIZ-PACK58";
+export const QUIZ_DISCOUNT_CODE = "QUIZ-PACK68";
 
 /**
  * Cart URL that pre-loads the personalized pack and applies the quiz discount.

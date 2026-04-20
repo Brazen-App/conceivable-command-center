@@ -76,16 +76,14 @@ export async function GET(req: Request) {
 
   const avgMsgsPerSession = totalSessions > 0 ? Math.round(allLogs.length / totalSessions) : 0;
 
-  // Quiz vs Kai comparison
+  // Quiz completions — count ALL quiz responses, not just non-Kai ones
   const TEST_EMAILS = ["kirsten.karchmer@iambrazen.com"];
   const allResponses = await prisma.quizResponse.findMany({
     where: { NOT: { email: { in: TEST_EMAILS } }, ...dateFilter },
     select: { email: true, answers: true },
   });
-  const quizOnly = allResponses.filter(r => {
-    const src = (r.answers as Record<string, unknown>)?.source;
-    return !src || !(typeof src === "string" && src.startsWith("kai"));
-  });
+  // quizOnly = all responses (previously filtered out kai-sourced, now includes everything)
+  const quizOnly = allResponses;
 
   const conversionRate = totalSessions > 0 ? Math.round((packsPresented / totalSessions) * 100) : 0;
   const cartRate = packsPresented > 0 ? Math.round((cartLinksShown / packsPresented) * 100) : 0;

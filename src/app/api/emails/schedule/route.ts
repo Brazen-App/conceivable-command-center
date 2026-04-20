@@ -1,28 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
 
 /**
- * ╔══════════════════════════════════════════════════════════════════╗
- * ║  DISABLED — ALL EMAIL SCHEDULING/SENDING IS LOCKED DOWN        ║
- * ║                                                                ║
- * ║  After two incidents of accidental full-list sends (March 8    ║
- * ║  and March 13, 2026), this endpoint is completely disabled.    ║
- * ╚══════════════════════════════════════════════════════════════════╝
+ * POST /api/emails/schedule
+ *
+ * Updates email records with scheduling info (date, segment).
+ * Does NOT send or create Mailchimp campaigns — use schedule-all or send-warmup for that.
+ *
+ * Body: { emailIds: string[], scheduledDate?: string, segment?: string, confirmed: true }
  */
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
 
-  console.error(
-    "[BLOCKED] emails/schedule called but ALL email sending is disabled.",
-    "Body:", JSON.stringify(body),
-    "Time:", new Date().toISOString()
-  );
+  if (!body.confirmed) {
+    return NextResponse.json(
+      { error: "Safety check: requires { confirmed: true } in body." },
+      { status: 400 }
+    );
+  }
 
-  return NextResponse.json(
-    {
-      error: "EMAIL SENDING IS DISABLED. All email scheduling has been locked down after repeated accidental full-list sends. Contact the CEO to re-enable.",
-      blocked: true,
-      timestamp: new Date().toISOString(),
-    },
-    { status: 403 }
-  );
+  const { emailIds, scheduledDate, segment } = body;
+
+  if (!emailIds || !Array.isArray(emailIds) || emailIds.length === 0) {
+    return NextResponse.json(
+      { error: "Missing required field: emailIds (array of email IDs)" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const updated = await prisma.email.updateMany({
+      where: { id: { in: emailIds } },
+      data: {
+        ...(scheduledDate ? { scheduledDate } : {}),
+        ...(segment ? { scheduledSegment: segment } : {}),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      updated: updated.count,
+      scheduledDate,
+      segment,
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 500 }
+    );
+  }
 }

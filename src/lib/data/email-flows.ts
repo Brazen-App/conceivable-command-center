@@ -23,10 +23,10 @@ export const FLOW_CONFIGS: Record<FlowType, FlowConfig> = {
   warmup: {
     id: "warmup",
     name: "Warmup Automation",
-    description: "Re-engagement + education emails. Sends every 3rd day at optimized time to warm the list before launch.",
+    description: "Re-engagement + education emails. Sends every 2 days at optimized time to warm the list before launch.",
     type: "automation",
     trigger: "Tag: warmup-start",
-    cadence: "Every 3 days",
+    cadence: "Every 2 days",
     color: "#78C3BF",
   },
   "launch-campaign": {
@@ -97,7 +97,7 @@ export function getEmailFlowType(email: { flow: string; phase: string }): FlowTy
 
 // Warmup automation schedule config
 export const WARMUP_SCHEDULE = {
-  intervalDays: 3,
+  intervalDays: 2,
   sendTime: "10:00 AM EST",
   rampStrategy: [
     { name: "Tier 1", size: 3000, desc: "Top 10% — highest openers", minOpenRate: 25 },

@@ -11,8 +11,8 @@ const AUTOMATION_DEFS = [
     flow: "launch",
     phases: ["re-engagement", "education"],
     title: "Conceivable — Warmup Sequence",
-    delayDays: 3,
-    description: "Re-engagement + education emails, every 3 days",
+    delayDays: 2,
+    description: "Re-engagement + education emails, every 2 days",
   },
   {
     flow: "post-purchase",
@@ -119,9 +119,6 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             recipients: {
               list_id: listId,
-            },
-            trigger_settings: {
-              workflow_type: "recurringEvent",
             },
             settings: {
               title: def.title,

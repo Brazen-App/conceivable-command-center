@@ -166,7 +166,7 @@ export default function QuizAnalyticsPage() {
   const [answersData, setAnswersData] = useState<AnswersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activePreset, setActivePreset] = useState<number | null>(null); // null = "Since launch"
+  const [activePreset, setActivePreset] = useState<number | null>(0); // 0 = today
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
   const [showCustom, setShowCustom] = useState(false);

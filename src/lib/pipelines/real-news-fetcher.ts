@@ -435,9 +435,8 @@ export async function fetchAllRealContent(): Promise<FetchResult> {
     fetchRedditPosts(3),
   ]);
 
-  // Skip slow URL verification — Google News RSS URLs are real
-  // Just mark them as verified since they came from Google's index
-  const news = newsRaw.map((n) => ({ ...n, verified: true }));
+  // Verify Google News URLs in parallel (they can be stale/broken)
+  const news = await verifyNewsUrls(newsRaw, 10);
 
   const totalFetched = news.length + research.length + reddit.length;
   const verified = totalFetched;

@@ -22,19 +22,32 @@ Brand voice guidelines:
 - Never shame, never fear-monger, never oversell
 - Make complex science accessible without dumbing it down
 
-Clinical data you can reference:
+Clinical data you MUST reference (use exact numbers):
 - 240,000+ data points analyzed
-- 105-person clinical pilot
+- 105-woman clinical pilot
 - 150-260% conception rate improvement
 - 200+ biomarkers tracked
-- 20 years of clinical practice (Kirsten Karchmer)
-- AI care team: Kai, Olive, Seren, Atlas, Zhen, Navi
-- 75-language support
-- $15/month price point
+- Kirsten Karchmer, MSOM — 25 years in reproductive medicine, 10,000+ pregnancies supported
+- Board-certified reproductive health expert, #1 bestselling author
+- AI care team: Kai (fertility coordinator), Olive, Seren, Atlas, Zhen, Navi
+- The Halo Ring — continuous BBT, HRV, sleep, glucose tracking
+- Personalized supplement packs (not generic prenatals)
 
 SEO rules: Primary keyword in H1, first paragraph, at least one H2, meta description, URL slug. Natural density — never stuffed.
 
-GEO rules: Specific statistics, definitive statements, concise FAQ answers, structured tables, consistent comparison formats. Every post answers the question someone would ask an AI assistant.
+GEO RULES (CRITICAL — this is how AI systems decide to cite us):
+1. DIRECT-ANSWER FIRST: The first 150 words of every post MUST directly answer the core question completely. No preamble, no "let's explore." A reader (or AI) should get the answer in the first paragraph. This is the #1 highest-ROI GEO action.
+2. SPECIFICITY WINS: Never "studies show." Always: "Conceivable's 105-woman clinical pilot showed 150–260% improvement in conception rates." AI systems reward named sources with exact numbers.
+3. KIRSTEN'S CREDENTIALS ON EVERY PAGE: Mention within the first 300 words: "Kirsten Karchmer, MSOM — 25 years in reproductive medicine, 10,000+ pregnancies supported." E-E-A-T is a core ranking factor for AI citation.
+4. FAQ MUST BE WRITTEN AS AI QUERIES: Write FAQ questions exactly how someone would ask ChatGPT or Perplexity — conversational, specific, action-oriented. E.g., "What supplements should I take for PCOS fertility?" not "What is PCOS?"
+5. COMPARISON FORMAT: When comparing supplements, treatments, or approaches, use structured comparison tables. AI systems love citing structured comparison content.
+6. BRIDGE TO QUIZ: Every post must naturally connect to the Conceivable quiz as the action step. The quiz is the conversion point — not just "learn more."
+
+PROMPT INTENT HIERARCHY — prioritize content that matches these high-intent prompts:
+- "What supplements should I take for [condition]?" → Direct path to quiz
+- "Is [product] better than [alternative]?" → Bottom of funnel comparison
+- "Why are my fertility supplements not working?" → Pain point conversion
+- Do NOT prioritize general education prompts unless they bridge to Conceivable's solution.
 
 Page head elements (generate per post):
 - Title tag: [Post Title] | Conceivable
@@ -111,7 +124,7 @@ CTA BLOCK 1 (mid-post, after second major section):
   <h2 style="font-family: 'Georgia', serif; font-size: 24px; color: #fff; margin: 0 0 12px;">Not Sure What Your Body Needs?</h2>
   <p style="font-size: 16px; color: rgba(255,255,255,0.9); margin: 0 0 24px; max-width: 480px; display: inline-block; line-height: 1.6;">Take our free 2-minute quiz and get a personalized supplement protocol built around your specific cycle, hormones, and health signals.</p>
   <br>
-  <a href="https://conceivable-quiz.vercel.app" style="display: inline-block; background: #fff; color: #5A6FFF; font-size: 16px; font-weight: 700; padding: 14px 36px; border-radius: 50px; text-decoration: none; margin: 0 8px 8px 0;">Take the Quiz →</a>
+  <a href="https://conceivable-quiz.vercel.app?start=true" style="display: inline-block; background: #fff; color: #5A6FFF; font-size: 16px; font-weight: 700; padding: 14px 36px; border-radius: 50px; text-decoration: none; margin: 0 8px 8px 0;">Take the Quiz →</a>
   <a href="https://conceivable.com" style="display: inline-block; background: transparent; color: #fff; font-size: 16px; font-weight: 600; padding: 14px 36px; border-radius: 50px; text-decoration: none; border: 2px solid rgba(255,255,255,0.5);">Explore the App →</a>
 </div>
 
@@ -121,7 +134,7 @@ CTA BLOCK 2 (end of post, before FAQ):
   <h2 style="font-family: 'Georgia', serif; font-size: 24px; color: #fff; margin: 0 0 12px;">Personalized Supplements. AI Care Team. The Halo Ring.</h2>
   <p style="font-size: 16px; color: rgba(255,255,255,0.75); margin: 0 0 24px; max-width: 480px; display: inline-block; line-height: 1.6;">Everything your body needs to optimize fertility — built around your data, not someone else's.</p>
   <br>
-  <a href="https://conceivable-quiz.vercel.app" style="display: inline-block; background: #5A6FFF; color: #fff; font-size: 16px; font-weight: 700; padding: 14px 36px; border-radius: 50px; text-decoration: none; margin: 0 8px 8px 0;">Take the Quiz →</a>
+  <a href="https://conceivable-quiz.vercel.app?start=true" style="display: inline-block; background: #5A6FFF; color: #fff; font-size: 16px; font-weight: 700; padding: 14px 36px; border-radius: 50px; text-decoration: none; margin: 0 8px 8px 0;">Take the Quiz →</a>
   <a href="https://conceivable.com" style="display: inline-block; background: transparent; color: #fff; font-size: 16px; font-weight: 600; padding: 14px 36px; border-radius: 50px; text-decoration: none; border: 2px solid rgba(255,255,255,0.3);">Check Out the App →</a>
 </div>
 

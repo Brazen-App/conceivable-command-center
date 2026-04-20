@@ -52,7 +52,7 @@ interface SchedulePreview {
 function cleanEmailBody(text: string): string {
   return text
     .replace(/\*\|FNAME\|\*/g, "Friend")   // merge tag → placeholder (do first)
-    .replace(/\*\*(.*?)\*\*/gs, "$1")       // strip **bold**
+    .replace(/\*\*([^*]+)\*\*/g, "$1")      // strip **bold**
     .replace(/^#{1,6}\s+/gm, "")            // strip # headings
     .replace(/^"+|"+$/gm, "")              // strip leading/trailing quotes on every line
     .replace(/^"(.+)"$/gm, "$1");          // strip quotes wrapping whole lines (fallback)

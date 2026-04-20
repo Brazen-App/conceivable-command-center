@@ -6,8 +6,9 @@ export interface QuizQuestion {
   category: string;
   question: string;
   subtext?: string;
-  type: "single" | "multi" | "scale";
+  type: "single" | "multi" | "scale" | "info";
   options: { value: string; label: string; score: number }[];
+  autoAdvance?: boolean; // auto-advance on selection (no Next button)
 }
 
 export interface QuizCategory {
@@ -20,12 +21,31 @@ export interface QuizCategory {
 }
 
 export const QUIZ_CATEGORIES: QuizCategory[] = [
-  { id: "cycle", name: "Cycle Health", icon: "🌙", color: "#E37FB1", maxScore: 20, weight: 0.20 },
-  { id: "nutrition", name: "Nutrition", icon: "🥗", color: "#1EAA55", maxScore: 15, weight: 0.15 },
-  { id: "sleep", name: "Sleep & Recovery", icon: "😴", color: "#356FB6", maxScore: 15, weight: 0.15 },
+  { id: "cycle", name: "Cycle Health", icon: "🌙", color: "#E37FB1", maxScore: 13, weight: 0.20 },
+  { id: "nutrition", name: "Nutrition", icon: "🥗", color: "#1EAA55", maxScore: 10, weight: 0.15 },
+  { id: "sleep", name: "Sleep & Recovery", icon: "😴", color: "#356FB6", maxScore: 10, weight: 0.15 },
   { id: "stress", name: "Stress & Lifestyle", icon: "🧘", color: "#9686B9", maxScore: 15, weight: 0.15 },
   { id: "hormonal", name: "Hormonal Signals", icon: "🔬", color: "#5A6FFF", maxScore: 20, weight: 0.20 },
-  { id: "history", name: "Health History", icon: "📋", color: "#78C3BF", maxScore: 15, weight: 0.15 },
+  { id: "history", name: "Health History", icon: "📋", color: "#78C3BF", maxScore: 10, weight: 0.15 },
+];
+
+// Non-scored intake question (journey stage)
+export const INTAKE_QUESTIONS: QuizQuestion[] = [
+  {
+    id: "journey_stage",
+    category: "intake",
+    question: "Please choose everything that applies to you today :)",
+    type: "single",
+    autoAdvance: true,
+    options: [
+      { value: "ttc_now", label: "Actively trying to conceive", score: 0 },
+      { value: "ttc_soon", label: "Planning to try in the next year", score: 0 },
+      { value: "thinking", label: "Thinking about it for the future", score: 0 },
+      { value: "struggling", label: "Struggling and looking for answers", score: 0 },
+      { value: "period_health", label: "I just want better period health", score: 0 },
+      { value: "curious", label: "Curious about my fertility health", score: 0 },
+    ],
+  },
 ];
 
 export const QUIZ_QUESTIONS: QuizQuestion[] = [
@@ -42,18 +62,6 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
       { value: "somewhat_irregular", label: "Somewhat irregular (varies by a week+)", score: 3 },
       { value: "very_irregular", label: "Very irregular or absent", score: 1 },
       { value: "unsure", label: "I don't track it", score: 2 },
-    ],
-  },
-  {
-    id: "q2",
-    category: "cycle",
-    question: "How would you describe your period pain?",
-    type: "single",
-    options: [
-      { value: "none", label: "Little to no pain", score: 7 },
-      { value: "mild", label: "Mild — manageable without medication", score: 5 },
-      { value: "moderate", label: "Moderate — I take pain relief", score: 3 },
-      { value: "severe", label: "Severe — it disrupts my life", score: 1 },
     ],
   },
   {
@@ -80,18 +88,6 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
       { value: "three_four", label: "3-4", score: 4 },
       { value: "one_two", label: "1-2", score: 2 },
       { value: "rarely", label: "Rarely", score: 1 },
-    ],
-  },
-  {
-    id: "q5",
-    category: "nutrition",
-    question: "Do you currently take any supplements?",
-    type: "single",
-    options: [
-      { value: "prenatal", label: "Yes, a prenatal or fertility-focused supplement", score: 5 },
-      { value: "multivitamin", label: "Yes, a general multivitamin", score: 4 },
-      { value: "some", label: "A few individual supplements", score: 3 },
-      { value: "none", label: "No supplements", score: 1 },
     ],
   },
   {
@@ -130,17 +126,6 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
       { value: "ok", label: "Decent — occasional trouble", score: 4 },
       { value: "poor", label: "I struggle to fall or stay asleep", score: 2 },
       { value: "terrible", label: "Chronic sleep issues", score: 1 },
-    ],
-  },
-  {
-    id: "q9",
-    category: "sleep",
-    question: "Do you have a consistent sleep schedule?",
-    type: "single",
-    options: [
-      { value: "yes", label: "Yes, same bedtime and wake time most days", score: 5 },
-      { value: "weekdays", label: "Weekdays yes, weekends no", score: 3 },
-      { value: "no", label: "No, it's all over the place", score: 1 },
     ],
   },
 
@@ -225,22 +210,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     ],
   },
 
-  // ── Health History (3 questions) ──
-  {
-    id: "q16",
-    category: "history",
-    question: "Have you been diagnosed with any of these?",
-    subtext: "Select all that apply",
-    type: "multi",
-    options: [
-      { value: "pcos", label: "PCOS", score: -3 },
-      { value: "endo", label: "Endometriosis", score: -3 },
-      { value: "thyroid", label: "Thyroid condition", score: -2 },
-      { value: "diabetes", label: "Diabetes or insulin resistance", score: -2 },
-      { value: "autoimmune", label: "Autoimmune condition", score: -2 },
-      { value: "none", label: "None of these", score: 5 },
-    ],
-  },
+  // ── Health History (2 questions) ──
   {
     id: "q17",
     category: "history",
@@ -377,9 +347,68 @@ export function getScoreInterpretation(score: number): ScoreInterpretation {
   ) || SCORE_INTERPRETATIONS[SCORE_INTERPRETATIONS.length - 1];
 }
 
+// Personalized bridge copy: connects Q4 concern answer to the recommendation
+export function getBridgeCopy(concern: string): string {
+  const bridgeMap: Record<string, string> = {
+    irregular_cycles: "Based on your cycle concerns, your protocol focuses on hormonal regulation and cycle support.",
+    pcos: "Based on your PCOS concerns, your protocol focuses on metabolic and inflammatory support.",
+    age: "Based on your egg quality concerns, your protocol focuses on mitochondrial support and antioxidant protection.",
+    unexplained: "Based on where you are, your protocol focuses on uncovering hidden patterns and optimizing from every angle.",
+    not_sure: "That's exactly why we're here — your protocol is designed to find the signals your body is sending and act on them.",
+    optimize: "You're already ahead of the game — your protocol fine-tunes the areas with the biggest room for improvement.",
+  };
+  return bridgeMap[concern] || "Your personalized protocol targets the areas where your body will benefit most.";
+}
+
 // Generate a referral code from email
 export function generateReferralCode(email: string): string {
   const base = email.split("@")[0].replace(/[^a-zA-Z0-9]/g, "").slice(0, 6).toUpperCase();
   const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `${base}-${suffix}`;
+}
+
+export interface SupplementRec {
+  name: string;
+  reason: string;
+}
+
+// Returns 8 supplement recommendations: 4 personalized (weakest categories) + 4 core (everyone).
+// Shared between the results page and the signup route (for Mailchimp merge fields).
+export function getSupplementRecs(
+  categoryScores: Record<string, { percentage: number }>
+): SupplementRec[] {
+  // Core 4 — every pack includes these
+  const core: SupplementRec[] = [
+    { name: "Methylated Folate", reason: "The prenatal foundation — essential for DNA replication and healthy cell division" },
+    { name: "CoQ10",             reason: "Protects egg cell mitochondria to improve egg quality at any age" },
+    { name: "Vitamin D3",        reason: "Supports hormone production, immune function, and implantation success" },
+    { name: "Omega-3 (EPA/DHA)", reason: "Reduces inflammation and improves endometrial receptivity" },
+  ];
+
+  // Personalized 4 — top 4 weakest categories
+  const categoryMap: Record<string, SupplementRec> = {
+    cycle:    { name: "Vitex Berry",        reason: "Supports progesterone production and helps regulate cycle length and timing" },
+    nutrition:{ name: "Iron Bisglycinate",  reason: "Replenishes ferritin stores essential for ovulation, energy, and egg health" },
+    sleep:    { name: "Magnesium Glycinate",reason: "Promotes restorative sleep and lowers nighttime cortisol levels" },
+    stress:   { name: "Ashwagandha",        reason: "An adaptogen that lowers cortisol to protect your hormonal balance" },
+    hormonal: { name: "DIM",                reason: "Clears excess estrogen metabolites to restore hormonal equilibrium" },
+    history:  { name: "Myo-Inositol",       reason: "Improves insulin sensitivity and egg quality, especially important for PCOS" },
+  };
+
+  const sorted = Object.entries(categoryScores).sort((a, b) => a[1].percentage - b[1].percentage);
+  const personalized = sorted.slice(0, 4).map(([catId]) => categoryMap[catId]).filter(Boolean);
+
+  return [...personalized, ...core];
+}
+
+// Returns the display name of the user's weakest category.
+export function getWeakestCategoryName(
+  categoryScores: Record<string, { percentage: number }>
+): string {
+  const sorted = Object.entries(categoryScores).sort(
+    (a, b) => a[1].percentage - b[1].percentage
+  );
+  if (!sorted.length) return "Overall Wellness";
+  const cat = QUIZ_CATEGORIES.find((c) => c.id === sorted[0][0]);
+  return cat?.name || "Overall Wellness";
 }

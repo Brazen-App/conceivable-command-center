@@ -7,21 +7,17 @@ export const maxDuration = 300;
 
 const LIST_ID = "3c920d5bed";
 
-// Send days: Mon (1), Wed (3), Fri (5)
-const SEND_DAYS = [1, 3, 5];
+// Send every 2 days
+const INTERVAL_DAYS = 2;
 
 function nextSendDay(from: Date): Date {
-  const d = new Date(from);
-  while (!SEND_DAYS.includes(d.getDay())) {
-    d.setDate(d.getDate() + 1);
-  }
-  return d;
+  return new Date(from);
 }
 
 function advanceToNextSendDay(from: Date): Date {
   const d = new Date(from);
-  d.setDate(d.getDate() + 1);
-  return nextSendDay(d);
+  d.setDate(d.getDate() + INTERVAL_DAYS);
+  return d;
 }
 
 function textToHtml(text: string): string {
@@ -77,8 +73,8 @@ export async function GET() {
 
   return NextResponse.json({
     preview: true,
-    message: "PREVIEW — 3x/week (Mon/Wed/Fri) to full list. POST with { confirmed: true } to create campaigns.",
-    cadence: "3x per week (Mon / Wed / Fri) at 10am EST",
+    message: "PREVIEW — every 2 days to full list. POST with { confirmed: true } to create campaigns.",
+    cadence: "Every 2 days at 10am EST",
     totalToSchedule: schedule.length,
     alreadyScheduled: schedule.filter((s) => s.alreadyScheduled).length,
     firstSend: schedule[0]?.sendDate,
@@ -105,24 +101,112 @@ export async function GET() {
  * ╚══════════════════════════════════════════════════════════════╝
  */
 /**
- * POST /api/mailchimp/schedule-all — DISABLED
+ * POST /api/mailchimp/schedule-all
  *
- * ╔══════════════════════════════════════════════════════════════════╗
- * ║  DISABLED — ALL EMAIL SCHEDULING/SENDING IS LOCKED DOWN        ║
- * ║  After two accidental full-list sends (March 8 and March 13,   ║
- * ║  2026), this endpoint is completely disabled.                   ║
- * ╚══════════════════════════════════════════════════════════════════╝
+ * Creates Mailchimp campaigns and SCHEDULES them (not immediate send).
+ * All emails go to full list. Mon/Wed/Fri at 10am EST.
+ *
+ * Body: { confirmed: true, startDate?: "2026-04-07" }
+ *
+ * ╔══════════════════════════════════════════════════════════════╗
+ * ║  SAFETY:                                                    ║
+ * ║  - Requires { confirmed: true }                             ║
+ * ║  - Only schedules emails with status "approved"             ║
+ * ║  - Skips emails that already have a mailchimpId             ║
+ * ║  - Uses mc.campaigns.schedule() NOT mc.campaigns.send()     ║
+ * ║  - All campaigns are SCHEDULED, not sent immediately        ║
+ * ╚══════════════════════════════════════════════════════════════╝
  */
 export async function POST(req: NextRequest) {
-  console.error(
-    "[BLOCKED] schedule-all POST called but ALL email sending is disabled.",
-    { body: await req.json().catch(() => ({})) }
-  );
-  return NextResponse.json(
-    {
-      error: "EMAIL SENDING IS DISABLED. All email scheduling has been locked down after repeated accidental full-list sends. Contact the CEO to re-enable.",
-      blocked: true,
-    },
-    { status: 403 }
-  );
+  const body = await req.json().catch(() => ({}));
+
+  if (!body.confirmed) {
+    return NextResponse.json(
+      { error: "Safety check: POST requires { confirmed: true } in body. Use GET to preview first." },
+      { status: 400 }
+    );
+  }
+
+  const mc = getClient();
+
+  // Only schedule approved emails that haven't already been scheduled
+  const emails = await prisma.email.findMany({
+    where: { status: "approved", mailchimpId: null },
+    orderBy: [{ week: "asc" }, { sequence: "asc" }],
+  });
+
+  if (emails.length === 0) {
+    return NextResponse.json({ message: "No approved emails to schedule. Either all are already scheduled or none are approved.", scheduled: 0 });
+  }
+
+  const startDate = body.startDate ? new Date(body.startDate) : new Date();
+  startDate.setDate(startDate.getDate() + 1);
+  let sendDate = nextSendDay(startDate);
+
+  const results: { emailId: string; subject: string; campaignId: string | null; sendDate: string; error: string | null }[] = [];
+
+  for (const email of emails) {
+    const dateStr = sendDate.toISOString().split("T")[0];
+    const sendTime = getSendTimeUTC(dateStr);
+
+    try {
+      // Create campaign
+      const campaign = await (mc.campaigns as any).create({
+        type: "regular",
+        recipients: { list_id: LIST_ID },
+        settings: {
+          title: `Warmup — ${String(email.week).padStart(2, "0")}.${email.sequence} ${email.subject}`,
+          subject_line: email.subject,
+          preview_text: email.preview || "",
+          from_name: "Kirsten at Conceivable",
+          reply_to: "kirsten@conceivable.com",
+          to_name: "*|FNAME|*",
+        },
+      });
+
+      const campaignId = campaign.id;
+
+      // Upload content
+      const html = textToHtml(email.body);
+      await (mc.campaigns as any).setContent(campaignId, { html });
+
+      // Schedule (NOT send)
+      await (mc.campaigns as any).schedule(campaignId, {
+        schedule_time: sendTime,
+      });
+
+      // Update DB with mailchimpId and scheduled date
+      await prisma.email.update({
+        where: { id: email.id },
+        data: { mailchimpId: campaignId, scheduledDate: dateStr, status: "published" },
+      });
+
+      results.push({ emailId: email.id, subject: email.subject, campaignId, sendDate: dateStr, error: null });
+    } catch (err) {
+      results.push({
+        emailId: email.id,
+        subject: email.subject,
+        campaignId: null,
+        sendDate: dateStr,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
+    sendDate = advanceToNextSendDay(sendDate);
+  }
+
+  const scheduled = results.filter((r) => r.campaignId && !r.error).length;
+  const failed = results.filter((r) => r.error).length;
+
+  console.log(`[schedule-all] Scheduled ${scheduled}/${emails.length} campaigns. ${failed} failed.`);
+
+  return NextResponse.json({
+    success: failed === 0,
+    scheduled,
+    failed,
+    total: emails.length,
+    firstSend: results[0]?.sendDate,
+    lastSend: results[results.length - 1]?.sendDate,
+    results,
+  });
 }

@@ -25,14 +25,15 @@ export async function POST(req: Request) {
     const signup = await prisma.earlyAccessSignup.upsert({
       where: { email },
       update: {
-        name: name || undefined,
+        firstName: name || undefined,
         quizAnswers: answers || undefined,
         utmSource: source || undefined,
       },
       create: {
         email,
-        name: name || null,
+        firstName: name || null,
         quizAnswers: answers || {},
+        score: 0,
         tier: "early_access",
         utmSource: source || null,
       },

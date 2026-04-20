@@ -11,7 +11,14 @@ import {
   Linkedin,
   Instagram,
   Twitter,
+  FlaskConical,
 } from "lucide-react";
+import {
+  PACK_VARIANTS,
+  fetchActiveVariant,
+  saveActiveVariant,
+  type PackVariant,
+} from "@/lib/data/pack-config";
 
 interface BufferProfile {
   id: string;
@@ -78,6 +85,9 @@ function getDefaultConnection(): PlatformConnection {
 }
 
 export default function SettingsPage() {
+  // Pack A/B test state
+  const [packVariant, setPackVariant] = useState<PackVariant>("A");
+
   // Buffer state
   const [bufferToken, setBufferToken] = useState("");
   const [bufferConnected, setBufferConnected] = useState(false);
@@ -96,6 +106,9 @@ export default function SettingsPage() {
 
   // Load saved state on mount
   useEffect(() => {
+    // Pack variant
+    fetchActiveVariant().then(setPackVariant);
+
     // Buffer
     const savedToken = localStorage.getItem("buffer_access_token");
     const savedUser = localStorage.getItem("buffer_user_name");
@@ -269,6 +282,91 @@ export default function SettingsPage() {
           </div>
           <span className="text-xs" style={{ color: "#5A6FFF" }}>→</span>
         </a>
+
+        {/* Supplement Pack A/B Test */}
+        <section
+          className="rounded-xl border p-6 mb-6"
+          style={{ borderColor: "#5A6FFF30", backgroundColor: "var(--surface)" }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: "#5A6FFF14" }}>
+              <FlaskConical size={18} style={{ color: "#5A6FFF" }} />
+            </div>
+            <div>
+              <h3 className="font-medium" style={{ color: "var(--foreground)" }}>
+                Supplement Pack A/B Test
+              </h3>
+              <p className="text-xs" style={{ color: "var(--muted)" }}>
+                Switch between pack configurations on the quiz results page
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-3">
+            {(Object.keys(PACK_VARIANTS) as PackVariant[]).map((key) => {
+              const config = PACK_VARIANTS[key];
+              const isActive = packVariant === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setPackVariant(key);
+                    saveActiveVariant(key);
+                  }}
+                  className="w-full text-left rounded-lg border p-4 transition-all"
+                  style={{
+                    borderColor: isActive ? "#5A6FFF" : "var(--border)",
+                    backgroundColor: isActive ? "#5A6FFF08" : "transparent",
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                        style={{ borderColor: isActive ? "#5A6FFF" : "var(--border)" }}
+                      >
+                        {isActive && (
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#5A6FFF" }} />
+                        )}
+                      </div>
+                      <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                        Variant {key}: {config.label}
+                      </span>
+                    </div>
+                    {isActive && (
+                      <span
+                        className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: "#1EAA5520", color: "#1EAA55" }}
+                      >
+                        ACTIVE
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
+                    {config.description}
+                  </p>
+                  <div className="flex items-center gap-4 ml-7 mt-2">
+                    <span className="text-xs" style={{ color: "var(--foreground)" }}>
+                      {config.pillCount} pills
+                    </span>
+                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                      {config.coreCount} core + {config.personalizedCount} personalized
+                    </span>
+                    {config.price && (
+                      <span className="text-xs font-semibold" style={{ color: "#5A6FFF" }}>
+                        {config.priceLabel}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>
+            Changes take effect immediately on the quiz results page. Visitors see whichever variant is active when they load results.
+          </p>
+        </section>
 
         {/* API Keys */}
         <section

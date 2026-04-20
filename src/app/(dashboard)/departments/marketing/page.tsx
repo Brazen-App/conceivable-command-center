@@ -11,6 +11,8 @@ import {
   Loader2,
   ArrowUpRight,
   Zap,
+  Calendar,
+  Phone,
 } from "lucide-react";
 import { colors, gradients } from "@/lib/theme";
 
@@ -99,6 +101,137 @@ function MetricCard({
         )}
       </div>
       {children}
+    </div>
+  );
+}
+
+// ── Calendly Bookings ───────────────────────────────────────
+
+interface CalendlyBooking {
+  id: string;
+  name: string;
+  status: string;
+  startTime: string;
+  endTime: string;
+  invitees: { name: string; email: string; status: string }[];
+}
+
+function CalendlyBookings() {
+  const [bookings, setBookings] = useState<CalendlyBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState<"today" | "upcoming" | "past" | "all">("upcoming");
+  const [total, setTotal] = useState(0);
+  const [todayCount, setTodayCount] = useState(0);
+
+  const fetchBookings = useCallback(async (p: string) => {
+    setLoading(true);
+    try {
+      const apiPeriod = p === "today" ? "upcoming" : p;
+      const res = await fetch(`/api/calendly?period=${apiPeriod}&status=active`);
+      if (!res.ok) return;
+      const data = await res.json();
+      let filtered = data.bookings || [];
+      if (p === "today") {
+        const today = new Date().toISOString().split("T")[0];
+        filtered = filtered.filter((b: CalendlyBooking) => b.startTime.split("T")[0] === today);
+      }
+      setBookings(filtered);
+      setTotal(data.total || 0);
+      setTodayCount(data.todayCount || 0);
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchBookings(period); }, [period, fetchBookings]);
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+    >
+      <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--border)" }}>
+        <div className="flex items-center gap-2">
+          <Phone size={14} style={{ color: colors.pink }} />
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--muted)" }}>
+            Calendly Bookings
+          </span>
+          {todayCount > 0 && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: `${colors.green}12`, color: colors.green }}>
+              {todayCount} today
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          {(["today", "upcoming", "past"] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className="px-2.5 py-1 rounded-md text-[10px] font-semibold capitalize transition-all"
+              style={{
+                backgroundColor: period === p ? `${colors.blue}15` : "transparent",
+                color: period === p ? colors.blue : "var(--muted)",
+              }}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="px-5 py-8 flex items-center justify-center">
+          <Loader2 size={18} className="animate-spin" style={{ color: "var(--muted)" }} />
+        </div>
+      ) : bookings.length === 0 ? (
+        <div className="px-5 py-8 text-center">
+          <Calendar size={24} className="mx-auto mb-2" style={{ color: "var(--muted)", opacity: 0.4 }} />
+          <p className="text-xs" style={{ color: "var(--muted)" }}>
+            {period === "today" ? "No calls scheduled for today" : "No bookings found"}
+          </p>
+        </div>
+      ) : (
+        <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+          {bookings.map((b) => {
+            const start = new Date(b.startTime);
+            const invitee = b.invitees[0];
+            return (
+              <div key={b.id} className="px-5 py-3 flex items-center justify-between">
+                <div className="flex-1 min-w-0 mr-4">
+                  <p className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
+                    {invitee?.name || "Unknown"}
+                  </p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "var(--muted)" }}>
+                    {invitee?.email || "—"}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-semibold" style={{ color: colors.blue }}>
+                    {start.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </p>
+                  <p className="text-[10px]" style={{ color: "var(--muted)" }}>
+                    {start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="px-5 py-2.5 flex items-center justify-between" style={{ borderTop: "1px solid var(--border)" }}>
+        <span className="text-[10px]" style={{ color: "var(--muted)" }}>
+          {total} total upcoming · Calendly 15-min calls
+        </span>
+        <a
+          href="https://calendly.com/kirstenk/15min"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[10px] font-semibold"
+          style={{ color: colors.blue }}
+        >
+          Open Calendly
+        </a>
+      </div>
     </div>
   );
 }
@@ -260,6 +393,35 @@ export default function MarketingDashboard() {
 
   return (
     <div className="space-y-6">
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* QUICK NAV — sub-dashboards                            */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      <div className="flex flex-wrap gap-2 px-1">
+        {[
+          { href: "/departments/marketing/quiz", label: "Quiz Funnel", icon: "🧪", color: "#E24D47" },
+          { href: "/departments/marketing/quiz/responses", label: "Quiz Responses", icon: "📝", color: "#F1C028" },
+          { href: "/departments/marketing/quiz/answers", label: "Quiz Answers", icon: "📊", color: "#78C3BF" },
+          { href: "/departments/marketing/ring-analytics", label: "Halo Ring", icon: "💍", color: "#E37FB1" },
+          { href: "/departments/marketing/kai-chats/daily-report", label: "Kai Insights", icon: "💡", color: "#F1C028" },
+          { href: "/departments/marketing/kai-chats", label: "Kai Chats", icon: "💬", color: "#5A6FFF" },
+          { href: "/departments/marketing/kai-chats/subscription-funnel", label: "Kai Funnel", icon: "📈", color: "#1EAA55" },
+          { href: "/departments/marketing/kai-chats/analytics", label: "Kai vs Quiz", icon: "⚡", color: "#9686B9" },
+          { href: "/departments/marketing/kai-chats/intelligence", label: "Intelligence", icon: "🧠", color: "#E37FB1" },
+          { href: "/departments/marketing/kai-chats/optimize", label: "Optimize", icon: "🧪", color: "#E24D47" },
+          { href: "/departments/marketing/social-posts", label: "Social Posts", icon: "📱", color: "#356FB6" },
+          { href: "/departments/marketing/email-templates", label: "Email Templates", icon: "✉️", color: "#78C3BF" },
+        ].map(link => (
+          <a
+            key={link.href}
+            href={link.href}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02]"
+            style={{ backgroundColor: `${link.color}12`, color: link.color, border: `1px solid ${link.color}25` }}
+          >
+            <span>{link.icon}</span> {link.label}
+          </a>
+        ))}
+      </div>
 
       {/* ═══════════════════════════════════════════════════════ */}
       {/* HERO: Path to 5,000 Early Access Signups              */}
@@ -457,6 +619,14 @@ export default function MarketingDashboard() {
         </MetricCard>
 
         <MetricCard
+          icon={Phone}
+          iconColor={colors.pink}
+          label="Calendly Calls"
+          value="—"
+          subtext="15-min consultations"
+        />
+
+        <MetricCard
           icon={DollarSign}
           iconColor={colors.yellow}
           label="Paid Spend"
@@ -464,6 +634,11 @@ export default function MarketingDashboard() {
           subtext="Set up in Marketing → Paid"
         />
       </div>
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* CALENDLY BOOKINGS                                      */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      <CalendlyBookings />
 
       {/* ═══════════════════════════════════════════════════════ */}
       {/* STAN STORE IMPORT                                      */}

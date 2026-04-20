@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 //
 // 29K cold list → gradual warmup with expanding audience segments
 //
-// Send cadence: 3x per week (Mon / Wed / Fri) at 10am EST
+// Send cadence: Every 2 days at 10am EST
 // Audience ramp: 3K → 5K → 7K → 10K → 15K → 25K → full list (29K)
 // Watch open rates at each tier before expanding
 //
@@ -41,27 +41,23 @@ const AUDIENCE_TIERS = [
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-// Send days: Monday (1), Wednesday (3), Friday (5)
-const SEND_DAYS = [1, 3, 5];
+// Send every 2 days
+const INTERVAL_DAYS = 2;
 
 /**
- * Find the next send date on or after the given date (Mon/Wed/Fri).
+ * Return the given date as the next send date.
  */
 function nextSendDay(from: Date): Date {
-  const d = new Date(from);
-  while (!SEND_DAYS.includes(d.getDay())) {
-    d.setDate(d.getDate() + 1);
-  }
-  return d;
+  return new Date(from);
 }
 
 /**
- * Advance to the following send day after the given date.
+ * Advance to the next send date (2 days later).
  */
 function advanceToNextSendDay(from: Date): Date {
   const d = new Date(from);
-  d.setDate(d.getDate() + 1);
-  return nextSendDay(d);
+  d.setDate(d.getDate() + INTERVAL_DAYS);
+  return d;
 }
 
 function buildWarmupSchedule(
@@ -108,7 +104,7 @@ function buildWarmupSchedule(
       audienceTier: tierIndex + 1,
     });
 
-    // Advance to next Mon/Wed/Fri
+    // Advance to next send date (every 2 days)
     sendDate = advanceToNextSendDay(sendDate);
   });
 
@@ -152,16 +148,16 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     strategy: {
-      name: "Fast Warmup — 3x/Week, Audience Ramp-Up",
+      name: "Warmup — Every 2 Days, Audience Ramp-Up",
       description:
-        "Send Mon/Wed/Fri at 10am EST. First 6 emails ramp audience (3K → 5K → 7K → 10K → 15K → 25K), then full list for remaining emails. Watch open rates at each tier.",
+        "Send every 2 days at 10am EST. First 6 emails ramp audience (3K → 5K → 7K → 10K → 15K → 25K), then full list for remaining emails. Watch open rates at each tier.",
       totalEmails,
       daySpan,
       weekSpan,
       firstSend,
       lastSend,
       startDate: startDate.toISOString().split("T")[0],
-      cadence: "3x per week (Mon / Wed / Fri)",
+      cadence: "Every 2 days",
       sendTime: "10:00 AM EST",
     },
     audienceProgression: AUDIENCE_TIERS.map((tier, i) => ({
@@ -222,7 +218,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    message: `Schedule locked for ${updates.length} emails. 3x/week (Mon/Wed/Fri) starting ${start.toISOString().split("T")[0]}. Watch open rates at each audience tier.`,
+    message: `Schedule locked for ${updates.length} emails. Every 2 days starting ${start.toISOString().split("T")[0]}. Watch open rates at each audience tier.`,
     lockedSchedule: updates,
     nextStep:
       "Use POST /api/mailchimp/schedule-all with { confirmed: true } to create all campaigns in Mailchimp and schedule them.",

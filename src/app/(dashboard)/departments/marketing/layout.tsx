@@ -16,6 +16,8 @@ const TABS = [
   { href: "/departments/marketing/paid", label: "PPC" },
   { href: "/departments/marketing/blog", label: "Blog Engine" },
   { href: "/departments/marketing/quiz", label: "Quiz" },
+  { href: "/departments/marketing/kai-chats", label: "Kai Chats" },
+  { href: "/departments/marketing/email-templates", label: "Email HTML" },
 ];
 
 const ACCENT = "#5A6FFF";

@@ -125,7 +125,7 @@ export default function EmailContentManager({ emails, onUpdate, onAction }: Prop
   const bodyPreview = (body: string) => {
     const cleaned = body
       .replace(/\*\|FNAME\|\*/g, "Friend")
-      .replace(/\*\*(.*?)\*\*/gs, "$1")
+      .replace(/\*\*([^*]+)\*\*/g, "$1")
       .replace(/^#{1,6}\s+/gm, "")
       .replace(/^"+|"+$/gm, "")
       .replace(/^"(.+)"$/gm, "$1");

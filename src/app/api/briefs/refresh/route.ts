@@ -68,30 +68,17 @@ export async function POST() {
       analyzeRedditPosts(topReddit),
     ]);
 
-    // 5. Delete items older than 7 days, then add new ones
-    //    (Don't delete everything — keep recent content so the page isn't empty
-    //    and so articles accumulate over multiple refreshes)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    // 5. Clear ALL old content on refresh so stale/hallucinated items don't persist
     await prisma.$transaction([
-      prisma.newsItem.deleteMany({ where: { createdAt: { lt: sevenDaysAgo } } }),
-      prisma.researchArticle.deleteMany({ where: { createdAt: { lt: sevenDaysAgo } } }),
-      prisma.redditPost.deleteMany({ where: { createdAt: { lt: sevenDaysAgo } } }),
+      prisma.newsItem.deleteMany({}),
+      prisma.researchArticle.deleteMany({}),
+      prisma.redditPost.deleteMany({}),
     ]);
 
-    // Deduplicate against existing items by title
-    const existingNewsTitles = new Set(
-      (await prisma.newsItem.findMany({ select: { title: true } })).map((n) => n.title)
-    );
-    const existingResearchTitles = new Set(
-      (await prisma.researchArticle.findMany({ select: { title: true } })).map((r) => r.title)
-    );
-    const existingRedditTitles = new Set(
-      (await prisma.redditPost.findMany({ select: { title: true } })).map((r) => r.title)
-    );
-
-    const newNews = analyzedNews.filter((n) => !existingNewsTitles.has(n.title));
-    const newResearch = analyzedResearch.filter((r) => !existingResearchTitles.has(r.title));
-    const newReddit = analyzedReddit.filter((r) => !existingRedditTitles.has(r.title));
+    // All old items were cleared — everything is new
+    const newNews = analyzedNews;
+    const newResearch = analyzedResearch;
+    const newReddit = analyzedReddit;
 
     // Insert only genuinely new items
     if (newNews.length > 0) {
@@ -104,12 +91,7 @@ export async function POST() {
       await prisma.redditPost.createMany({ data: newReddit });
     }
 
-    // Cap at 50 items per type (keep most recent)
-    const allNews = await prisma.newsItem.findMany({ orderBy: { createdAt: "desc" }, select: { id: true } });
-    if (allNews.length > 50) {
-      const idsToDelete = allNews.slice(50).map((n) => n.id);
-      await prisma.newsItem.deleteMany({ where: { id: { in: idsToDelete } } });
-    }
+    // No need to cap — we cleared and re-inserted fresh content only
 
     const durationMs = Date.now() - startTime;
 

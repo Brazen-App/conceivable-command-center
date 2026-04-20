@@ -35,7 +35,14 @@ const ANSWER_LABELS: Record<string, Record<string, string>> = {
   prenatal: { yes: "Yes", no: "No" },
 };
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const fromParam = searchParams.get("from");
+  const toParam = searchParams.get("to");
+  const fromClause = fromParam
+    ? `AND timestamp >= toDateTime('${fromParam} 00:00:00')`
+    : `AND timestamp > toDateTime('2026-03-22 20:00:00')`;
+  const toClause = toParam ? `AND timestamp <= toDateTime('${toParam} 23:59:59')` : "";
   const POSTHOG_PERSONAL_KEY = process.env.POSTHOG_PERSONAL_API_KEY || "";
   const PROJECT_ID = process.env.POSTHOG_PROJECT_ID || "";
 
@@ -63,7 +70,7 @@ export async function GET() {
               count() as cnt
             FROM events
             WHERE event = 'quiz_answer'
-              AND timestamp > toDateTime('2026-03-22 20:00:00')
+              ${fromClause} ${toClause}
               AND JSONExtractString(properties, 'question') != ''
             GROUP BY question, answer
             ORDER BY question, cnt DESC
@@ -138,7 +145,7 @@ export async function GET() {
       body: JSON.stringify({
         query: {
           kind: "HogQLQuery",
-          query: `SELECT count() FROM events WHERE event = 'quiz_completed' AND timestamp > toDateTime('2026-03-22 20:00:00')`,
+          query: `SELECT count() FROM events WHERE event = 'quiz_completed' ${fromClause} ${toClause}`,
         },
       }),
     });

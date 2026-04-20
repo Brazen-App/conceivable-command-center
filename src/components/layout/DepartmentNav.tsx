@@ -20,6 +20,7 @@ import {
   Menu,
   X,
   Sparkles,
+  Microscope,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -86,6 +87,13 @@ const DEPARTMENTS = [
     icon: Heart,
     description: "The Heartbeat",
     accent: "#E37FB1",
+  },
+  {
+    label: "Research",
+    href: "/departments/research",
+    icon: Microscope,
+    description: "The Evidence",
+    accent: "#78C3BF",
   },
   {
     label: "Strategy",
@@ -391,7 +399,7 @@ export default function DepartmentNav() {
               style={{ backgroundColor: "#1EAA55" }}
             />
             <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.45)" }}>
-              10 departments connected
+              11 departments connected
             </span>
           </div>
         </div>

@@ -129,6 +129,12 @@ function LoginForm() {
             </p>
           )}
 
+          <div className="text-right">
+            <a href="/forgot-password" className="text-xs" style={{ color: "#5A6FFF" }}>
+              Forgot password?
+            </a>
+          </div>
+
           <button
             type="submit"
             disabled={loading}

@@ -356,7 +356,7 @@ Kirsten`,
     week: 3,
     sequence: 3,
     phase: "education",
-    subject: "The supplement protocol that actually works",
+    subject: "Your personalized supplement pack — here's what's in it",
     preview: "Evidence-based. Personalized. And you can verify it's working.",
     body: `Hi *|FNAME|*,
 
@@ -371,7 +371,7 @@ THE TARGETED LAYER (depends on YOUR drivers):
 CoQ10 — powerful for egg quality, but not everyone needs it. Inositol — excellent for insulin sensitivity and PCOS-related issues. Vitamin E — supports endometrial lining. Iron — but only if you're actually deficient, because excess iron is inflammatory. Magnesium — the unsung hero of hormonal balance and sleep quality.
 
 THE VERIFICATION PIECE (this is what nobody talks about):
-Any supplement protocol should be MEASURABLE. You should be able to track whether it's producing the expected changes in your cycle dynamics, your temperature patterns, your energy, your sleep quality.
+Any personalized supplement pack should be MEASURABLE. You should be able to track whether it's producing the expected changes in your cycle dynamics, your temperature patterns, your energy, your sleep quality.
 
 If you've been taking something for 3 months and you have no objective way to know if it's working? That's a problem.
 
@@ -409,15 +409,15 @@ Here's how it works:
 
 When you join Conceivable, the system analyzes your 7 fertility drivers — your hormonal patterns, your cycle dynamics, your sleep, your stress load, your nutrition gaps — and identifies exactly where your body needs support.
 
-Then we build you a custom supplement pack based on that analysis. Not a generic "fertility blend" with a little bit of everything. A targeted protocol with specific ingredients at specific doses, designed for what YOUR body actually needs.
+Then we build you a custom supplement pack based on that analysis. Not a generic "fertility blend" with a little bit of everything. A targeted personalized pack with specific ingredients at specific doses, designed for what YOUR body actually needs.
 
-If your luteal phase temps suggest progesterone support? Your pack includes targeted nutrients for that. If your HRV patterns show elevated stress load? We address the cortisol cascade. If your cycle variability points to thyroid or blood sugar issues? Different protocol entirely.
+If your luteal phase temps suggest progesterone support? Your pack includes targeted nutrients for that. If your HRV patterns show elevated stress load? We address the cortisol cascade. If your cycle variability points to thyroid or blood sugar issues? Different pack entirely.
 
 And here's the part that makes this completely different from anything else out there:
 
 WE TRACK WHETHER IT'S WORKING.
 
-Your Halo Ring and the app monitor your biomarkers continuously. After 4-6 weeks on your protocol, Kai analyzes whether your drivers are shifting in the expected direction. If they are — great, we optimize. If not — we adjust the protocol.
+Your Halo Ring and the app monitor your biomarkers continuously. After 4-6 weeks on your personalized pack, Kai analyzes whether your drivers are shifting in the expected direction. If they are — great, we optimize. If not — we adjust your pack.
 
 No more guessing. No more taking 17 supplements because Instagram told you to. Just the ones your body needs, verified by your own data.
 
@@ -567,7 +567,7 @@ I've been telling you the story for 4 weeks. The problem, the philosophy, the re
 
 Conceivable is a system — app + Halo Ring + AI coaching — that does what I've been describing:
 
-It reads the signals your body is already sending (through the Halo Ring, your cycle tracking, and daily inputs). It analyzes them against the 7 drivers of fertility health. And it tells you exactly what to focus on, in what order, with evidence-based protocols personalized to YOUR body.
+It reads the signals your body is already sending (through the Halo Ring, your cycle tracking, and daily inputs). It analyzes them against the 7 drivers of fertility health. And it tells you exactly what to focus on, in what order, with evidence-based recommendations personalized to YOUR body.
 
 The Halo Ring tracks your temperature, sleep, HRV, and activity continuously — so you don't have to remember to take your BBT every morning. It just... does it. All day, all night.
 
@@ -605,11 +605,11 @@ She's not a chatbot that Googles your symptoms. She's not a generic wellness app
 
 Here's what Kai actually does:
 
-She reads your Halo Ring data and daily inputs to understand what's happening in YOUR body right now. She identifies which of the 7 fertility drivers need attention — and in what order. She recommends specific protocols — supplements, nutrition changes, sleep adjustments, stress management techniques — based on YOUR patterns, not generic guidelines.
+She reads your Halo Ring data and daily inputs to understand what's happening in YOUR body right now. She identifies which of the 7 fertility drivers need attention — and in what order. She recommends specific interventions — supplements, nutrition changes, sleep adjustments, stress management techniques — based on YOUR patterns, not generic guidelines.
 
 And then — this is the part I'm proudest of — she tracks whether it's working.
 
-Did your luteal phase temperature stabilize after that supplement recommendation? Did your sleep improve after the protocol adjustment? Is your cycle variability decreasing?
+Did your luteal phase temperature stabilize after that supplement recommendation? Did your sleep improve after the pack adjustment? Is your cycle variability decreasing?
 
 If yes, she builds on what's working. If not, she adjusts. That's the closed loop.
 
@@ -685,7 +685,7 @@ Your personalized Conceivable Score — one number that captures your overall fe
 
 The Halo Ring — continuous tracking of temperature, sleep, HRV, and activity. No more morning BBT alarms. No more single-snapshot data.
 
-Kai AI coaching — unlimited, personalized to YOUR data. Evidence-based protocols that adapt as your body responds.
+Kai AI coaching — unlimited, personalized to YOUR data. Evidence-based recommendations that adapt as your body responds.
 
 The closed-loop system — measure, intervene, verify, adjust. Real accountability for whether interventions are working.
 
@@ -723,9 +723,9 @@ DAY 3-5: Halo Ring arrives. Put it on. That's it. It starts capturing data immed
 
 DAY 7: Your initial Conceivable Score is generated. This is the moment. You'll see a full breakdown of all 7 drivers — which ones are strong, which ones need attention, and which one to address FIRST for the biggest impact.
 
-DAY 7-10: Kai delivers your first personalized protocol. Not "eat more vegetables." Specific, evidence-based recommendations targeting YOUR top priority driver. Supplements if needed, lifestyle adjustments, things you can actually do.
+DAY 7-10: Kai delivers your first personalized pack recommendations. Not "eat more vegetables." Specific, evidence-based recommendations targeting YOUR top priority driver. Supplements if needed, lifestyle adjustments, things you can actually do.
 
-DAY 14: First progress check. The system looks at whether your data is shifting in the expected direction. If yes — great, keep going. If not — Kai adjusts the protocol.
+DAY 14: First progress check. The system looks at whether your data is shifting in the expected direction. If yes — great, keep going. If not — Kai adjusts your pack.
 
 From there, it's an ongoing conversation between you, your body, and a system that's actually paying attention.
 
@@ -920,7 +920,7 @@ THIS WEEK: Set up the app, complete your health profile. When your Halo Ring arr
 
 WITHIN 7 DAYS: Your initial Conceivable Score drops. This is the good stuff — a full breakdown of all 7 drivers, what's strong, what needs attention, and where to start.
 
-WITHIN 14 DAYS: Kai delivers your first personalized protocol. Real recommendations, based on your actual data.
+WITHIN 14 DAYS: Kai delivers your first personalized pack recommendations. Real recommendations, based on your actual data.
 
 A few things to know:
 
@@ -959,7 +959,7 @@ WHAT'S LIVE NOW:
 — Halo Ring (continuous temp, sleep, HRV, activity)
 — Kai AI coaching (personalized, unlimited)
 — Closed-loop recommendation system
-— Supplement protocol guidance
+— Personalized supplement pack guidance
 — Cycle and lifestyle tracking
 
 WHAT'S COMING (and you'll help shape):

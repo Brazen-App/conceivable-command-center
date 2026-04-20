@@ -85,7 +85,12 @@ export async function GET(request: Request) {
   const to = searchParams.get("to");
   const status = searchParams.get("status") || "any";
 
-  const createdAtMin = from ? `${from}T00:00:00-05:00` : startOfTodayInStoreTZ();
+  // Default to last 90 days if no from param (was defaulting to today-only which showed no data)
+  const createdAtMin = from ? `${from}T00:00:00-05:00` : (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 90);
+    return d.toISOString();
+  })();
   const createdAtMax = to ? `${to}T23:59:59-05:00` : new Date().toISOString();
 
   const baseUrl = storeUrl.startsWith("https://") ? storeUrl : `https://${storeUrl}`;
@@ -118,16 +123,18 @@ export async function GET(request: Request) {
       );
     }
 
+    const TEST_EMAILS = ["kirsten.karchmer@iambrazen.com"];
     const data = (await res.json()) as { orders: ShopifyOrder[] };
     const orders = data.orders || [];
 
-    // Filter to paid + pending only — exclude refunded/cancelled
+    // Filter to paid + pending only — exclude refunded/cancelled and test emails
     const validOrders = orders.filter(
       (o) =>
-        o.financial_status === "paid" ||
+        !TEST_EMAILS.includes((o.email || "").toLowerCase()) &&
+        (o.financial_status === "paid" ||
         o.financial_status === "partially_paid" ||
         o.financial_status === "pending" ||
-        o.financial_status === "authorized"
+        o.financial_status === "authorized")
     );
 
     const revenue = validOrders.reduce(
